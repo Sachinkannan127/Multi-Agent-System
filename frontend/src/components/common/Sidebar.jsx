@@ -1,13 +1,16 @@
 import React from 'react';
-import { MessageSquare, Layers, Globe, Compass, Activity } from 'lucide-react';
+import { MessageSquare, Layers, Globe, Compass, Activity, Home, User, Settings } from 'lucide-react';
 
 export const Sidebar = ({ activeTab, setActiveTab }) => {
   const navItems = [
+    { id: 'landing', label: 'Overview & Matrix', icon: Home, badge: 'Info' },
     { id: 'chat', label: 'Stateful Agent Chat', icon: MessageSquare, badge: 'LangGraph' },
     { id: 'rag', label: 'RAG & Hybrid Search', icon: Layers, badge: 'BM25 + RRF' },
     { id: 'tools', label: 'Web Tools Workbench', icon: Globe, badge: 'Tavily / ScrapeGraph' },
     { id: 'router', label: 'Smart Router Inspector', icon: Compass, badge: 'Classifier' },
-    { id: 'health', label: 'System Health & Ping', icon: Activity, badge: 'Telemetry' },
+    { id: 'profile', label: 'User Profile & Quotas', icon: User, badge: 'Account' },
+    { id: 'settings', label: 'Settings & Key Vault', icon: Settings, badge: 'Vault' },
+    { id: 'health', label: 'System Telemetry', icon: Activity, badge: 'Ping' },
   ];
 
   return (
@@ -16,7 +19,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
         Workspace Navigation
       </div>
 
-      <nav className="flex flex-col gap-1.5">
+      <nav className="flex flex-col gap-1.5 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -24,7 +27,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${
+              className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl font-medium text-sm transition-all duration-200 cursor-pointer ${
                 isActive
                   ? 'bg-gradient-to-r from-purple-600/30 to-indigo-600/30 text-white border border-purple-500/40 shadow-lg shadow-purple-500/10'
                   : 'text-[var(--text-muted)] hover:bg-white/5 hover:text-white border border-transparent'
@@ -46,3 +49,4 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
     </aside>
   );
 };
+
