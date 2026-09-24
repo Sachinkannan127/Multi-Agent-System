@@ -2,8 +2,16 @@ import React from 'react';
 import { ArrowRight, Sparkles, ShieldCheck, Zap } from 'lucide-react';
 import { PoeLogo } from '../components/common/PoeLogo';
 
-export const LandingView = ({ onExplore, onLaunch }) => {
-  const handleClick = onExplore || onLaunch;
+export const LandingView = ({ onSelectTab, onExplore, onLaunch }) => {
+  const handleDefaultClick = (tab = 'chat') => {
+    if (onSelectTab) {
+      onSelectTab(tab);
+    } else if (onExplore) {
+      onExplore(tab);
+    } else if (onLaunch) {
+      onLaunch(tab);
+    }
+  };
 
   const bots = [
     {
@@ -59,7 +67,7 @@ export const LandingView = ({ onExplore, onLaunch }) => {
           Poe-inspired multi-agent workspace. Run stateful graph memory chats, hybrid RAG document search, live web scrapers, and automated intent classifiers.
         </p>
 
-        <button onClick={handleClick} className="btn-poe-primary text-sm px-6 py-2.5 shadow-lg">
+        <button onClick={() => handleDefaultClick('chat')} className="btn-poe-primary text-sm px-6 py-2.5 shadow-lg cursor-pointer">
           <span>Start Agent Session</span>
           <ArrowRight className="w-4 h-4" />
         </button>
@@ -96,8 +104,8 @@ export const LandingView = ({ onExplore, onLaunch }) => {
             </div>
 
             <button
-              onClick={handleClick}
-              className="btn-poe-pill text-xs w-full justify-center font-semibold py-2"
+              onClick={() => handleDefaultClick(bot.route)}
+              className="btn-poe-pill text-xs w-full justify-center font-semibold py-2 cursor-pointer"
             >
               <span>Chat with {bot.name}</span>
               <ArrowRight className="w-3.5 h-3.5" />
