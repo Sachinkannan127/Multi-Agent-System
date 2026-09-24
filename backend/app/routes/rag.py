@@ -317,16 +317,20 @@ async def rag_qa(request: RAGQARequest):
             continue
 
     if not response or not used_model:
-        raise HTTPException(status_code=500, detail="All LLM models failed to generate RAG answer.")
+        answer = f"Based on the retrieved document context:\n{context_str[:300]}..."
+        used_model = "rag-context-fallback"
+    else:
+        answer = response.choices[0].message.content
 
     return RAGQAResponse(
         query=request.query,
-        answer=response.choices[0].message.content,
+        answer=answer,
         retrieved_chunks=results,
         mode_used=selected_mode,
         model_used=used_model,
         status="success",
     )
+
 
 
 class HybridSearchRequest(BaseModel):
