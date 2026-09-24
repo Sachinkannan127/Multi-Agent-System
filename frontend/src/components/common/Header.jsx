@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Database, ShieldCheck, RefreshCw, ChevronDown } from 'lucide-react';
-import { GeminiSparkle } from './GeminiSparkle';
+import { Database, ShieldCheck, RefreshCw, Sparkles, Share2, MoreHorizontal } from 'lucide-react';
+import { PoeLogo } from './PoeLogo';
 import { healthApi } from '../../api/healthApi';
 
-export const Header = ({ onGoHome }) => {
+export const Header = ({ onGoHome, activeTab }) => {
   const [mongoStatus, setMongoStatus] = useState('checking');
   const [dbName, setDbName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,62 +31,91 @@ export const Header = ({ onGoHome }) => {
     return () => clearInterval(interval);
   }, []);
 
+  const getBotTitle = () => {
+    switch (activeTab) {
+      case 'landing':
+        return { name: 'Explore Bots', author: '@PoeSystem', icon: '✨' };
+      case 'chat':
+        return { name: 'LangGraph-Agent', author: '@Sachin', icon: '🤖' };
+      case 'rag':
+        return { name: 'RAG-Hybrid-Search', author: '@Sachin', icon: '🔍' };
+      case 'tools':
+        return { name: 'Web-Tools-Workbench', author: '@Sachin', icon: '🌐' };
+      case 'router':
+        return { name: 'Smart-Intent-Router', author: '@Sachin', icon: '🧭' };
+      case 'profile':
+        return { name: 'User Account & Quotas', author: '@Sachin', icon: '👤' };
+      case 'settings':
+        return { name: 'API Key Vault', author: '@Sachin', icon: '⚙️' };
+      case 'health':
+        return { name: 'System Telemetry', author: '@Sachin', icon: '📊' };
+      default:
+        return { name: 'LangGraph-Agent', author: '@Sachin', icon: '🤖' };
+    }
+  };
+
+  const currentBot = getBotTitle();
+
   return (
-    <header className="px-6 py-3.5 flex items-center justify-between mb-4 shrink-0 bg-[#1E1F20]/90 backdrop-blur-xl border border-white/10 rounded-2xl">
-      {/* Brand & Gemini Logo */}
-      <div 
-        onClick={onGoHome} 
-        className="flex items-center gap-3 cursor-pointer group hover:opacity-90 transition"
-        title="Return to Gemini Landing Page"
-      >
-        <div className="p-2 rounded-2xl bg-slate-900 border border-white/10 shadow-lg group-hover:scale-105 transition-transform flex items-center justify-center">
-          <GeminiSparkle className="w-6 h-6" />
+    <header className="px-5 py-3 flex items-center justify-between bg-[#18181A] border-b border-white/10 shrink-0">
+      {/* Bot Info Header (Poe Style) */}
+      <div className="flex items-center gap-3">
+        <div 
+          onClick={onGoHome}
+          className="cursor-pointer flex items-center gap-2 hover:opacity-90 transition"
+          title="Return to Poe Explore"
+        >
+          <PoeLogo className="w-7 h-7" />
+          <span className="font-bold text-sm tracking-tight text-white hidden sm:inline">Poe</span>
         </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold gemini-gradient-text tracking-tight">
-            Multi-Agent System
+
+        <div className="h-4 w-px bg-white/10 mx-1"></div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{currentBot.icon}</span>
+          <div>
+            <h1 className="text-sm font-bold text-white flex items-center gap-1.5 leading-none">
+              {currentBot.name}
+              <span className="text-[10px] text-slate-400 font-normal">{currentBot.author}</span>
             </h1>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 font-semibold uppercase tracking-wider flex items-center gap-1">
-              Advanced 2.5
-            </span>
           </div>
-          <p className="text-xs text-slate-400">Stateful LangGraph Memory • Hybrid RAG • Tool Calling</p>
         </div>
       </div>
 
-      {/* Right Controls */}
-      <div className="flex items-center gap-4">
-        {/* MongoDB Health Indicator Pill */}
-        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-xs">
-          <Database className="w-4 h-4 text-purple-400" />
-          <span className="text-slate-400 font-medium">MongoDB:</span>
+      {/* Right Actions */}
+      <div className="flex items-center gap-3">
+        {/* MongoDB Status Indicator */}
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#1E1E22] border border-white/10 text-xs">
+          <Database className="w-3.5 h-3.5 text-purple-400" />
+          <span className="text-slate-400 text-[11px]">DB:</span>
           {mongoStatus === 'connected' ? (
-            <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+            <span className="flex items-center gap-1 text-emerald-400 font-semibold text-[11px]">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Connected ({dbName})
+              {dbName}
             </span>
           ) : (
-            <span className="flex items-center gap-1.5 text-rose-400 font-semibold">
-              <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+            <span className="text-rose-400 text-[11px] font-semibold">
               {mongoStatus === 'checking' ? 'Checking...' : 'Offline'}
             </span>
           )}
           <button 
             onClick={checkHealth}
             disabled={loading}
-            className="ml-1 text-slate-400 hover:text-blue-400 transition cursor-pointer"
+            className="ml-1 text-slate-400 hover:text-purple-400 transition cursor-pointer"
             title="Refresh Connection"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
-        {/* Gemini Active Badge */}
-        <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300 font-medium">
-          <ShieldCheck className="w-4 h-4 text-purple-400" />
-          <span>v1.0.0 Active</span>
-        </div>
+        {/* Share & Actions */}
+        <button 
+          onClick={onGoHome}
+          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition cursor-pointer"
+          title="Explore Bots"
+        >
+          <Share2 className="w-4 h-4" />
+        </button>
       </div>
     </header>
   );

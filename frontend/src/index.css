@@ -2,31 +2,28 @@
 
 @layer base {
   :root {
-    --gemini-bg: #131314;
-    --gemini-card: #1E1F20;
-    --gemini-card-hover: #282A2C;
-    --gemini-sidebar: #1E1F20;
-    --gemini-border: rgba(255, 255, 255, 0.1);
-    --gemini-border-hover: rgba(66, 133, 244, 0.4);
+    --poe-bg: #121214;
+    --poe-sidebar: #18181A;
+    --poe-card: #1E1E22;
+    --poe-card-hover: #26262B;
+    --poe-input: #27272A;
+    --poe-border: rgba(255, 255, 255, 0.08);
+    --poe-border-hover: rgba(139, 92, 246, 0.35);
     
-    --gemini-blue: #4285F4;
-    --gemini-purple: #9B51E0;
-    --gemini-pink: #EC407A;
-    --gemini-amber: #FF6D00;
-    --gemini-green: #00E676;
+    --poe-purple: #7C3AED;
+    --poe-indigo: #6366F1;
+    --poe-cyan: #06B6D4;
+    --poe-emerald: #10B981;
+    --poe-amber: #F59E0B;
     
-    --text-main: #E3E3E3;
-    --text-muted: #C4C7C5;
-    --text-dim: #8E918F;
+    --text-main: #F3F4F6;
+    --text-muted: #A1A1AA;
+    --text-dim: #71717A;
   }
 
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background-color: var(--gemini-bg);
-    background-image: 
-      radial-gradient(at 10% 10%, rgba(66, 133, 244, 0.12) 0px, transparent 45%),
-      radial-gradient(at 90% 10%, rgba(155, 81, 224, 0.12) 0px, transparent 45%),
-      radial-gradient(at 50% 90%, rgba(236, 64, 122, 0.1) 0px, transparent 45%);
+    background-color: var(--poe-bg);
     color: var(--text-main);
     min-height: 100vh;
     margin: 0;
@@ -43,85 +40,75 @@
   }
 }
 
-/* Gemini Multi-Color Gradient Text */
-.gemini-gradient-text {
-  background: linear-gradient(135deg, #4285F4 0%, #9B51E0 40%, #EC407A 70%, #FF6D00 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Gemini Glowing Cards */
-.gemini-card {
-  background: var(--gemini-card);
-  border: 1px solid var(--gemini-border);
-  border-radius: 24px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.gemini-card:hover {
-  border-color: rgba(155, 81, 224, 0.4);
-  box-shadow: 0 12px 40px 0 rgba(66, 133, 244, 0.15);
-}
-
-/* Gemini Rounded Input Pill */
-.gemini-input-pill {
-  background: #1E1F20;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: var(--text-main);
-  border-radius: 28px;
-  padding: 14px 22px;
-  outline: none;
+/* Poe Card Styling */
+.poe-card {
+  background: var(--poe-card);
+  border: 1px solid var(--poe-border);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.gemini-input-pill:focus {
-  border-color: #4285F4;
-  box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.2);
-  background: #282A2C;
+.poe-card:hover {
+  background: var(--poe-card-hover);
+  border-color: var(--poe-border-hover);
 }
 
-/* Gemini Buttons */
-.btn-gemini {
-  background: linear-gradient(135deg, #4285F4, #9B51E0);
+/* Poe Floating Input Bar */
+.poe-input-bar {
+  background: #1E1E22;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.poe-input-bar:focus-within {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25);
+}
+
+/* Poe Buttons */
+.btn-poe-primary {
+  background: linear-gradient(135deg, #7C3AED, #6366F1);
   color: #ffffff;
   font-weight: 600;
   border: none;
-  border-radius: 24px;
-  padding: 12px 24px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 20px rgba(66, 133, 244, 0.35);
-}
-
-.btn-gemini:hover {
-  transform: translateY(-1.5px);
-  box-shadow: 0 8px 30px rgba(155, 81, 224, 0.5);
-  filter: brightness(1.08);
-}
-
-.btn-gemini-pill {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--text-main);
   border-radius: 20px;
-  padding: 8px 16px;
+  padding: 10px 20px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.3);
 }
 
-.btn-gemini-pill:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(66, 133, 244, 0.4);
+.btn-poe-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.45);
+  filter: brightness(1.08);
 }
 
-/* Custom Gemini Scrollbar */
+.btn-poe-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  border-radius: 18px;
+  padding: 6px 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.btn-poe-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(124, 58, 237, 0.4);
+}
+
+/* Custom Poe Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -130,28 +117,28 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(66, 133, 244, 0.5);
+  background: rgba(124, 58, 237, 0.5);
 }
 
-/* Gemini Route Badges */
+/* Route Badges */
 .badge-rag {
-  background: rgba(66, 133, 244, 0.15);
-  color: #4285F4;
-  border: 1px solid rgba(66, 133, 244, 0.35);
+  background: rgba(99, 102, 241, 0.15);
+  color: #818CF8;
+  border: 1px solid rgba(99, 102, 241, 0.35);
 }
 
 .badge-toolcalling {
-  background: rgba(0, 230, 118, 0.15);
-  color: #00E676;
-  border: 1px solid rgba(0, 230, 118, 0.35);
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
 }
 
 .badge-direct {
-  background: rgba(255, 109, 0, 0.15);
-  color: #FF6D00;
-  border: 1px solid rgba(255, 109, 0, 0.35);
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
 }
