@@ -4,7 +4,8 @@ import { Cpu, Layers, Globe, Compass, ArrowRight, ShieldCheck, Zap, Sparkles } f
 export const LandingView = ({ onExplore, onLaunch }) => {
   const handleClick = onExplore || onLaunch;
   return (
-    <div className="flex-1 space-y-12 overflow-y-auto pb-12 pr-2">
+    <div className="flex-1 flex flex-col justify-between space-y-6 overflow-y-auto pb-4 pr-1 h-full">
+
       {/* Hero Section */}
       <section className="glass-panel p-10 relative overflow-hidden text-center flex flex-col items-center justify-center space-y-6">
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
