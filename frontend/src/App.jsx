@@ -37,22 +37,23 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen p-6 flex flex-col">
+    <div className="h-screen max-h-screen p-6 flex flex-col overflow-hidden bg-[var(--bg-dark)]">
       {/* Top Navigation Header */}
       <Header />
 
       {/* Main Workspace Container */}
-      <div className="flex-1 flex gap-6 overflow-hidden mt-2">
+      <div className="flex-1 flex gap-6 overflow-hidden min-h-0">
         {/* Navigation Sidebar */}
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {/* Dynamic View Viewport */}
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 flex flex-col overflow-hidden min-h-0">
           {renderActiveView()}
         </main>
       </div>
     </div>
   );
+
 }
 
 export default App;

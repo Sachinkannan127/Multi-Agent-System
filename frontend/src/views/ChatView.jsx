@@ -84,7 +84,8 @@ export const ChatView = () => {
   ];
 
   return (
-    <div className="flex-1 flex gap-6 h-[calc(100vh-140px)]">
+    <div className="flex-1 flex gap-6 h-full min-h-0">
+
       {/* Thread Controls & Session Panel */}
       <div className="w-80 glass-panel p-4 flex flex-col justify-between shrink-0">
         <div>

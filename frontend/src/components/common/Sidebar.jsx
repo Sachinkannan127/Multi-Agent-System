@@ -14,7 +14,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
   ];
 
   return (
-    <aside className="w-64 glass-panel p-4 flex flex-col gap-2 shrink-0">
+    <aside className="w-64 glass-panel p-4 flex flex-col gap-2 shrink-0 h-full min-h-0">
       <div className="px-3 py-2 text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider">
         Workspace Navigation
       </div>

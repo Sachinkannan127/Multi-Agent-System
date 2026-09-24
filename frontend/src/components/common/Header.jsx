@@ -31,7 +31,7 @@ export const Header = () => {
   }, []);
 
   return (
-    <header className="glass-panel border-b border-[var(--border-glass)] px-6 py-3.5 flex items-center justify-between mb-6">
+    <header className="glass-panel border-b border-[var(--border-glass)] px-6 py-3.5 flex items-center justify-between mb-4 shrink-0">
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/20">
           <Cpu className="w-6 h-6" />
