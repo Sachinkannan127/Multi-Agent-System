@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Database, ShieldCheck, Cpu, RefreshCw } from 'lucide-react';
+import { Database, ShieldCheck, RefreshCw, ChevronDown } from 'lucide-react';
+import { GeminiSparkle } from './GeminiSparkle';
 import { healthApi } from '../../api/healthApi';
 
 export const Header = ({ onGoHome }) => {
@@ -31,28 +32,35 @@ export const Header = ({ onGoHome }) => {
   }, []);
 
   return (
-    <header className="glass-panel border-b border-[var(--border-glass)] px-6 py-3.5 flex items-center justify-between mb-4 shrink-0">
+    <header className="px-6 py-3.5 flex items-center justify-between mb-4 shrink-0 bg-[#1E1F20]/90 backdrop-blur-xl border border-white/10 rounded-2xl">
+      {/* Brand & Gemini Logo */}
       <div 
         onClick={onGoHome} 
         className="flex items-center gap-3 cursor-pointer group hover:opacity-90 transition"
-        title="Return to Landing Overview"
+        title="Return to Gemini Landing Page"
       >
-        <div className="p-2 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform">
-          <Cpu className="w-6 h-6" />
+        <div className="p-2 rounded-2xl bg-slate-900 border border-white/10 shadow-lg group-hover:scale-105 transition-transform flex items-center justify-center">
+          <GeminiSparkle className="w-6 h-6" />
         </div>
         <div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">
-            Multi-Agent Intelligence System
-          </h1>
-          <p className="text-xs text-[var(--text-dim)]">LangGraph Stateful Workflows • Hybrid RAG • Tool Calling</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold gemini-gradient-text tracking-tight">
+            Multi-Agent System
+            </h1>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 font-semibold uppercase tracking-wider flex items-center gap-1">
+              Advanced 2.5
+            </span>
+          </div>
+          <p className="text-xs text-slate-400">Stateful LangGraph Memory • Hybrid RAG • Tool Calling</p>
         </div>
       </div>
 
+      {/* Right Controls */}
       <div className="flex items-center gap-4">
-        {/* MongoDB Health Indicator */}
-        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
+        {/* MongoDB Health Indicator Pill */}
+        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-xs">
           <Database className="w-4 h-4 text-purple-400" />
-          <span className="text-[var(--text-muted)] font-medium">MongoDB:</span>
+          <span className="text-slate-400 font-medium">MongoDB:</span>
           {mongoStatus === 'connected' ? (
             <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -67,15 +75,15 @@ export const Header = ({ onGoHome }) => {
           <button 
             onClick={checkHealth}
             disabled={loading}
-            className="ml-1 text-slate-400 hover:text-purple-400 transition cursor-pointer"
+            className="ml-1 text-slate-400 hover:text-blue-400 transition cursor-pointer"
             title="Refresh Connection"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
-        {/* System Version Badge */}
-        <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300 font-medium">
+        {/* Gemini Active Badge */}
+        <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300 font-medium">
           <ShieldCheck className="w-4 h-4 text-purple-400" />
           <span>v1.0.0 Active</span>
         </div>
