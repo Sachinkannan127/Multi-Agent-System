@@ -7,3 +7,11 @@ pypdf
 python-multipart
 pytest
 httpx
+langchain
+langchain-core
+langchain-community
+langchain-google-genai
+langchain-groq
+scrapegraphai
+scrapegraph-py
+tavily-python

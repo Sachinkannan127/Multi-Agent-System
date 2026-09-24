@@ -6,6 +6,12 @@ from app.rag.text_chunker import (
 )
 from app.rag.embedder import GeminiEmbedder, EmbeddedChunk
 from app.rag.vector_store import VectorStore, vector_store, SearchResult, cosine_similarity
+from app.rag.hybrid_search import (
+    HybridSearchEngine,
+    hybrid_search_engine,
+    HybridSearchResult,
+    BM25Okapi,
+)
 
 __all__ = [
     "PDFLoader",
@@ -20,4 +26,8 @@ __all__ = [
     "vector_store",
     "SearchResult",
     "cosine_similarity",
+    "HybridSearchEngine",
+    "hybrid_search_engine",
+    "HybridSearchResult",
+    "BM25Okapi",
 ]

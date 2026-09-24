@@ -327,3 +327,39 @@ async def rag_qa(request: RAGQARequest):
         model_used=used_model,
         status="success",
     )
+
+
+class HybridSearchRequest(BaseModel):
+    query: str = Field(
+        ...,
+        description="Query text for Hybrid Search (Semantic + BM25 + RRF)",
+        json_schema_extra={"example": "What are the candidate's core skills?"},
+    )
+    top_k: int = Field(default=3, ge=1, le=10, description="Top K results to retrieve", json_schema_extra={"example": 3})
+    rrf_k: int = Field(default=60, ge=1, le=100, description="RRF constant k (default 60)", json_schema_extra={"example": 60})
+
+
+@router.post("/hybrid-search", summary="Perform Hybrid Search (Semantic + BM25 + RRF)")
+def hybrid_search(request: HybridSearchRequest):
+    """
+    Executes Hybrid Search combining:
+    1. Semantic Vector Search (Dense Embedding Cosine Similarity)
+    2. BM25 Keyword Search (Term Frequency & Inverse Document Frequency)
+    3. Reciprocal Rank Fusion (RRF Re-ranking)
+    """
+    try:
+        from app.rag.hybrid_search import HybridSearchEngine
+        engine = HybridSearchEngine(rrf_k=request.rrf_k)
+        results = engine.search(query=request.query, top_k=request.top_k)
+        return {
+            "query": request.query,
+            "search_mode": "hybrid_semantic_bm25_rrf",
+            "top_k": request.top_k,
+            "rrf_k": request.rrf_k,
+            "total_results": len(results),
+            "results": [r.model_dump() for r in results],
+            "status": "success",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Hybrid Search failed: {str(e)}")
+

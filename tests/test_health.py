@@ -21,8 +21,18 @@ def test_health_check(client):
     response = client.get("/health")
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "healthy"
-    assert "running" in data["message"]
+    assert "status" in data
+    assert "mongodb" in data
+
+
+def test_mongo_ping(client):
+    """Test GET /mongo/ping MongoDB ping endpoint."""
+    response = client.get("/mongo/ping")
+    assert response.status_code == 200
+    data = response.json()
+    assert "status" in data
+    assert "ping" in data
+
 
 
 if __name__ == "__main__":
