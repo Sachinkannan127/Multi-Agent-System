@@ -13,10 +13,13 @@ import { HealthDashboardView } from './views/HealthDashboardView';
 export function App() {
   const [activeTab, setActiveTab] = useState('landing');
 
+  const goToWorkspace = () => setActiveTab('chat');
+  const goToLanding = () => setActiveTab('landing');
+
   const renderActiveView = () => {
     switch (activeTab) {
       case 'landing':
-        return <LandingView onExplore={() => setActiveTab('chat')} />;
+        return <LandingView onExplore={goToWorkspace} onLaunch={goToWorkspace} />;
       case 'chat':
         return <ChatView />;
       case 'rag':
@@ -32,29 +35,32 @@ export function App() {
       case 'health':
         return <HealthDashboardView />;
       default:
-        return <LandingView onExplore={() => setActiveTab('chat')} />;
+        return <ChatView />;
     }
   };
 
   return (
     <div className="h-screen max-h-screen p-6 flex flex-col overflow-hidden bg-[var(--bg-dark)]">
-      {/* Top Navigation Header */}
-      <Header />
+      {/* Top Header */}
+      <Header onGoHome={goToLanding} />
 
-      {/* Main Workspace Container */}
-      <div className="flex-1 flex gap-6 overflow-hidden min-h-0">
-        {/* Navigation Sidebar */}
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-
-        {/* Dynamic View Viewport */}
+      {/* Main Container */}
+      {activeTab === 'landing' ? (
+        /* Full-width Landing Page Hero Layout */
         <main className="flex-1 flex flex-col overflow-hidden min-h-0">
-          {renderActiveView()}
+          <LandingView onExplore={goToWorkspace} onLaunch={goToWorkspace} />
         </main>
-      </div>
+      ) : (
+        /* Dashboard Workspace Layout with Sidebar */
+        <div className="flex-1 flex gap-6 overflow-hidden min-h-0">
+          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+          <main className="flex-1 flex flex-col overflow-hidden min-h-0">
+            {renderActiveView()}
+          </main>
+        </div>
+      )}
     </div>
   );
-
 }
 
 export default App;
-

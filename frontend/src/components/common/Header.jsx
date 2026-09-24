@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Database, ShieldCheck, Cpu, RefreshCw } from 'lucide-react';
 import { healthApi } from '../../api/healthApi';
 
-export const Header = () => {
+export const Header = ({ onGoHome }) => {
   const [mongoStatus, setMongoStatus] = useState('checking');
   const [dbName, setDbName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,8 +32,12 @@ export const Header = () => {
 
   return (
     <header className="glass-panel border-b border-[var(--border-glass)] px-6 py-3.5 flex items-center justify-between mb-4 shrink-0">
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/20">
+      <div 
+        onClick={onGoHome} 
+        className="flex items-center gap-3 cursor-pointer group hover:opacity-90 transition"
+        title="Return to Landing Page"
+      >
+        <div className="p-2 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform">
           <Cpu className="w-6 h-6" />
         </div>
         <div>
@@ -43,6 +47,7 @@ export const Header = () => {
           <p className="text-xs text-[var(--text-dim)]">LangGraph Stateful Workflows • Hybrid RAG • Tool Calling</p>
         </div>
       </div>
+
 
       <div className="flex items-center gap-4">
         {/* MongoDB Health Indicator */}
