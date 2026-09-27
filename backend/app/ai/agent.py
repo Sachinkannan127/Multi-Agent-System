@@ -19,13 +19,20 @@ You have access to specialized tools:
 3. `scrapegraph_web_search`: Searches the web for live queries and extracts information using ScrapeGraphAI.
 4. `vector_store_search`: Queries the MongoDB Vector Store to retrieve document chunks and contextual information.
 
-Instructions:
-- Decide when to call tools automatically based on the user's prompt.
-- Use `tavily_search_tool` for fast, real-time web searches, news, and current events.
-- Use `scrapegraph_web_scraper` if the user asks to scrape a specific website URL or extract deep web content.
-- Use `scrapegraph_web_search` for graph-based web search & extraction.
-- Use `vector_store_search` if the user asks about uploaded documents, resume information, or vector store content.
-- Synthesize tool output into a concise, well-formatted response.
+TOOL USAGE DIRECTIVE:
+Whenever the user asks about recent, latest, current, now, today, live news, or real-time data, YOU MUST EXECUTE one of your search or scraping tools (`tavily_search_tool` or `scrapegraph_web_search`) to retrieve live factual data BEFORE outputting your final response.
+
+OUTPUT FORMATTING REQUIREMENTS:
+You MUST format your final response strictly into the following 3 markdown sections:
+
+### 📌 Question Summary
+(Provide a brief, 1-2 sentence summary of the user's question or request.)
+
+### 💡 Response
+(Provide the main detailed response, explanation, solution, or code satisfying the user's prompt.)
+
+### 📚 References & Sources
+(Provide a bulleted list of tools executed, retrieved document chunks, webpage URLs, or knowledge sources relied upon. If no external tools or documents were used, state "Internal Knowledge Base".)
 """
 
 
@@ -34,19 +41,19 @@ def get_llm(model_provider: Optional[str] = None):
     Instantiates a LangChain Chat Model with tool calling capabilities.
     Supported providers: 'gemini', 'groq', 'openai'
     """
-    provider = (model_provider or "gemini").lower()
+    provider = (model_provider or "groq").lower()
 
-    if provider == "gemini" or (not model_provider and settings.GEMINI_API_KEY):
+    if provider == "gemini":
         from langchain_google_genai import ChatGoogleGenerativeAI
         return ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             google_api_key=settings.GEMINI_API_KEY,
             temperature=0.2,
         )
-    elif provider == "groq" or (not model_provider and settings.GROQ_API_KEY):
+    elif provider == "groq":
         from langchain_groq import ChatGroq
         return ChatGroq(
-            model_name="qwen-2.5-32b",
+            model_name="openai/gpt-oss-20b",
             groq_api_key=settings.GROQ_API_KEY,
             temperature=0.2,
         )
@@ -55,7 +62,7 @@ def get_llm(model_provider: Optional[str] = None):
         if settings.GEMINI_API_KEY:
             from langchain_google_genai import ChatGoogleGenerativeAI
             return ChatGoogleGenerativeAI(
-                model="gemini-2.5-flash",
+                model="gemini-1.5-flash",
                 google_api_key=settings.GEMINI_API_KEY,
                 temperature=0.2,
             )
@@ -74,17 +81,41 @@ class LangChainToolAgent:
         self.llm = get_llm(model_provider)
         self.llm_with_tools = self.llm.bind_tools(self.tools)
 
-    def run(self, prompt: str, max_iterations: int = 5) -> Dict[str, Any]:
+    def run(
+        self,
+        prompt: str,
+        history: Optional[List[Dict[str, Any]]] = None,
+        max_iterations: int = 5,
+    ) -> Dict[str, Any]:
         """
-        Runs the agent conversation loop with tool calling execution.
+        Runs the agent conversation loop with tool calling execution and conversation memory.
         """
         logger.info(f"Agent received prompt: '{prompt}'")
-        print(f"[Agent] Processing user prompt: '{prompt}'")
+        print(f"[Agent] Processing user prompt: '{prompt}' (History turns: {len(history) if history else 0})")
 
-        messages: List[BaseMessage] = [
-            SystemMessage(content=SYSTEM_PROMPT),
-            HumanMessage(content=prompt),
-        ]
+        messages: List[BaseMessage] = [SystemMessage(content=SYSTEM_PROMPT)]
+
+        # Append conversation history turns if provided
+        if history:
+            for msg in history:
+                if isinstance(msg, dict):
+                    role = msg.get("role", "").lower()
+                    content = msg.get("content", "")
+                    if content:
+                        if role == "user":
+                            messages.append(HumanMessage(content=content))
+                        elif role in ["assistant", "ai"]:
+                            messages.append(AIMessage(content=content))
+                elif hasattr(msg, "role") and hasattr(msg, "content"):
+                    r = getattr(msg, "role", "").lower()
+                    c = getattr(msg, "content", "")
+                    if c:
+                        if r == "user":
+                            messages.append(HumanMessage(content=c))
+                        elif r in ["assistant", "ai"]:
+                            messages.append(AIMessage(content=c))
+
+        messages.append(HumanMessage(content=prompt))
 
         executed_tool_calls = []
 

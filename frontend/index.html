@@ -1,17 +1,603 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Multi-Agent Intelligence System | Stateful LangGraph & Hybrid RAG</title>
-    <meta name="description" content="Stateful Multi-Agent Workflows, LangGraph Memory, Tavily Web Search, ScrapeGraphAI Scraping, and Hybrid RAG with Reciprocal Rank Fusion." />
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Multi-Agent System — AI-powered multi-agent platform with LangGraph workflows, RAG pipeline, smart routing, web scraping tools, and real-time memory.">
+    <title>MultiAgent | Intelligent work, orchestrated</title>
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  </head>
-  <body class="bg-[#090D16] text-slate-100 antialiased selection:bg-purple-500 selection:text-white overflow-hidden">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Gradient Background -->
+    <div class="bg-gradient"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- Main Card Container -->
+    <main class="main-card" id="main-card">
+
+        <!-- ===== NAVIGATION ===== -->
+        <nav class="navbar" id="navbar">
+            <div class="nav-brand" id="nav-brand">
+                <div class="brand-icon">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                        <circle cx="14" cy="14" r="12" stroke="url(#brandGrad)" stroke-width="2.5"/>
+                        <circle cx="9" cy="11" r="3" fill="#FF6B35"/>
+                        <circle cx="19" cy="11" r="3" fill="#FF8C42"/>
+                        <circle cx="14" cy="19" r="3" fill="#FFB347"/>
+                        <line x1="9" y1="11" x2="19" y2="11" stroke="#FF6B35" stroke-width="1.5" opacity="0.4"/>
+                        <line x1="9" y1="11" x2="14" y2="19" stroke="#FF6B35" stroke-width="1.5" opacity="0.4"/>
+                        <line x1="19" y1="11" x2="14" y2="19" stroke="#FF8C42" stroke-width="1.5" opacity="0.4"/>
+                        <defs>
+                            <linearGradient id="brandGrad" x1="0" y1="0" x2="28" y2="28">
+                                <stop offset="0%" stop-color="#FF6B35"/>
+                                <stop offset="100%" stop-color="#FFB347"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <span class="brand-text">MultiAgent</span>
+            </div>
+
+            <ul class="nav-links" id="nav-links">
+                <li><a href="#features" class="nav-link">Features</a></li>
+                <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
+                <li><a href="#tools" class="nav-link">Tools</a></li>
+                <li><a href="#tech-stack" class="nav-link">Tech Stack</a></li>
+                <li><a href="#api-docs" class="nav-link">API</a></li>
+            </ul>
+
+            <div class="nav-actions" id="nav-actions">
+                <a href="http://localhost:8990/docs" target="_blank" class="nav-login" id="nav-login">API Docs</a>
+                <a href="app.html" class="nav-cta" id="nav-cta">Get Started</a>
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme" title="Toggle Light/Dark Mode">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+            </div>
+
+            <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </nav>
+
+        <!-- ===== HERO SECTION ===== -->
+        <section class="hero" id="hero">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <div class="hero-badge">
+                        <span class="badge-dot"></span>
+                        <span>AI OPERATIONS / BUILT FOR MOMENTUM</span>
+                    </div>
+                    <h1 class="hero-heading">
+                        Put your AI work
+                        <span class="heading-highlight">on autopilot.</span>
+                    </h1>
+                    <p class="hero-description">
+                        MultiAgent gives every request the right specialist, the right context,
+                        and a clear next step. One calm command center for research, documents,
+                        web intelligence, and the work between them.
+                    </p>
+                    <div class="hero-cta-group">
+                        <a href="app.html" class="hero-cta" id="hero-cta">
+                            <span>Open the workspace</span>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </a>
+                        <a href="#how-it-works" class="hero-cta-secondary" id="hero-cta-secondary">
+                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                <polygon points="6,4 16,10 6,16" fill="currentColor"/>
+                            </svg>
+                            <span>Explore the system</span>
+                        </a>
+                    </div>
+
+                    <!-- Stats Section -->
+                    <div class="hero-stats">
+                        <div class="stat-avatars">
+                            <img src="assets/avatars.jpg" alt="Happy users" class="avatar-group-img">
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="stat-users">1500</span>
+                            <span class="stat-label">Happy Users</span>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item">
+                            <span class="stat-number">4.8/5</span>
+                            <span class="stat-label"><span class="stars">★★★★★</span> User Rating</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-visual">
+                    <div class="hero-status-strip">
+                        <span class="live-indicator"><span></span> LIVE ORCHESTRATION</span>
+                        <span class="hero-status-model">Groq · ready</span>
+                    </div>
+                    <div class="accent-circle accent-circle-1"></div>
+                    <div class="accent-circle accent-circle-2"></div>
+                    <div class="hero-image-wrapper">
+                        <img src="assets/hero-person.jpg" alt="Person using Multi-Agent System" class="hero-image" id="hero-image">
+                    </div>
+                    <div class="chat-bubble bubble-1" id="bubble-1">
+                        <div class="bubble-avatar bubble-avatar-ai">AI</div>
+                        <div class="bubble-content">
+                            <p class="bubble-text">Analyzing your data with multiple agents working in parallel...</p>
+                        </div>
+                    </div>
+                    <div class="chat-bubble bubble-2" id="bubble-2">
+                        <div class="bubble-avatar bubble-avatar-user">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                <circle cx="7" cy="5" r="3" fill="white"/>
+                                <path d="M1 13C1 10 4 8 7 8C10 8 13 10 13 13" stroke="white" stroke-width="1.5" fill="none"/>
+                            </svg>
+                        </div>
+                        <div class="bubble-content">
+                            <p class="bubble-text">Smart routing delivers 10x faster responses with AI orchestration</p>
+                        </div>
+                    </div>
+                    <div class="deco-ring"></div>
+                    <div class="workflow-preview" aria-label="AI workflow preview">
+                        <div class="workflow-preview-head"><span>Agent flow</span><span class="workflow-live">● active</span></div>
+                        <div class="workflow-track">
+                            <div class="workflow-node active"><span class="node-index">01</span><strong>Route</strong><small>intent detected</small></div>
+                            <span class="workflow-line"></span>
+                            <div class="workflow-node"><span class="node-index">02</span><strong>Retrieve</strong><small>context ready</small></div>
+                            <span class="workflow-line"></span>
+                            <div class="workflow-node"><span class="node-index">03</span><strong>Respond</strong><small>streaming</small></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== TRUSTED BY / LOGOS BAR ===== -->
+        <section class="logos-bar" id="logos-bar">
+            <p class="logos-title">Built With Industry-Leading Technologies</p>
+            <div class="logos-track">
+                <div class="logos-slide">
+                    <div class="logo-item"><span class="logo-icon">🦜</span> LangChain</div>
+                    <div class="logo-item"><span class="logo-icon">🔗</span> LangGraph</div>
+                    <div class="logo-item"><span class="logo-icon">💎</span> Gemini AI</div>
+                    <div class="logo-item"><span class="logo-icon">⚡</span> Groq</div>
+                    <div class="logo-item"><span class="logo-icon">🍃</span> MongoDB</div>
+                    <div class="logo-item"><span class="logo-icon">🚀</span> FastAPI</div>
+                    <div class="logo-item"><span class="logo-icon">🔍</span> Tavily</div>
+                    <div class="logo-item"><span class="logo-icon">🕷️</span> ScrapeGraph</div>
+                    <!-- duplicate for seamless scroll -->
+                    <div class="logo-item"><span class="logo-icon">🦜</span> LangChain</div>
+                    <div class="logo-item"><span class="logo-icon">🔗</span> LangGraph</div>
+                    <div class="logo-item"><span class="logo-icon">💎</span> Gemini AI</div>
+                    <div class="logo-item"><span class="logo-icon">⚡</span> Groq</div>
+                    <div class="logo-item"><span class="logo-icon">🍃</span> MongoDB</div>
+                    <div class="logo-item"><span class="logo-icon">🚀</span> FastAPI</div>
+                    <div class="logo-item"><span class="logo-icon">🔍</span> Tavily</div>
+                    <div class="logo-item"><span class="logo-icon">🕷️</span> ScrapeGraph</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== FEATURES SECTION ===== -->
+        <section class="features" id="features">
+            <div class="section-header">
+                <span class="section-tag">Core Features</span>
+                <h2 class="section-title">Everything You Need for<br><span class="text-gradient">Intelligent AI Automation</span></h2>
+                <p class="section-subtitle">Our multi-agent architecture combines smart routing, document intelligence, web scraping, and stateful conversations into one powerful platform.</p>
+            </div>
+
+            <div class="features-grid">
+                <!-- Feature 1: Smart Intent Router -->
+                <div class="feature-card" id="feature-router">
+                    <div class="feature-icon icon-router">
+                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                            <path d="M14 3L25 9V19L14 25L3 19V9L14 3Z" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <circle cx="14" cy="14" r="4" fill="currentColor" opacity="0.3"/>
+                            <path d="M14 10V14L17 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Smart Intent Router</h3>
+                    <p class="feature-desc">AI-powered intent classification that dynamically routes queries to RAG, Tool Calling, or Direct LLM pipelines with keyword heuristics and LLM fallback.</p>
+                    <div class="feature-tags">
+                        <span class="tag">RAG</span>
+                        <span class="tag">Tool Calling</span>
+                        <span class="tag">Direct LLM</span>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Hybrid RAG Search -->
+                <div class="feature-card" id="feature-rag">
+                    <div class="feature-icon icon-search">
+                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                            <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path d="M18 18L25 25" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                            <path d="M8 12H16M12 8V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Hybrid RAG Search</h3>
+                    <p class="feature-desc">Combines Semantic Vector Search with BM25 Keyword Search, fused through Reciprocal Rank Fusion (RRF) for superior document retrieval accuracy.</p>
+                    <div class="feature-tags">
+                        <span class="tag">Semantic</span>
+                        <span class="tag">BM25</span>
+                        <span class="tag">RRF Fusion</span>
+                    </div>
+                </div>
+
+                <!-- Feature 3: LangGraph Workflows -->
+                <div class="feature-card" id="feature-langgraph">
+                    <div class="feature-icon icon-graph">
+                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                            <circle cx="14" cy="6" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <circle cx="6" cy="22" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <circle cx="22" cy="22" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <line x1="14" y1="9" x2="6" y2="19" stroke="currentColor" stroke-width="1.5"/>
+                            <line x1="14" y1="9" x2="22" y2="19" stroke="currentColor" stroke-width="1.5"/>
+                            <line x1="9" y1="22" x2="19" y2="22" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">LangGraph Stateful Workflows</h3>
+                    <p class="feature-desc">Stateful multi-agent workflow graph with Router → RAG / Tool / Direct → Assistant nodes. Thread-based conversation memory via MemorySaver checkpointing.</p>
+                    <div class="feature-tags">
+                        <span class="tag">StateGraph</span>
+                        <span class="tag">MemorySaver</span>
+                        <span class="tag">Threads</span>
+                    </div>
+                </div>
+
+                <!-- Feature 4: Web Scraping Tools -->
+                <div class="feature-card" id="feature-scraping">
+                    <div class="feature-icon icon-scrape">
+                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                            <rect x="3" y="3" width="22" height="22" rx="4" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path d="M3 10H25" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="7" cy="6.5" r="1.2" fill="currentColor" opacity="0.5"/>
+                            <circle cx="11" cy="6.5" r="1.2" fill="currentColor" opacity="0.5"/>
+                            <path d="M8 16L11 19L8 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M15 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">AI-Powered Web Scraping</h3>
+                    <p class="feature-desc">Extract structured data from any website with ScrapeGraphAI. Supports single-page, multi-page, and real-time live scraping with LLM-guided extraction.</p>
+                    <div class="feature-tags">
+                        <span class="tag">ScrapeGraphAI</span>
+                        <span class="tag">Real-time</span>
+                        <span class="tag">Multi-URL</span>
+                    </div>
+                </div>
+
+                <!-- Feature 5: Multi-Model Support -->
+                <div class="feature-card" id="feature-models">
+                    <div class="feature-icon icon-model">
+                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                            <path d="M14 3V7M14 21V25M25 14H21M7 14H3M21.5 6.5L18.5 9.5M9.5 18.5L6.5 21.5M21.5 21.5L18.5 18.5M9.5 9.5L6.5 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <circle cx="14" cy="14" r="5" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Multi-Model Orchestration</h3>
+                    <p class="feature-desc">Switch between Gemini, Groq, and Mistral models with tiered routing — Fast, Slow, and Pro modes with automatic fallback sequences for reliability.</p>
+                    <div class="feature-tags">
+                        <span class="tag">Gemini</span>
+                        <span class="tag">Groq</span>
+                        <span class="tag">Fallback</span>
+                    </div>
+                </div>
+
+                <!-- Feature 6: PDF & Document Upload -->
+                <div class="feature-card" id="feature-upload">
+                    <div class="feature-icon icon-upload">
+                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                            <path d="M6 18V22C6 23.1 6.9 24 8 24H20C21.1 24 22 23.1 22 22V18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M14 4V18M14 4L9 9M14 4L19 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">PDF Upload & Vectorization</h3>
+                    <p class="feature-desc">Upload PDFs and documents that are automatically chunked, embedded with Gemini Embeddings, and stored in MongoDB Atlas Vector Store for instant retrieval.</p>
+                    <div class="feature-tags">
+                        <span class="tag">PDF Parsing</span>
+                        <span class="tag">Chunking</span>
+                        <span class="tag">Embeddings</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== HOW IT WORKS SECTION ===== -->
+        <section class="how-it-works" id="how-it-works">
+            <div class="section-header">
+                <span class="section-tag">Architecture</span>
+                <h2 class="section-title">How the Multi-Agent<br><span class="text-gradient">Orchestration Works</span></h2>
+                <p class="section-subtitle">Every query flows through our intelligent pipeline — classified, routed, processed, and synthesized by specialized agents.</p>
+            </div>
+
+            <div class="workflow-container">
+                <div class="workflow-image-wrap">
+                    <img src="assets/workflow-diagram.jpg" alt="Multi-Agent Workflow Diagram" class="workflow-image" id="workflow-image">
+                </div>
+
+                <div class="workflow-steps">
+                    <div class="step" id="step-1">
+                        <div class="step-number">01</div>
+                        <div class="step-content">
+                            <h3>Smart Intent Classification</h3>
+                            <p>Your query enters the <strong>Intent Router</strong> which uses keyword heuristics + LLM classification to determine the best route: RAG, Tool Calling, or Direct LLM.</p>
+                        </div>
+                    </div>
+                    <div class="step" id="step-2">
+                        <div class="step-number">02</div>
+                        <div class="step-content">
+                            <h3>Conditional Agent Routing</h3>
+                            <p>LangGraph's <strong>conditional edges</strong> dispatch the query to the specialized agent node — document search, web tools, or direct generation — based on the classification.</p>
+                        </div>
+                    </div>
+                    <div class="step" id="step-3">
+                        <div class="step-number">03</div>
+                        <div class="step-content">
+                            <h3>Pipeline Execution</h3>
+                            <p>The selected agent executes: <strong>Hybrid RAG</strong> retrieves documents, <strong>Tool Agent</strong> calls Tavily/ScrapeGraph, or <strong>Direct LLM</strong> generates from knowledge.</p>
+                        </div>
+                    </div>
+                    <div class="step" id="step-4">
+                        <div class="step-number">04</div>
+                        <div class="step-content">
+                            <h3>Assistant Synthesis & Memory</h3>
+                            <p>The <strong>Assistant Node</strong> synthesizes the final response using retrieved context, tool outputs, and full conversation history stored via MemorySaver checkpoints.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== TOOLS & CAPABILITIES SECTION ===== -->
+        <section class="tools-section" id="tools">
+            <div class="section-header">
+                <span class="section-tag">Toolbox</span>
+                <h2 class="section-title">Powerful Tools at<br><span class="text-gradient">Your Agent's Fingertips</span></h2>
+                <p class="section-subtitle">Five specialized LangChain tools that your agents can invoke autonomously based on the user's intent.</p>
+            </div>
+
+            <div class="tools-grid">
+                <div class="tool-card tool-tavily" id="tool-tavily">
+                    <div class="tool-icon">🔍</div>
+                    <h3>Tavily Search</h3>
+                    <p>Real-time web search via Tavily AI API. Get factual, up-to-date news, events, and internet content with configurable result limits.</p>
+                    <code class="tool-code">tavily_search_tool</code>
+                </div>
+                <div class="tool-card tool-scraper" id="tool-scraper">
+                    <div class="tool-icon">🕷️</div>
+                    <h3>Web Scraper</h3>
+                    <p>Extract structured data from any URL using ScrapeGraphAI SmartScraperGraph with LLM-guided content extraction and prompt-based targeting.</p>
+                    <code class="tool-code">scrapegraph_web_scraper</code>
+                </div>
+                <div class="tool-card tool-realtime" id="tool-realtime">
+                    <div class="tool-icon">⚡</div>
+                    <h3>Realtime Scraper</h3>
+                    <p>Simultaneously scrape multiple URLs in real-time. Supports ScrapeGraph Cloud API with local SmartScraperMultiGraph fallback.</p>
+                    <code class="tool-code">scrapegraph_realtime_scraper</code>
+                </div>
+                <div class="tool-card tool-websearch" id="tool-websearch">
+                    <div class="tool-icon">🌐</div>
+                    <h3>Graph Web Search</h3>
+                    <p>Graph-based web search using ScrapeGraphAI SearchGraph engine for deep internet research with structured extraction capabilities.</p>
+                    <code class="tool-code">scrapegraph_web_search</code>
+                </div>
+                <div class="tool-card tool-vector" id="tool-vector">
+                    <div class="tool-icon">📄</div>
+                    <h3>Vector Store Search</h3>
+                    <p>Query MongoDB Atlas Vector Store for semantic document chunk retrieval. Search uploaded PDFs, resumes, and knowledge bases with cosine similarity.</p>
+                    <code class="tool-code">vector_store_search</code>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== TECH STACK SECTION ===== -->
+        <section class="tech-stack" id="tech-stack">
+            <div class="tech-stack-bg">
+                <img src="assets/tech-bg.jpg" alt="" class="tech-bg-image">
+                <div class="tech-bg-overlay"></div>
+            </div>
+            <div class="tech-stack-content">
+                <div class="section-header section-header-light">
+                    <span class="section-tag section-tag-light">Technology</span>
+                    <h2 class="section-title section-title-light">Production-Grade<br><span class="text-gradient-light">Tech Stack</span></h2>
+                </div>
+                <div class="tech-grid">
+                    <div class="tech-item">
+                        <div class="tech-item-icon">🚀</div>
+                        <h4>FastAPI</h4>
+                        <p>High-performance async Python API</p>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-item-icon">🔗</div>
+                        <h4>LangGraph</h4>
+                        <p>Stateful multi-agent workflow graphs</p>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-item-icon">🦜</div>
+                        <h4>LangChain</h4>
+                        <p>Tool binding & agent execution</p>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-item-icon">💎</div>
+                        <h4>Gemini AI</h4>
+                        <p>LLM completion & embeddings</p>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-item-icon">⚡</div>
+                        <h4>Groq</h4>
+                        <p>Ultra-fast inference fallback</p>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-item-icon">🍃</div>
+                        <h4>MongoDB Atlas</h4>
+                        <p>Vector store & document database</p>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-item-icon">🔍</div>
+                        <h4>Tavily</h4>
+                        <p>Real-time web search API</p>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-item-icon">🕷️</div>
+                        <h4>ScrapeGraphAI</h4>
+                        <p>LLM-powered web scraping</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== API ENDPOINTS SECTION ===== -->
+        <section class="api-section" id="api-docs">
+            <div class="section-header">
+                <span class="section-tag">API Reference</span>
+                <h2 class="section-title">RESTful API<br><span class="text-gradient">Endpoints</span></h2>
+                <p class="section-subtitle">Clean, documented FastAPI endpoints ready to integrate with any frontend, mobile app, or third-party service.</p>
+            </div>
+
+            <div class="api-grid">
+                <div class="api-card" id="api-chat">
+                    <div class="api-method method-post">POST</div>
+                    <div class="api-info">
+                        <code class="api-path">/api/v1/chat</code>
+                        <p class="api-desc">Multi-model chat with mode tiers (Fast/Slow/Pro) and automatic fallback sequences</p>
+                    </div>
+                </div>
+                <div class="api-card" id="api-router">
+                    <div class="api-method method-post">POST</div>
+                    <div class="api-info">
+                        <code class="api-path">/api/v1/router/execute</code>
+                        <p class="api-desc">Smart orchestrator — classifies intent and auto-routes to RAG, Tools, or Direct LLM</p>
+                    </div>
+                </div>
+                <div class="api-card" id="api-langgraph">
+                    <div class="api-method method-post">POST</div>
+                    <div class="api-info">
+                        <code class="api-path">/api/v1/langgraph/chat</code>
+                        <p class="api-desc">Stateful LangGraph workflow with thread-based memory and conversation history</p>
+                    </div>
+                </div>
+                <div class="api-card" id="api-rag">
+                    <div class="api-method method-post">POST</div>
+                    <div class="api-info">
+                        <code class="api-path">/api/v1/rag/query</code>
+                        <p class="api-desc">Hybrid RAG search with Semantic + BM25 + RRF fusion over uploaded documents</p>
+                    </div>
+                </div>
+                <div class="api-card" id="api-upload">
+                    <div class="api-method method-post">POST</div>
+                    <div class="api-info">
+                        <code class="api-path">/api/v1/upload</code>
+                        <p class="api-desc">Upload PDFs for automatic chunking, embedding, and vector store indexing</p>
+                    </div>
+                </div>
+                <div class="api-card" id="api-agent">
+                    <div class="api-method method-post">POST</div>
+                    <div class="api-info">
+                        <code class="api-path">/api/v1/agent/execute</code>
+                        <p class="api-desc">Execute LangChain Tool Agent with Tavily, ScrapeGraphAI, and Vector Store tools</p>
+                    </div>
+                </div>
+                <div class="api-card" id="api-health">
+                    <div class="api-method method-get">GET</div>
+                    <div class="api-info">
+                        <code class="api-path">/health</code>
+                        <p class="api-desc">Health check endpoint with MongoDB connection status monitoring</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== GET STARTED / CTA SECTION ===== -->
+        <section class="cta-section" id="get-started">
+            <div class="cta-card">
+                <div class="cta-glow"></div>
+                <h2 class="cta-title">Ready to Build with<br><span class="text-gradient">Multi-Agent AI?</span></h2>
+                <p class="cta-desc">Clone the repository, configure your API keys, and start deploying intelligent agent workflows in minutes.</p>
+                <div class="cta-actions">
+                    <a href="https://github.com" target="_blank" class="cta-btn cta-btn-primary" id="cta-github">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 0C4.477 0 0 4.477 0 10c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.1.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0110 4.84c.85.004 1.71.115 2.51.34 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.6 1.03 2.69 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.16.59.67.5A10.013 10.013 0 0020 10c0-5.523-4.477-10-10-10z"/>
+                        </svg>
+                        <span>View on GitHub</span>
+                    </a>
+                    <a href="http://localhost:8990/docs" target="_blank" class="cta-btn cta-btn-secondary" id="cta-docs">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 3H16C17 3 18 4 18 5V15C18 16 17 17 16 17H4C3 17 2 16 2 15V5C2 4 3 3 4 3Z" stroke-linecap="round"/>
+                            <path d="M6 7H14M6 10H14M6 13H10" stroke-linecap="round"/>
+                        </svg>
+                        <span>API Documentation</span>
+                    </a>
+                </div>
+                <div class="cta-code">
+                    <code>
+                        <span class="code-comment"># Quick start</span><br>
+                        <span class="code-keyword">git clone</span> https://github.com/your-repo/multi-agent-system<br>
+                        <span class="code-keyword">cd</span> backend && <span class="code-keyword">pip install</span> -r requirements.txt<br>
+                        <span class="code-keyword">python</span> server.py
+                    </code>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== FOOTER ===== -->
+        <footer class="footer" id="footer">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="nav-brand">
+                        <div class="brand-icon">
+                            <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+                                <circle cx="14" cy="14" r="12" stroke="url(#footerGrad)" stroke-width="2.5"/>
+                                <circle cx="9" cy="11" r="3" fill="#FF6B35"/>
+                                <circle cx="19" cy="11" r="3" fill="#FF8C42"/>
+                                <circle cx="14" cy="19" r="3" fill="#FFB347"/>
+                                <defs>
+                                    <linearGradient id="footerGrad" x1="0" y1="0" x2="28" y2="28">
+                                        <stop offset="0%" stop-color="#FF6B35"/>
+                                        <stop offset="100%" stop-color="#FFB347"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <span class="brand-text">MultiAgent</span>
+                    </div>
+                    <p class="footer-tagline">AI-powered multi-agent system for intelligent automation.</p>
+                </div>
+                <div class="footer-links-group">
+                    <div class="footer-col">
+                        <h4>Product</h4>
+                        <a href="#features">Features</a>
+                        <a href="#how-it-works">Architecture</a>
+                        <a href="#tools">Tools</a>
+                        <a href="#api-docs">API Reference</a>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Resources</h4>
+                        <a href="http://localhost:8990/docs" target="_blank">Documentation</a>
+                        <a href="http://localhost:8990/docs" target="_blank">Quick Start</a>
+                        <a href="#tech-stack">Tech Stack</a>
+                        <a href="https://github.com" target="_blank">GitHub</a>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Connect</h4>
+                        <a href="#">Twitter / X</a>
+                        <a href="#">LinkedIn</a>
+                        <a href="#">Discord</a>
+                        <a href="mailto:hello@multiagent.ai">Contact</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 MultiAgent System. Built with ❤️ and AI.</p>
+            </div>
+        </footer>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
 </html>

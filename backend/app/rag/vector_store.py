@@ -184,6 +184,21 @@ class MongoDBVectorStore:
                 pass
         return len(self._in_memory_store)
 
+    def remove_source(self, filename: str) -> None:
+        """Remove previously indexed chunks belonging to one uploaded document."""
+        stale_ids = [
+            chunk_id for chunk_id, chunk in self._in_memory_store.items()
+            if chunk.metadata.get("filename") == filename
+        ]
+        for chunk_id in stale_ids:
+            del self._in_memory_store[chunk_id]
+
+        if self._collection is not None:
+            try:
+                self._collection.delete_many({"metadata.filename": filename})
+            except Exception:
+                pass
+
     def clear(self):
         """Clears vectors from store and MongoDB collection."""
         self._in_memory_store.clear()

@@ -15,9 +15,13 @@ class AgentChatRequest(BaseModel):
         json_schema_extra={"example": "Scrape https://news.ycombinator.com and give me the top 3 tech stories."},
     )
     provider: Optional[str] = Field(
-        default="gemini",
+        default="groq",
         description="LLM provider for tool calling: 'gemini' or 'groq'",
-        json_schema_extra={"example": "gemini"},
+        json_schema_extra={"example": "groq"},
+    )
+    history: Optional[List[Dict[str, Any]]] = Field(
+        default=None,
+        description="Optional conversation memory history turns",
     )
 
 
@@ -77,7 +81,7 @@ def agent_chat(request: AgentChatRequest):
     """
     try:
         agent = LangChainToolAgent(model_provider=request.provider)
-        result = agent.run(request.prompt)
+        result = agent.run(request.prompt, history=request.history)
         return AgentChatResponse(
             status=result["status"],
             final_response=result["final_response"],

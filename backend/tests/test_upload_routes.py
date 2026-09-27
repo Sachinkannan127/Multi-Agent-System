@@ -16,6 +16,8 @@ def test_upload_pdf_success(client, sample_pdf_bytes):
     assert data["num_pages"] >= 1
     assert data["status"] == "success"
     assert "file_path" in data
+    assert "indexed" in data
+    assert "total_chunks" in data
 
 
 def test_upload_pdf_invalid_extension(client):

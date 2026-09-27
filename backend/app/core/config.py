@@ -26,31 +26,33 @@ class Settings:
     VECTOR_INDEX_NAME: str = os.getenv("VECTOR_INDEX_NAME", "vector_index")
 
     # Default LLM Model
-    DEFAULT_MODEL: str = os.getenv("DEFAULT_MODEL", "gemini/gemini-2.5-flash")
+    DEFAULT_MODEL: str = os.getenv("DEFAULT_MODEL", "groq/openai/gpt-oss-20b")
 
     # Mode to Provider mapping:
-    # Fast -> Groq | Slow -> Gemini | Pro -> Mistral/Gemini
+    # Fast -> Groq | Slow -> Gemini | Pro -> Gemini/Groq
     MODEL_TIERS: Dict[str, str] = {
-        "Fast": "groq/llama-3.3-70b-versatile",
-        "Slow": "gemini/gemini-2.5-flash",
-        "Pro": "gemini/gemini-2.5-flash",
+        "Fast": "groq/openai/gpt-oss-20b",
+        "Slow": "gemini/gemini-1.5-flash",
+        "Pro": "gemini/gemini-1.5-flash",
     }
 
     # Ordered Fallback sequences per mode
     FALLBACK_SEQUENCES: Dict[str, List[str]] = {
         "Fast": [
-            "groq/llama-3.3-70b-versatile",
-            "groq/llama3-8b-8192",
+            "groq/openai/gpt-oss-20b",
+            "gemini/gemini-1.5-flash",
             "gemini/gemini-2.5-flash",
         ],
         "Slow": [
-            "gemini/gemini-2.5-flash",
             "gemini/gemini-1.5-flash",
-            "groq/llama-3.3-70b-versatile",
+            "gemini/gemini-2.5-flash",
+            "groq/openai/gpt-oss-20b",
+            "groq/openai/gpt-oss-20b",
         ],
         "Pro": [
+            "gemini/gemini-1.5-flash",
             "gemini/gemini-2.5-flash",
-            "groq/llama-3.3-70b-versatile",
+            "groq/openai/gpt-oss-20b",
         ],
     }
 

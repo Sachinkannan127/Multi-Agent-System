@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 from typing import Any, Dict, List, Literal, Optional
@@ -54,7 +55,7 @@ class SmartIntentRouter:
     """
 
     def __init__(self, classification_model: Optional[str] = None):
-        self.model = classification_model or "gemini/gemini-2.5-flash"
+        self.model = classification_model or settings.DEFAULT_MODEL
 
     def classify_intent(self, prompt: str) -> IntentClassification:
         """
@@ -65,7 +66,15 @@ class SmartIntentRouter:
 
         # Heuristic fast check for explicit keyword patterns
         doc_keywords = ["pdf", "resume", "uploaded", "document", "file content", "vector store", "chunk"]
-        realtime_keywords = ["latest news", "today", "scrape", "http://", "https://", "live news", "current news", "tavily", "scrapegraph"]
+        
+        import re
+        realtime_patterns = [
+            r"\blatest\b", r"\brecent\b", r"\bresend\b", r"\bcurrent\b", r"\bnow\b",
+            r"\btoday\b", r"\bthis week\b", r"\bthis month\b", r"\bheadlines\b",
+            r"\bbreaking\b", r"\bscrape\b", r"\blive\b", r"\bnews\b", r"\bsearch\b",
+            r"\brealtime\b", r"\breal-time\b", r"\bupdates?\b", r"https?://",
+            r"\btavily\b", r"\bscrapegraph\b"
+        ]
 
         # Check document keywords
         if any(k in lower_prompt for k in doc_keywords):
@@ -75,12 +84,12 @@ class SmartIntentRouter:
                 reasoning="Prompt contains explicit document/PDF related keywords."
             )
 
-        # Check real-time / web scraping keywords
-        if any(k in lower_prompt for k in realtime_keywords):
+        # Check real-time / web scraping / temporal keywords (latest, recent, current, now, etc.)
+        if any(re.search(pat, lower_prompt) for pat in realtime_patterns):
             return IntentClassification(
                 intent="toolcalling",
-                confidence=0.95,
-                reasoning="Prompt requests real-time web search or web scraping."
+                confidence=0.98,
+                reasoning="Prompt requests real-time data, latest info, recent updates, or web search/scraping."
             )
 
         # Use LLM Classifier for nuanced or ambiguous prompts
@@ -88,11 +97,13 @@ class SmartIntentRouter:
             formatted_prompt = ROUTER_CLASSIFICATION_PROMPT.format(prompt=prompt)
             messages = [{"role": "user", "content": formatted_prompt}]
 
-            # Use Gemini or Groq fallback
-            target_model = self.model
+            # Use Gemini or Groq API Key
             if settings.GEMINI_API_KEY:
-                os_env_key = os.environ.get("GEMINI_API_KEY", settings.GEMINI_API_KEY)
+                os.environ["GEMINI_API_KEY"] = settings.GEMINI_API_KEY
+            if settings.GROQ_API_KEY:
+                os.environ["GROQ_API_KEY"] = settings.GROQ_API_KEY
             
+            target_model = self.model
             response = litellm.completion(
                 model=target_model,
                 messages=messages,

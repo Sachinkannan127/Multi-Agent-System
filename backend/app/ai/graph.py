@@ -114,13 +114,23 @@ def assistant_node(state: MultiAgentState) -> Dict[str, Any]:
 
     print(f"[LangGraph Assistant Node] Generating response for route: '{route}'")
 
-    system_prompt = "You are a stateful Multi-Agent AI Assistant powered by LangGraph.\n"
+    system_prompt = (
+        "You are a stateful Multi-Agent AI Assistant powered by LangGraph.\n"
+        "OUTPUT FORMATTING REQUIREMENTS:\n"
+        "You MUST format your response strictly into the following 3 markdown sections:\n"
+        "### 📌 Question Summary\n"
+        "(Brief 1-2 sentence summary of the user's question)\n\n"
+        "### 💡 Response\n"
+        "(Main detailed response and content)\n\n"
+        "### 📚 References & Sources\n"
+        "(List tools used, retrieved document chunks, webpage URLs, or internal knowledge base)\n\n"
+    )
     if route == "rag" and context:
         system_prompt += f"Use the following RAG document context to answer accurately:\n{context}\n"
     elif route == "toolcalling" and context:
         system_prompt += f"Use the following tool execution context to answer accurately:\n{context}\n"
     else:
-        system_prompt += "Provide a helpful, friendly, and concise response.\n"
+        system_prompt += "Provide a helpful, friendly, and comprehensive response.\n"
 
     # Build prompt payload with history
     llm_messages = [{"role": "system", "content": system_prompt}]

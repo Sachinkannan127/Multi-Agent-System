@@ -110,12 +110,12 @@ def scrapegraph_realtime_scraper(urls: List[str], prompt: str) -> Dict[str, Any]
         if settings.GEMINI_API_KEY:
             llm_config = {
                 "api_key": settings.GEMINI_API_KEY,
-                "model": "google_genai/gemini-2.5-flash",
+                "model": "google_genai/gemini-1.5-flash",
             }
         elif settings.GROQ_API_KEY:
             llm_config = {
                 "api_key": settings.GROQ_API_KEY,
-                "model": "groq/qwen-2.5-32b",
+                "model": "groq/openai/gpt-oss-20b",
             }
         else:
             return {
@@ -193,12 +193,12 @@ def scrapegraph_web_scraper(url: str, prompt: str) -> Dict[str, Any]:
         if settings.GEMINI_API_KEY:
             llm_config = {
                 "api_key": settings.GEMINI_API_KEY,
-                "model": "google_genai/gemini-2.5-flash",
+                "model": "google_genai/gemini-1.5-flash",
             }
         elif settings.GROQ_API_KEY:
             llm_config = {
                 "api_key": settings.GROQ_API_KEY,
-                "model": "groq/qwen-2.5-32b",
+                "model": "groq/openai/gpt-oss-20b",
             }
         else:
             return {
@@ -249,12 +249,12 @@ def scrapegraph_web_search(query: str, prompt: str) -> Dict[str, Any]:
         if settings.GEMINI_API_KEY:
             llm_config = {
                 "api_key": settings.GEMINI_API_KEY,
-                "model": "google_genai/gemini-2.5-flash",
+                "model": "google_genai/gemini-1.5-flash",
             }
         elif settings.GROQ_API_KEY:
             llm_config = {
                 "api_key": settings.GROQ_API_KEY,
-                "model": "groq/qwen-2.5-32b",
+                "model": "groq/openai/gpt-oss-20b",
             }
         else:
             return {

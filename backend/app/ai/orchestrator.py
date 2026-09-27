@@ -37,12 +37,13 @@ class SmartMultiAgentOrchestrator:
         prompt: str,
         provider: Optional[str] = None,
         top_k_rag: int = 3,
+        history: Optional[List[Dict[str, Any]]] = None,
     ) -> RouterExecutionResult:
         """
-        Main entry point: classifies prompt and dispatches to the corresponding pipeline.
+        Main entry point: classifies prompt and dispatches to the corresponding pipeline with history memory.
         """
         logger.info(f"Orchestrator evaluating prompt: '{prompt}'")
-        print(f"[Orchestrator] Classifying prompt: '{prompt}'")
+        print(f"[Orchestrator] Classifying prompt: '{prompt}' (History turns: {len(history) if history else 0})")
 
         # 1. Classify Intent
         classification: IntentClassification = self.router.classify_intent(prompt)
@@ -53,21 +54,22 @@ class SmartMultiAgentOrchestrator:
 
         # Route A: RAG (Document / PDF Vector Store QA)
         if route == "rag":
-            return self._execute_rag_pipeline(prompt, classification, top_k=top_k_rag)
+            return self._execute_rag_pipeline(prompt, classification, top_k=top_k_rag, history=history)
 
         # Route B: Tool Calling Agent (Tavily / ScrapeGraphAI)
         elif route == "toolcalling":
-            return self._execute_toolcalling_pipeline(prompt, classification, provider=provider)
+            return self._execute_toolcalling_pipeline(prompt, classification, provider=provider, history=history)
 
         # Route C: Direct LLM Completion
         else:
-            return self._execute_direct_pipeline(prompt, classification, provider=provider)
+            return self._execute_direct_pipeline(prompt, classification, provider=provider, history=history)
 
     def _execute_rag_pipeline(
         self,
         prompt: str,
         classification: IntentClassification,
         top_k: int = 3,
+        history: Optional[List[Dict[str, Any]]] = None,
     ) -> RouterExecutionResult:
         """Executes Hybrid Search (Semantic + BM25 + RRF) + LLM synthesis."""
         print(f"[RAG Route] Executing Hybrid Search (Semantic + BM25 + RRF) for context...")
@@ -80,23 +82,26 @@ class SmartMultiAgentOrchestrator:
             ) if search_results else "No relevant document chunks found in vector store."
 
             system_instruction = (
-                "You are an expert RAG Assistant. Answer the user question accurately based ONLY on the provided document context below.\n"
-                "If the information is not contained in the context, state clearly what is missing.\n\n"
+                "You are an expert RAG Assistant. Answer the user question accurately based on the provided document context below.\n\n"
+                "OUTPUT FORMATTING REQUIREMENTS:\n"
+                "You MUST structure your response strictly into the following 3 markdown sections:\n"
+                "### 📌 Question Summary\n"
+                "(Brief 1-2 sentence summary of the user's question)\n\n"
+                "### 💡 Response\n"
+                "(Main detailed answer satisfying the user request based on context)\n\n"
+                "### 📚 References & Sources\n"
+                "(Bulleted list of document chunks, files, or RRF scores used)\n\n"
                 f"DOCUMENT CONTEXT:\n{context_str}"
             )
 
-            messages = [
-                {"role": "system", "content": system_instruction},
-                {"role": "user", "content": prompt}
-            ]
+            messages = [{"role": "system", "content": system_instruction}]
+            if history:
+                for item in history:
+                    if isinstance(item, dict) and item.get("content"):
+                        messages.append({"role": item.get("role", "user"), "content": item.get("content")})
+            messages.append({"role": "user", "content": prompt})
 
-            model_name = settings.DEFAULT_MODEL
-            response = litellm.completion(
-                model=model_name,
-                messages=messages,
-                temperature=0.2
-            )
-            answer_text = response.choices[0].message.content
+            answer_text, model_used = self._completion_with_fallback(messages, temperature=0.2)
 
             return RouterExecutionResult(
                 query=prompt,
@@ -108,7 +113,7 @@ class SmartMultiAgentOrchestrator:
                     "search_mode": "hybrid_rrf",
                     "total_chunks_retrieved": len(search_results),
                     "top_chunk_rrf_scores": [r.rrf_score for r in search_results],
-                    "model_used": model_name
+                    "model_used": model_used
                 }
             )
         except Exception as e:
@@ -122,17 +127,36 @@ class SmartMultiAgentOrchestrator:
                 metadata={"error": str(e)}
             )
 
+    def _completion_with_fallback(self, messages: List[Dict[str, str]], temperature: float = 0.7) -> tuple[str, str]:
+        """Tries models sequentially from candidate list until one succeeds."""
+        candidate_models = settings.FALLBACK_SEQUENCES.get("Fast", [settings.DEFAULT_MODEL])
+        errors = []
+        for model in candidate_models:
+            try:
+                response = litellm.completion(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature
+                )
+                return response.choices[0].message.content, model
+            except Exception as err:
+                logger.warning(f"Model '{model}' failed: {err}")
+                errors.append(f"{model}: {err}")
+        
+        raise RuntimeError(f"All models failed in fallback sequence: {'; '.join(errors)}")
+
     def _execute_toolcalling_pipeline(
         self,
         prompt: str,
         classification: IntentClassification,
         provider: Optional[str] = None,
+        history: Optional[List[Dict[str, Any]]] = None,
     ) -> RouterExecutionResult:
         """Executes LangChain Tool Calling Agent (Tavily / ScrapeGraphAI)."""
         print(f"[ToolCalling Route] Delegating to LangChain Tool Agent...")
         try:
             agent = LangChainToolAgent(model_provider=provider)
-            agent_result = agent.run(prompt)
+            agent_result = agent.run(prompt, history=history)
 
             return RouterExecutionResult(
                 query=prompt,
@@ -143,7 +167,7 @@ class SmartMultiAgentOrchestrator:
                 metadata={
                     "tool_calls_executed": agent_result.get("tool_calls_executed", []),
                     "total_iterations": agent_result.get("total_iterations", 1),
-                    "provider": provider or "gemini"
+                    "provider": provider or "groq"
                 }
             )
         except Exception as e:
@@ -162,22 +186,30 @@ class SmartMultiAgentOrchestrator:
         prompt: str,
         classification: IntentClassification,
         provider: Optional[str] = None,
+        history: Optional[List[Dict[str, Any]]] = None,
     ) -> RouterExecutionResult:
         """Executes Direct LLM Completion."""
         print(f"[Direct Route] Generating direct LLM response...")
         try:
-            model_name = settings.DEFAULT_MODEL
-            messages = [
-                {"role": "system", "content": "You are a helpful, friendly, and concise AI assistant."},
-                {"role": "user", "content": prompt}
-            ]
-
-            response = litellm.completion(
-                model=model_name,
-                messages=messages,
-                temperature=0.7
+            direct_system_prompt = (
+                "You are a helpful, friendly, and expert AI assistant.\n\n"
+                "OUTPUT FORMATTING REQUIREMENTS:\n"
+                "You MUST structure your response strictly into the following 3 markdown sections:\n"
+                "### 📌 Question Summary\n"
+                "(Brief 1-2 sentence summary of the user's query)\n\n"
+                "### 💡 Response\n"
+                "(Main detailed content, solution, explanation, or code)\n\n"
+                "### 📚 References & Sources\n"
+                "(List references, model knowledge base, or relevant links used)"
             )
-            answer_text = response.choices[0].message.content
+            messages = [{"role": "system", "content": direct_system_prompt}]
+            if history:
+                for item in history:
+                    if isinstance(item, dict) and item.get("content"):
+                        messages.append({"role": item.get("role", "user"), "content": item.get("content")})
+            messages.append({"role": "user", "content": prompt})
+
+            answer_text, model_used = self._completion_with_fallback(messages, temperature=0.7)
 
             return RouterExecutionResult(
                 query=prompt,
@@ -186,7 +218,7 @@ class SmartMultiAgentOrchestrator:
                 confidence=classification.confidence,
                 response=answer_text,
                 metadata={
-                    "model_used": model_name
+                    "model_used": model_used
                 }
             )
         except Exception as e:

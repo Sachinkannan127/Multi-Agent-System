@@ -35,6 +35,19 @@ class ChatMessage(BaseModel):
     )
 
 
+DEFAULT_CHATGPT_STYLE_PROMPT = (
+    "You are a helpful, friendly, and expert AI assistant.\n\n"
+    "OUTPUT FORMATTING REQUIREMENTS:\n"
+    "You MUST format your output strictly into the following 3 markdown sections:\n\n"
+    "### 📌 Question Summary\n"
+    "(Provide a brief 1-2 sentence summary of the user's question or prompt)\n\n"
+    "### 💡 Response\n"
+    "(Provide the main detailed content, solution, explanation, or code)\n\n"
+    "### 📚 References & Sources\n"
+    "(Provide a bulleted list of references, sources, model knowledge base, or links used)"
+)
+
+
 class ChatRequest(BaseModel):
     message: str = Field(
         ...,
@@ -52,7 +65,7 @@ class ChatRequest(BaseModel):
         description="Optional conversation history",
     )
     system_prompt: Optional[str] = Field(
-        default="You are a helpful, friendly, and concise AI assistant.",
+        default=DEFAULT_CHATGPT_STYLE_PROMPT,
         description="Optional system prompt to guide the AI behavior",
     )
     model: Optional[str] = Field(
@@ -103,8 +116,10 @@ async def generate_stream_events(request: ChatRequest):
 
     # Build messages payload
     messages = []
-    if request.system_prompt:
-        messages.append({"role": "system", "content": request.system_prompt})
+    sys_prompt = request.system_prompt or DEFAULT_CHATGPT_STYLE_PROMPT
+    if "Question Summary" not in sys_prompt:
+        sys_prompt = DEFAULT_CHATGPT_STYLE_PROMPT + "\n\n" + sys_prompt
+    messages.append({"role": "system", "content": sys_prompt})
 
     if request.history:
         for msg in request.history:
@@ -226,8 +241,10 @@ async def chat_endpoint(request: ChatRequest):
 
     # Build messages payload
     messages = []
-    if request.system_prompt:
-        messages.append({"role": "system", "content": request.system_prompt})
+    sys_prompt = request.system_prompt or DEFAULT_CHATGPT_STYLE_PROMPT
+    if "Question Summary" not in sys_prompt:
+        sys_prompt = DEFAULT_CHATGPT_STYLE_PROMPT + "\n\n" + sys_prompt
+    messages.append({"role": "system", "content": sys_prompt})
 
     if request.history:
         for msg in request.history:

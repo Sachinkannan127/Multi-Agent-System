@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
@@ -15,9 +15,9 @@ class RouterChatRequest(BaseModel):
         json_schema_extra={"example": "What are the candidate's skills in the uploaded resume?"},
     )
     provider: Optional[str] = Field(
-        default="gemini",
+        default="groq",
         description="LLM provider for tool calling/execution: 'gemini' or 'groq'",
-        json_schema_extra={"example": "gemini"},
+        json_schema_extra={"example": "groq"},
     )
     top_k: int = Field(
         default=3,
@@ -25,6 +25,10 @@ class RouterChatRequest(BaseModel):
         le=10,
         description="Number of vector chunks to retrieve if RAG route is selected",
         json_schema_extra={"example": 3},
+    )
+    history: Optional[List[Dict[str, Any]]] = Field(
+        default=None,
+        description="Optional conversation memory history turns",
     )
 
 
@@ -59,6 +63,7 @@ def smart_router_chat(request: RouterChatRequest):
             prompt=request.prompt,
             provider=request.provider,
             top_k_rag=request.top_k,
+            history=request.history,
         )
         return RouterChatResponse(
             query=result.query,

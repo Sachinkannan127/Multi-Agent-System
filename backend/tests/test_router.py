@@ -28,6 +28,14 @@ def test_classify_realtime_prompt(client):
     assert data["intent"] == "toolcalling"
 
 
+def test_classify_latest_developments_as_realtime(client):
+    """Current-development prompts should use live web tools, not stale direct knowledge."""
+    payload = {"prompt": "What are the latest AI developments this week?"}
+    response = client.post("/router/classify", json=payload)
+    assert response.status_code == 200
+    assert response.json()["intent"] == "toolcalling"
+
+
 def test_classify_direct_prompt(client):
     """Test POST /router/classify routes basic questions to 'direct'."""
     payload = {"prompt": "Write a python function to add two numbers."}

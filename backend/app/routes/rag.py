@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import Dict, List, Optional, Any
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 import litellm
@@ -86,6 +86,7 @@ class RAGQARequest(BaseModel):
     )
     mode: Optional[str] = Field(default="Fast", description="LLM mode tier: 'Slow' (Gemini), 'Fast' (Groq), 'Pro' (Mistral)")
     top_k: int = Field(default=3, gt=0, description="Number of context chunks to retrieve")
+    history: List[Dict[str, Any]] = Field(default_factory=list, description="Previous conversation turns")
 
 
 class RAGQAResponse(BaseModel):
@@ -302,8 +303,11 @@ async def rag_qa(request: RAGQARequest):
 
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_prompt},
     ]
+    for message in request.history:
+        if message.get("role") in {"user", "assistant"} and message.get("content"):
+            messages.append({"role": message["role"], "content": message["content"]})
+    messages.append({"role": "user", "content": user_prompt})
 
     response = None
     used_model = None

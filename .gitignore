@@ -1,3 +1,4 @@
+# Python
 .env
 __pycache__/
 *.pyc
@@ -6,5 +7,11 @@ __pycache__/
 .pytest_cache/
 venv/
 env/
-app/upload/*
-!app/upload/.gitkeep
+
+# Uploads
+backend/app/upload/*
+!backend/app/upload/.gitkeep
+
+# Node (no longer needed, kept for safety)
+node_modules/
+dist/

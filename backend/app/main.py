@@ -1,3 +1,11 @@
+import sys
+
+# Ensure stdout and stderr use UTF-8 on Windows console
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,6 +17,7 @@ from app.routes.rag import router as rag_router
 from app.routes.agent import router as agent_router
 from app.routes.router import router as intent_router_endpoint
 from app.routes.langgraph import router as langgraph_router
+from app.routes.conversations import router as conversations_router
 
 
 @asynccontextmanager
@@ -57,13 +66,26 @@ app.include_router(intent_router_endpoint)
 app.include_router(langgraph_router, prefix=settings.API_V1_STR)
 app.include_router(langgraph_router)
 
+app.include_router(conversations_router, prefix=settings.API_V1_STR)
+app.include_router(conversations_router)
+
 
 @app.get("/", tags=["Landing"])
 def landing_page():
     return {
-        "message": "Welcome to the Multi-Agent API",
+        "message": "Welcome to the Multi-Agent System API",
         "status": "online",
+        "version": settings.VERSION,
+        "frontend": "http://localhost:5173",
         "docs": "/docs",
+        "endpoints": {
+            "chat": f"{settings.API_V1_STR}/chat",
+            "router": f"{settings.API_V1_STR}/router/execute",
+            "langgraph": f"{settings.API_V1_STR}/langgraph/chat",
+            "rag": f"{settings.API_V1_STR}/rag/query",
+            "upload": f"{settings.API_V1_STR}/upload",
+            "agent": f"{settings.API_V1_STR}/agent/execute",
+        },
     }
 
 
