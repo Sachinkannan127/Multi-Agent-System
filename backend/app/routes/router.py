@@ -30,6 +30,10 @@ class RouterChatRequest(BaseModel):
         default=None,
         description="Optional conversation memory history turns",
     )
+    conversation_id: Optional[str] = Field(
+        default=None,
+        description="Optional conversation ID for global cross-chat memory exclusion",
+    )
 
 
 class ClassifyPromptRequest(BaseModel):
@@ -64,6 +68,7 @@ def smart_router_chat(request: RouterChatRequest):
             provider=request.provider,
             top_k_rag=request.top_k,
             history=request.history,
+            conversation_id=request.conversation_id,
         )
         return RouterChatResponse(
             query=result.query,

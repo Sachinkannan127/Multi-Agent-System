@@ -574,7 +574,7 @@ async function sendMessage() {
             response = await fetch(`${API_V1}/router/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: text, provider: 'groq', top_k: 3, history: conversationHistory })
+                body: JSON.stringify({ prompt: text, provider: 'groq', top_k: 3, history: conversationHistory, conversation_id: activeConversationId })
             });
             data = await response.json();
             if (!response.ok) throw new Error(data.detail || 'Router error');
