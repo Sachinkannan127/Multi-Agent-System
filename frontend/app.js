@@ -93,17 +93,58 @@ function toggleTheme() {
 }
 
 // ============================
-//  CLERK AUTHENTICATION
+//  CLERK & JWT AUTHENTICATION (Access & Refresh Tokens)
 // ============================
 async function getAuthHeaders(extraHeaders = {}) {
     const headers = { 'Content-Type': 'application/json', ...extraHeaders };
+    
+    // 1. Clerk session token (auto-refreshed by Clerk SDK)
     if (clerk && clerk.session) {
         try {
             const token = await clerk.session.getToken();
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-        } catch { /* Silent */ }
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+                return headers;
+            }
+        } catch { /* fallback */ }
+    }
+
+    // 2. Custom Access Token fallback
+    const localToken = localStorage.getItem('ma_access_token');
+    if (localToken) {
+        headers['Authorization'] = `Bearer ${localToken}`;
     }
     return headers;
+}
+
+async function refreshSessionToken() {
+    if (clerk && clerk.session) {
+        try {
+            return await clerk.session.getToken({ skipCache: true });
+        } catch {}
+    }
+
+    const refreshToken = localStorage.getItem('ma_refresh_token');
+    if (!refreshToken) return null;
+
+    try {
+        const res = await fetch(`${API_V1}/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.access_token) {
+                localStorage.setItem('ma_access_token', data.access_token);
+                if (data.refresh_token) localStorage.setItem('ma_refresh_token', data.refresh_token);
+                return data.access_token;
+            }
+        }
+    } catch (e) {
+        console.warn('Token refresh error:', e);
+    }
+    return null;
 }
 
 async function initClerkAuth() {
