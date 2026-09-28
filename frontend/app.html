@@ -1,47 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Multi-Agent System — Chat with AI agents powered by LangGraph, RAG, and real-time web tools.">
+    <meta name="description"
+        content="Multi-Agent System — Chat with AI agents powered by LangGraph, RAG, and real-time web tools.">
     <title>MultiAgent — AI Chat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="app.css">
 </head>
+
 <body>
     <div class="app-layout">
+
+        <!-- Mobile Sidebar Backdrop -->
+        <div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
 
         <!-- ===== SIDEBAR ===== -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-brand">
                     <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
-                        <circle cx="14" cy="14" r="12" stroke="url(#sbGrad)" stroke-width="2.5"/>
-                        <circle cx="9" cy="11" r="3" fill="#FF6B35"/>
-                        <circle cx="19" cy="11" r="3" fill="#FF8C42"/>
-                        <circle cx="14" cy="19" r="3" fill="#FFB347"/>
-                        <defs><linearGradient id="sbGrad" x1="0" y1="0" x2="28" y2="28"><stop offset="0%" stop-color="#FF6B35"/><stop offset="100%" stop-color="#FFB347"/></linearGradient></defs>
+                        <circle cx="14" cy="14" r="12" stroke="url(#sbGrad)" stroke-width="2.5" />
+                        <circle cx="9" cy="11" r="3" fill="#FF6B35" />
+                        <circle cx="19" cy="11" r="3" fill="#FF8C42" />
+                        <circle cx="14" cy="19" r="3" fill="#FFB347" />
+                        <defs>
+                            <linearGradient id="sbGrad" x1="0" y1="0" x2="28" y2="28">
+                                <stop offset="0%" stop-color="#FF6B35" />
+                                <stop offset="100%" stop-color="#FFB347" />
+                            </linearGradient>
+                        </defs>
                     </svg>
                     <span>MultiAgent</span>
                 </div>
                 <div class="sidebar-header-actions">
                     <button class="new-chat-btn" id="new-chat-btn" title="New Chat">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3V15M3 9H15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <path d="M9 3V15M3 9H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
                     </button>
-                    <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" title="Collapse Sidebar" aria-label="Collapse Sidebar">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="9" y1="3" x2="9" y2="21"/>
-                            <path d="M15 9l-3 3 3 3"/>
+                    <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" title="Collapse Sidebar"
+                        aria-label="Collapse Sidebar">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <line x1="9" y1="3" x2="9" y2="21" />
+                            <path d="M15 9l-3 3 3 3" />
                         </svg>
                     </button>
                 </div>
             </div>
 
             <div class="sidebar-search">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" />
+                    <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
                 <input type="text" placeholder="Search conversations..." id="search-input">
             </div>
 
@@ -51,44 +69,56 @@
             </div>
 
             <div class="sidebar-footer">
-                <button class="sidebar-link sidebar-codevis-link" id="sidebar-codevis-link" title="Code Studio & Live Interactive Visualizer">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="16 18 22 12 16 6"/>
-                        <polyline points="8 6 2 12 8 18"/>
-                    </svg>
-                    <span>Code Studio</span>
-                    <span class="sidebar-badge-codevis">Live</span>
-                </button>
-                <button class="sidebar-link sidebar-ocr-link" id="sidebar-ocr-link" title="OCR Image Text Extractor (EasyOCR)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/>
-                        <rect x="7" y="7" width="10" height="10" rx="1.5"/>
-                        <line x1="9" y1="12" x2="15" y2="12"/>
+                <button class="sidebar-link sidebar-ocr-link" id="sidebar-ocr-link"
+                    title="OCR Image Text Extractor (EasyOCR)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" />
+                        <rect x="7" y="7" width="10" height="10" rx="1.5" />
+                        <line x1="9" y1="12" x2="15" y2="12" />
                     </svg>
                     <span>OCR</span>
-                    <span class="sidebar-badge-ocr"></span>
+                    <span class="sidebar-badge-ocr">Beta</span>
                 </button>
-                <button class="sidebar-link sidebar-connectors-link" id="sidebar-connectors-link" title="Connectors & Integrations">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                        <circle cx="12" cy="12" r="4"/>
+                <button class="sidebar-link sidebar-connectors-link" id="sidebar-connectors-link"
+                    title="Connectors & Integrations">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                        <circle cx="12" cy="12" r="4" />
                     </svg>
                     <span>Connectors</span>
                     <span class="sidebar-badge-soon">Soon</span>
                 </button>
                 <button class="sidebar-link sidebar-settings-link" id="sidebar-settings-link">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 1.7-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-2.4v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L8 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6.7v-2.4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L8 8.6l1.7-1.7.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h2.4v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.7 1.7-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2v2.4h-.2a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 1.7-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-2.4v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L8 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6.7v-2.4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L8 8.6l1.7-1.7.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h2.4v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.7 1.7-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2v2.4h-.2a1.7 1.7 0 0 0-1.5 1Z" />
+                    </svg>
                     Settings
                 </button>
                 <a href="index.html" class="sidebar-link" id="back-to-landing">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
                     Back to Home
                 </a>
-                <a href="http://localhost:8990/docs" target="_blank" class="sidebar-link">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 5H11M5 8H11M5 11H8" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
-                    API Docs
+                <a href="docs.html" class="sidebar-link" id="sidebar-docs-link"
+                    title="Application Documentation & API Reference">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5" />
+                        <path d="M5 5H11M5 8H11M5 11H8" stroke="currentColor" stroke-width="1" stroke-linecap="round" />
+                    </svg>
+                    Documentation
                 </a>
-                <div class="sidebar-profile"><span class="profile-avatar">M</span><span><strong>MultiAgent</strong><small>Workspace</small></span><span class="profile-more">•••</span></div>
+                <div class="sidebar-profile"><span
+                        class="profile-avatar">M</span><span><strong>MultiAgent</strong><small>Workspace</small></span><span
+                        class="profile-more">•••</span></div>
             </div>
         </aside>
 
@@ -97,10 +127,11 @@
             <!-- Top bar -->
             <header class="chat-topbar" id="chat-topbar">
                 <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar" title="Toggle Sidebar">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                        <line x1="9" y1="3" x2="9" y2="21"/>
-                        <path d="M13 15l3-3-3-3"/>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <line x1="9" y1="3" x2="9" y2="21" />
+                        <path d="M13 15l3-3-3-3" />
                     </svg>
                 </button>
 
@@ -110,21 +141,54 @@
                 </div>
 
                 <div class="topbar-controls">
+                    <!-- Export / Share -->
+                    <button class="topbar-btn share-btn" id="share-btn" title="Export / Share Chat" aria-label="Export Chat">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                            <polyline points="16 6 12 2 8 6"></polyline>
+                            <line x1="12" y1="2" x2="12" y2="15"></line>
+                        </svg>
+                    </button>
+
                     <!-- Upload -->
                     <label class="upload-btn" id="upload-btn" title="Upload PDF">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 12V14C4 14.6 4.4 15 5 15H13C13.6 15 14 14.6 14 14V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9 3V11M9 3L6 6M9 3L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <path d="M4 12V14C4 14.6 4.4 15 5 15H13C13.6 15 14 14.6 14 14V12" stroke="currentColor"
+                                stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M9 3V11M9 3L6 6M9 3L12 6" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
                         <input type="file" accept=".pdf" id="pdf-upload" hidden>
                     </label>
 
                     <!-- Theme Toggle -->
-                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme" title="Toggle Light/Dark Mode">
-                        <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                        <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme"
+                        title="Toggle Light/Dark Mode">
+                        <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="5" />
+                            <line x1="12" y1="1" x2="12" y2="3" />
+                            <line x1="12" y1="21" x2="12" y2="23" />
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                            <line x1="1" y1="12" x2="3" y2="12" />
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                        </svg>
+                        <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                        </svg>
                     </button>
 
                     <!-- Settings -->
                     <button class="settings-btn" id="settings-btn" aria-label="Open settings" title="Settings">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="m19.4 15 .1.1a2 2 0 0 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4V19a2 2 0 0 1-4 0v-.1a2 2 0 0 0-3.4-1.4l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1A2 2 0 0 0 1.6 12H1.5a2 2 0 0 1 0-4h.1A2 2 0 0 0 3 4.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A2 2 0 0 0 9.2.4V.3a2 2 0 0 1 4 0v.1a2 2 0 0 0 3.4 1.4l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A2 2 0 0 0 20.8 8h.1a2 2 0 0 1 0 4h-.1a2 2 0 0 0-1.4 3Z"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
+                            <path
+                                d="m19.4 15 .1.1a2 2 0 0 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4V19a2 2 0 0 1-4 0v-.1a2 2 0 0 0-3.4-1.4l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1A2 2 0 0 0 1.6 12H1.5a2 2 0 0 1 0-4h.1A2 2 0 0 0 3 4.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A2 2 0 0 0 9.2.4V.3a2 2 0 0 1 4 0v.1a2 2 0 0 0 3.4 1.4l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A2 2 0 0 0 20.8 8h.1a2 2 0 0 1 0 4h-.1a2 2 0 0 0-1.4 3Z" />
+                        </svg>
                     </button>
                 </div>
             </header>
@@ -134,69 +198,176 @@
                 <!-- Welcome screen (shown when no messages) -->
                 <div class="welcome-screen" id="welcome-screen">
                     <div class="home-brand-lockup">
-                        <div class="home-brand-mark"><img src="assets/bot-avatar.jpg" alt="MultiAgent"></div>
-                        <span>MultiAgent</span>
+                        <div class="claude-spark-emblem">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                            </svg>
+                        </div>
+                        <h1 class="welcome-heading">What can I help you orchestrate today?</h1>
                     </div>
-                    <div class="home-models" aria-label="Available AI models">
-                        <button class="model-chip active"><span class="model-chip-icon assistant-icon">✦</span> Assistant</button>
-                        <button class="model-chip"><span class="model-chip-icon groq-icon">⚡</span> Groq GPT OSS</button>
-                        <button class="model-chip"><span class="model-chip-icon rag-icon">◈</span> Document RAG</button>
-                        <button class="model-search" title="Browse models" aria-label="Browse models">⌕</button>
-                    </div>
-                    <h2 class="welcome-title">What can I help you orchestrate?</h2>
-                    <p class="welcome-desc">Ask anything, upload a document, or choose a specialist to get started.</p>
+                    <p class="welcome-subheading">Ask questions, analyze documents, search live web sources, or run
+                        agentic workflows.</p>
 
                     <div class="suggestion-grid" id="suggestion-grid">
                         <button class="suggestion-card" data-prompt="What can you do? List all your capabilities.">
-                            <span class="suggestion-icon">🤖</span>
-                            <span class="suggestion-text">What can you do?</span>
+                            <div class="card-icon-wrap">🤖</div>
+                            <div class="card-content">
+                                <div class="suggestion-title">What can you do?</div>
+                                <div class="suggestion-subtitle">Explore tools, RAG & agent routing</div>
+                            </div>
                         </button>
                         <button class="suggestion-card" data-prompt="Search the web for the latest AI news today">
-                            <span class="suggestion-icon">🔍</span>
-                            <span class="suggestion-text">Latest AI news</span>
+                            <div class="card-icon-wrap">🌐</div>
+                            <div class="card-content">
+                                <div class="suggestion-title">Latest AI news</div>
+                                <div class="suggestion-subtitle">Live web search and research summary</div>
+                            </div>
                         </button>
-                        <button class="suggestion-card" data-prompt="Scrape https://news.ycombinator.com and list the top 5 stories">
-                            <span class="suggestion-icon">🕷️</span>
-                            <span class="suggestion-text">Scrape Hacker News</span>
+                        <button class="suggestion-card"
+                            data-prompt="Scrape https://news.ycombinator.com and list the top 5 stories">
+                            <div class="card-icon-wrap">🕷️</div>
+                            <div class="card-content">
+                                <div class="suggestion-title">Scrape Hacker News</div>
+                                <div class="suggestion-subtitle">Extract trending tech stories & links</div>
+                            </div>
                         </button>
-                        <button class="suggestion-card" data-prompt="Explain how RAG (Retrieval Augmented Generation) works in simple terms">
-                            <span class="suggestion-icon">📚</span>
-                            <span class="suggestion-text">Explain RAG</span>
+                        <button class="suggestion-card"
+                            data-prompt="Explain how RAG (Retrieval Augmented Generation) works in simple terms">
+                            <div class="card-icon-wrap">📚</div>
+                            <div class="card-content">
+                                <div class="suggestion-title">Explain RAG</div>
+                                <div class="suggestion-subtitle">Understand vector search & retrieval</div>
+                            </div>
                         </button>
-                    </div>
-                    <div class="official-agents">
-                        <div class="official-agents-head"><strong>Official agents</strong><button type="button">View all</button></div>
-                        <div class="official-agents-track">
-                            <button class="official-card suggestion-card" data-prompt="What can you do? List all your capabilities."><img src="assets/bot-avatar.jpg" alt="Assistant"><span>Assistant</span><small>General</small></button>
-                            <button class="official-card suggestion-card" data-prompt="Summarize the key capabilities of this application."><span class="official-symbol purple">✦</span><span>MultiAgent</span><small>Orchestrator</small></button>
-                            <button class="official-card suggestion-card" data-prompt="Explain how document RAG works in this application."><span class="official-symbol teal">◈</span><span>Document RAG</span><small>Research</small></button>
-                            <button class="official-card suggestion-card" data-prompt="Give me the latest AI news today."><span class="official-symbol coral">↗</span><span>Web Scout</span><small>Live search</small></button>
-                        </div>
                     </div>
                 </div>
 
                 <!-- Messages will be inserted here by JS -->
             </div>
 
-            <!-- Input Area -->
+            <!-- Floating Pill Input Area (ChatGPT / Claude Style) -->
             <div class="input-area" id="input-area">
-                <div class="input-wrapper">
+                <div class="input-capsule-container">
+                    <!-- Upload file preview chips inside the capsule -->
                     <div class="upload-indicator" id="upload-indicator" style="display: none;">
-                        <span class="upload-filename" id="upload-filename"></span>
-                        <button class="upload-remove" id="upload-remove">×</button>
+                        <div class="upload-chip">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
+                            <span class="upload-filename" id="upload-filename"></span>
+                            <button class="upload-remove" id="upload-remove" title="Remove attachment"
+                                aria-label="Remove attachment">&times;</button>
+                        </div>
                     </div>
-                    <textarea class="chat-input" id="chat-input" placeholder="Ask me anything..." rows="1"></textarea>
-                    <button class="voice-btn" id="voice-btn" title="Use voice input" aria-label="Use voice input">
-                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8"/></svg>
-                    </button>
-                    <button class="send-btn" id="send-btn" title="Send message" disabled>
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10L17 3L10 17L9 11L3 10Z" fill="currentColor"/></svg>
-                    </button>
+
+                    <!-- Textarea Prompt -->
+                    <div class="prompt-field-wrap">
+                        <textarea class="chat-input" id="chat-input" placeholder="Message MultiAgent or ask anything..."
+                            rows="1"></textarea>
+                    </div>
+
+                    <!-- Bottom Tool Toolbar inside Pill -->
+                    <div class="capsule-toolbar">
+                        <div class="toolbar-left">
+                            <!-- Attachment Plus Button (ChatGPT style) -->
+                            <label class="tool-btn attach-btn" for="pdf-upload" title="Attach PDF or document"
+                                aria-label="Attach document">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                            </label>
+
+                            <!-- Model / Agent Selector Pill (Claude style) -->
+                            <div class="model-dropdown-wrap" id="model-dropdown-wrap">
+                                <button type="button" class="model-pill-trigger" id="model-pill-trigger"
+                                    title="Switch Agent Mode">
+                                    <span class="model-pill-icon" id="model-pill-icon">✦</span>
+                                    <span class="model-pill-text" id="model-pill-text">Smart Router</span>
+                                    <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </button>
+                                <div class="model-menu-dropdown" id="model-menu-dropdown" hidden>
+                                    <button type="button" class="model-menu-item active" data-mode="Smart">
+                                        <span class="menu-item-icon smart-icon">✦</span>
+                                        <span class="menu-item-label">Smart Router</span>
+                                        <span class="menu-item-check">✓</span>
+                                    </button>
+                                    <button type="button" class="model-menu-item" data-mode="Fast">
+                                        <span class="menu-item-icon fast-icon">⚡</span>
+                                        <span class="menu-item-label">Groq Ultra-Fast</span>
+                                        <span class="menu-item-check">✓</span>
+                                    </button>
+                                    <button type="button" class="model-menu-item" data-mode="Slow">
+                                        <span class="menu-item-icon rag-icon">◈</span>
+                                        <span class="menu-item-label">Document RAG</span>
+                                        <span class="menu-item-check">✓</span>
+                                    </button>
+                                    <button type="button" class="model-menu-item" data-mode="LangGraph">
+                                        <span class="menu-item-icon lang-icon">🌿</span>
+                                        <span class="menu-item-label">LangGraph Memory</span>
+                                        <span class="menu-item-check">✓</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Web Search quick toggle button -->
+                            <button type="button" class="tool-btn web-search-btn" id="web-search-btn"
+                                title="Toggle Live Web Search">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                                    <path
+                                        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                                    </path>
+                                </svg>
+                                <span>Search</span>
+                            </button>
+                        </div>
+
+                        <div class="toolbar-right">
+                            <!-- Voice Input Mic Button -->
+                            <button type="button" class="voice-btn" id="voice-btn" title="Use voice input"
+                                aria-label="Use voice input">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                                </svg>
+                            </button>
+
+                            <!-- Circular Send Arrow Button (ChatGPT style) -->
+                            <button type="button" class="send-btn" id="send-btn" title="Send message"
+                                aria-label="Send message" disabled>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="19" x2="12" y2="5"></line>
+                                    <polyline points="5 12 12 5 19 12"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="prompt-bar-meta">
-                    <span class="prompt-status"><span class="status-dot"></span> Groq · streaming</span>
-                    <span class="prompt-shortcuts"><kbd>@</kbd> sources <kbd>/</kbd> commands</span>
-                    <span class="prompt-hint">Enter to send · Shift + Enter for a new line</span>
+
+                <!-- Footer disclaimer & status -->
+                <div class="capsule-footer-meta">
+                    <div class="footer-status-pill">
+                        <span class="status-pulse-dot"></span>
+                        <span class="status-text" id="status-mode-label">Groq · Llama 3.3 · streaming</span>
+                    </div>
+                    <div class="footer-disclaimer">MultiAgent can make mistakes. Verify important info.</div>
                 </div>
             </div>
         </div>
@@ -205,65 +376,74 @@
 
     <!-- Settings Dialog (ChatGPT Style) -->
     <div class="settings-backdrop" id="settings-backdrop" hidden>
-        <section class="settings-dialog cg-settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <section class="settings-dialog cg-settings-modal" role="dialog" aria-modal="true"
+            aria-labelledby="settings-title">
             <div class="cg-settings-header">
                 <h2 id="settings-title">Settings</h2>
-                <button class="settings-close" id="settings-close" aria-label="Close settings" title="Close settings">&times;</button>
+                <button class="settings-close" id="settings-close" aria-label="Close settings"
+                    title="Close settings">&times;</button>
             </div>
 
             <div class="cg-settings-container">
                 <!-- Left Tab Navigation Sidebar -->
                 <nav class="cg-settings-nav" id="settings-tabs-nav" aria-label="Settings navigation">
                     <button type="button" class="cg-nav-item active" data-tab="general">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="3"/>
-                            <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 1.7-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-2.4v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L8 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6.7v-2.4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L8 8.6l1.7-1.7.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h2.4v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.7 1.7-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2v2.4h-.2a1.7 1.7 0 0 0-1.5 1Z"/>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3" />
+                            <path
+                                d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 1.7-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-2.4v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L8 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6.7v-2.4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L8 8.6l1.7-1.7.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h2.4v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.7 1.7-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2v2.4h-.2a1.7 1.7 0 0 0-1.5 1Z" />
                         </svg>
                         <span>General</span>
                     </button>
                     <button type="button" class="cg-nav-item" data-tab="personalization">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
                         </svg>
                         <span>Personalization</span>
                     </button>
                     <button type="button" class="cg-nav-item" data-tab="speech">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                            <line x1="12" y1="19" x2="12" y2="23"/>
-                            <line x1="8" y1="23" x2="16" y2="23"/>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                            <line x1="12" y1="19" x2="12" y2="23" />
+                            <line x1="8" y1="23" x2="16" y2="23" />
                         </svg>
                         <span>Speech</span>
                     </button>
                     <button type="button" class="cg-nav-item" data-tab="data-controls">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <ellipse cx="12" cy="5" rx="9" ry="3"/>
-                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <ellipse cx="12" cy="5" rx="9" ry="3" />
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
                         </svg>
                         <span>Data controls</span>
                     </button>
                     <button type="button" class="cg-nav-item" data-tab="models">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="4" y="4" width="16" height="16" rx="2"/>
-                            <rect x="9" y="9" width="6" height="6"/>
-                            <line x1="9" y1="1" x2="9" y2="4"/>
-                            <line x1="15" y1="1" x2="15" y2="4"/>
-                            <line x1="9" y1="20" x2="9" y2="23"/>
-                            <line x1="15" y1="20" x2="15" y2="23"/>
-                            <line x1="20" y1="9" x2="23" y2="9"/>
-                            <line x1="20" y1="14" x2="23" y2="14"/>
-                            <line x1="1" y1="9" x2="4" y2="9"/>
-                            <line x1="1" y1="14" x2="4" y2="14"/>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="4" width="16" height="16" rx="2" />
+                            <rect x="9" y="9" width="6" height="6" />
+                            <line x1="9" y1="1" x2="9" y2="4" />
+                            <line x1="15" y1="1" x2="15" y2="4" />
+                            <line x1="9" y1="20" x2="9" y2="23" />
+                            <line x1="15" y1="20" x2="15" y2="23" />
+                            <line x1="20" y1="9" x2="23" y2="9" />
+                            <line x1="20" y1="14" x2="23" y2="14" />
+                            <line x1="1" y1="9" x2="4" y2="9" />
+                            <line x1="1" y1="14" x2="4" y2="14" />
                         </svg>
                         <span>AI & Multi-Agent</span>
                     </button>
                     <button type="button" class="cg-nav-item" data-tab="account">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="2" y="5" width="20" height="14" rx="2"/>
-                            <line x1="2" y1="10" x2="22" y2="10"/>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="5" width="20" height="14" rx="2" />
+                            <line x1="2" y1="10" x2="22" y2="10" />
                         </svg>
                         <span>Account & System</span>
                     </button>
@@ -348,7 +528,8 @@
                                     <strong>What would you like the AI to know about you?</strong>
                                     <small>Background, profession, primary tech stack, or context for responses.</small>
                                 </label>
-                                <textarea id="custom-instructions-user" class="cg-textarea" rows="3" placeholder="e.g. I am a software engineer building multi-agent systems with Python and JavaScript..."></textarea>
+                                <textarea id="custom-instructions-user" class="cg-textarea" rows="3"
+                                    placeholder="e.g. I am a software engineer building multi-agent systems with Python and JavaScript..."></textarea>
                             </div>
 
                             <div class="cg-field-group">
@@ -356,11 +537,13 @@
                                     <strong>How would you like the AI agents to respond?</strong>
                                     <small>Tone, formatting style, brevity, or specific instructions.</small>
                                 </label>
-                                <textarea id="custom-instructions-style" class="cg-textarea" rows="3" placeholder="e.g. Be concise, direct, provide structured code examples, and skip generic fluff..."></textarea>
+                                <textarea id="custom-instructions-style" class="cg-textarea" rows="3"
+                                    placeholder="e.g. Be concise, direct, provide structured code examples, and skip generic fluff..."></textarea>
                             </div>
 
                             <div class="cg-form-footer">
-                                <button type="button" class="cg-primary-btn" id="save-instructions-btn">Save Instructions</button>
+                                <button type="button" class="cg-primary-btn" id="save-instructions-btn">Save
+                                    Instructions</button>
                             </div>
                         </div>
                     </div>
@@ -407,7 +590,8 @@
                                 <small>Adjust the narration speed for text-to-speech audio.</small>
                             </div>
                             <div class="cg-row-control cg-speed-control">
-                                <input type="range" id="setting-tts-speed" min="0.75" max="1.5" step="0.05" value="1.0" class="cg-range">
+                                <input type="range" id="setting-tts-speed" min="0.75" max="1.5" step="0.05" value="1.0"
+                                    class="cg-range">
                                 <span class="cg-pill" id="tts-speed-val">1.0x</span>
                             </div>
                         </div>
@@ -573,16 +757,22 @@
                 <div class="connectors-header-text">
                     <span class="connectors-eyebrow">Integrations & Ecosystem</span>
                     <h2 id="connectors-title">Connectors Hub</h2>
-                    <p class="connectors-subtitle">Connect your workspace tools, databases, and pipelines directly into the Multi-Agent orchestrator.</p>
+                    <p class="connectors-subtitle">Connect your workspace tools, databases, and pipelines directly into
+                        the Multi-Agent orchestrator.</p>
                 </div>
-                <button class="connectors-close" id="connectors-close" aria-label="Close Connectors" title="Close">&times;</button>
+                <button class="connectors-close" id="connectors-close" aria-label="Close Connectors"
+                    title="Close">&times;</button>
             </div>
 
             <!-- Toolbar: Search & Category Filter Tabs -->
             <div class="connectors-toolbar">
                 <div class="connectors-search-box">
-                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    <input type="text" id="connectors-search-input" placeholder="Filter connectors (e.g. GitHub, Notion, SQL)...">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" />
+                        <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+                    <input type="text" id="connectors-search-input"
+                        placeholder="Filter connectors (e.g. GitHub, Notion, SQL)...">
                 </div>
                 <div class="connectors-tabs" id="connectors-tabs">
                     <button class="connector-tab-btn active" data-category="all">All Tools</button>
@@ -598,8 +788,12 @@
                 <!-- GitHub -->
                 <div class="connector-card" data-category="developer" data-name="github">
                     <div class="connector-card-header">
-                        <div class="connector-icon" style="background: linear-gradient(135deg, #24292e, #0d1117); color: #ffffff;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                        <div class="connector-icon"
+                            style="background: linear-gradient(135deg, #24292e, #0d1117); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                            </svg>
                         </div>
                         <span class="connector-status-badge">
                             <span class="status-pulse-dot"></span> Coming Soon
@@ -610,7 +804,8 @@
                             <h4>GitHub</h4>
                             <span class="connector-category-tag">Developer</span>
                         </div>
-                        <p class="connector-desc">Sync repositories, automate pull request reviews, query commit history, and triage issues directly with the Coding Agent.</p>
+                        <p class="connector-desc">Sync repositories, automate pull request reviews, query commit
+                            history, and triage issues directly with the Coding Agent.</p>
                     </div>
                     <div class="connector-footer">
                         <button class="connector-action-btn" data-tool="GitHub">
@@ -622,8 +817,12 @@
                 <!-- Notion -->
                 <div class="connector-card" data-category="knowledge" data-name="notion">
                     <div class="connector-card-header">
-                        <div class="connector-icon" style="background: linear-gradient(135deg, #000000, #2f343b); color: #ffffff;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.83c-.466-.373-.746-.466-1.586-.42L3.899 2.11c-.42.046-.513.28-.326.466l.886 1.632zm-.793 3.033v13.542c0 .746.373 1.073 1.213.98l14.475-.84c.84-.046 1.073-.56 1.073-1.165V6.447c0-.606-.233-.98-.84-.933l-15.08.886c-.653.047-.84.42-.84.841zm14.195.42c.093.42 0 .84-.42.886l-.7.14v9.658c-.606.326-1.213.513-1.726.513-.933 0-1.213-.373-1.913-1.26l-4.526-6.158v6.205l1.493.326s0 .84-.98.84l-3.312.187c-.093-.373.187-.746.56-.84l.84-.233V8.873l-1.12-.093c-.093-.42.14-.84.653-.886l3.686-.233 4.806 6.392V8.453l-1.306-.14c-.093-.466.233-.84.7-.886l3.353-.187z"/></svg>
+                        <div class="connector-icon"
+                            style="background: linear-gradient(135deg, #000000, #2f343b); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.83c-.466-.373-.746-.466-1.586-.42L3.899 2.11c-.42.046-.513.28-.326.466l.886 1.632zm-.793 3.033v13.542c0 .746.373 1.073 1.213.98l14.475-.84c.84-.046 1.073-.56 1.073-1.165V6.447c0-.606-.233-.98-.84-.933l-15.08.886c-.653.047-.84.42-.84.841zm14.195.42c.093.42 0 .84-.42.886l-.7.14v9.658c-.606.326-1.213.513-1.726.513-.933 0-1.213-.373-1.913-1.26l-4.526-6.158v6.205l1.493.326s0 .84-.98.84l-3.312.187c-.093-.373.187-.746.56-.84l.84-.233V8.873l-1.12-.093c-.093-.42.14-.84.653-.886l3.686-.233 4.806 6.392V8.453l-1.306-.14c-.093-.466.233-.84.7-.886l3.353-.187z" />
+                            </svg>
                         </div>
                         <span class="connector-status-badge">
                             <span class="status-pulse-dot"></span> Coming Soon
@@ -634,7 +833,8 @@
                             <h4>Notion</h4>
                             <span class="connector-category-tag">Knowledge</span>
                         </div>
-                        <p class="connector-desc">Index team wikis, project roadmaps, and meeting notes seamlessly into the RAG Document vector store with bi-directional sync.</p>
+                        <p class="connector-desc">Index team wikis, project roadmaps, and meeting notes seamlessly into
+                            the RAG Document vector store with bi-directional sync.</p>
                     </div>
                     <div class="connector-footer">
                         <button class="connector-action-btn" data-tool="Notion">
@@ -646,8 +846,12 @@
                 <!-- Google Drive -->
                 <div class="connector-card" data-category="knowledge" data-name="google drive">
                     <div class="connector-card-header">
-                        <div class="connector-icon" style="background: linear-gradient(135deg, #1fa463, #0f9d58); color: #ffffff;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm4.86 6.5l3.43 6h7.85l-3.43-6h-7.85zm-2.07 7.5L7.07 23.5h13.71l3.43-6H10.5z"/></svg>
+                        <div class="connector-icon"
+                            style="background: linear-gradient(135deg, #1fa463, #0f9d58); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm4.86 6.5l3.43 6h7.85l-3.43-6h-7.85zm-2.07 7.5L7.07 23.5h13.71l3.43-6H10.5z" />
+                            </svg>
                         </div>
                         <span class="connector-status-badge">
                             <span class="status-pulse-dot"></span> Coming Soon
@@ -658,7 +862,8 @@
                             <h4>Google Drive</h4>
                             <span class="connector-category-tag">Knowledge</span>
                         </div>
-                        <p class="connector-desc">Automatically ingest and index Google Docs, Sheets, Slides, and enterprise PDFs with fine-grained permission controls.</p>
+                        <p class="connector-desc">Automatically ingest and index Google Docs, Sheets, Slides, and
+                            enterprise PDFs with fine-grained permission controls.</p>
                     </div>
                     <div class="connector-footer">
                         <button class="connector-action-btn" data-tool="Google Drive">
@@ -670,8 +875,14 @@
                 <!-- PostgreSQL / SQL -->
                 <div class="connector-card" data-category="database" data-name="postgresql mysql sql">
                     <div class="connector-card-header">
-                        <div class="connector-icon" style="background: linear-gradient(135deg, #336791, #1e3f5a); color: #ffffff;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                        <div class="connector-icon"
+                            style="background: linear-gradient(135deg, #336791, #1e3f5a); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                            </svg>
                         </div>
                         <span class="connector-status-badge">
                             <span class="status-pulse-dot"></span> Coming Soon
@@ -682,7 +893,8 @@
                             <h4>PostgreSQL & MySQL</h4>
                             <span class="connector-category-tag">Databases</span>
                         </div>
-                        <p class="connector-desc">Natural language Text-to-SQL querying, automatic schema discovery, and safe read-only business data analysis.</p>
+                        <p class="connector-desc">Natural language Text-to-SQL querying, automatic schema discovery, and
+                            safe read-only business data analysis.</p>
                     </div>
                     <div class="connector-footer">
                         <button class="connector-action-btn" data-tool="PostgreSQL & MySQL">
@@ -694,8 +906,15 @@
                 <!-- Snowflake -->
                 <div class="connector-card" data-category="database" data-name="snowflake">
                     <div class="connector-card-header">
-                        <div class="connector-icon" style="background: linear-gradient(135deg, #29b5e8, #11567f); color: #ffffff;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/><line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/></svg>
+                        <div class="connector-icon"
+                            style="background: linear-gradient(135deg, #29b5e8, #11567f); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="2" x2="12" y2="22" />
+                                <line x1="2" y1="12" x2="22" y2="12" />
+                                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                                <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
+                            </svg>
                         </div>
                         <span class="connector-status-badge">
                             <span class="status-pulse-dot"></span> Coming Soon
@@ -706,7 +925,8 @@
                             <h4>Snowflake</h4>
                             <span class="connector-category-tag">Databases</span>
                         </div>
-                        <p class="connector-desc">Query enterprise data cloud warehouses, run semantic KPI aggregations, and generate boardroom analytical reports.</p>
+                        <p class="connector-desc">Query enterprise data cloud warehouses, run semantic KPI aggregations,
+                            and generate boardroom analytical reports.</p>
                     </div>
                     <div class="connector-footer">
                         <button class="connector-action-btn" data-tool="Snowflake">
@@ -718,8 +938,12 @@
                 <!-- Slack -->
                 <div class="connector-card" data-category="communication" data-name="slack">
                     <div class="connector-card-header">
-                        <div class="connector-icon" style="background: linear-gradient(135deg, #4A154B, #611f69); color: #ffffff;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></svg>
+                        <div class="connector-icon"
+                            style="background: linear-gradient(135deg, #4A154B, #611f69); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z" />
+                            </svg>
                         </div>
                         <span class="connector-status-badge">
                             <span class="status-pulse-dot"></span> Coming Soon
@@ -730,7 +954,8 @@
                             <h4>Slack</h4>
                             <span class="connector-category-tag">Communication</span>
                         </div>
-                        <p class="connector-desc">Listen to channels, summarize long discussions, trigger agent workflows via slash commands, and broadcast findings.</p>
+                        <p class="connector-desc">Listen to channels, summarize long discussions, trigger agent
+                            workflows via slash commands, and broadcast findings.</p>
                     </div>
                     <div class="connector-footer">
                         <button class="connector-action-btn" data-tool="Slack">
@@ -742,8 +967,12 @@
                 <!-- Jira & Confluence -->
                 <div class="connector-card" data-category="developer" data-name="jira confluence atlassian">
                     <div class="connector-card-header">
-                        <div class="connector-icon" style="background: linear-gradient(135deg, #0052cc, #2684ff); color: #ffffff;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M11.53 2c0 2.4-1.97 4.35-4.4 4.35H2.8a.8.8 0 0 0-.8.8v4.33c0 2.4 1.97 4.35 4.4 4.35h4.33a.8.8 0 0 0 .8-.8V2zM16.14 6.35c0 2.4-1.97 4.35-4.4 4.35H7.41a.8.8 0 0 0-.8.8v4.33c0 2.4 1.97 4.35 4.4 4.35h4.33a.8.8 0 0 0 .8-.8V6.35zM20.75 10.7c0 2.4-1.97 4.35-4.4 4.35h-4.33a.8.8 0 0 0-.8.8v4.33c0 2.4 1.97 4.35 4.4 4.35h4.33a.8.8 0 0 0 .8-.8V10.7z"/></svg>
+                        <div class="connector-icon"
+                            style="background: linear-gradient(135deg, #0052cc, #2684ff); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M11.53 2c0 2.4-1.97 4.35-4.4 4.35H2.8a.8.8 0 0 0-.8.8v4.33c0 2.4 1.97 4.35 4.4 4.35h4.33a.8.8 0 0 0 .8-.8V2zM16.14 6.35c0 2.4-1.97 4.35-4.4 4.35H7.41a.8.8 0 0 0-.8.8v4.33c0 2.4 1.97 4.35 4.4 4.35h4.33a.8.8 0 0 0 .8-.8V6.35zM20.75 10.7c0 2.4-1.97 4.35-4.4 4.35h-4.33a.8.8 0 0 0-.8.8v4.33c0 2.4 1.97 4.35 4.4 4.35h4.33a.8.8 0 0 0 .8-.8V10.7z" />
+                            </svg>
                         </div>
                         <span class="connector-status-badge">
                             <span class="status-pulse-dot"></span> Coming Soon
@@ -754,7 +983,8 @@
                             <h4>Jira & Confluence</h4>
                             <span class="connector-category-tag">Developer</span>
                         </div>
-                        <p class="connector-desc">Automate sprint ticket grooming, search engineering specifications, and generate bug triage reports automatically.</p>
+                        <p class="connector-desc">Automate sprint ticket grooming, search engineering specifications,
+                            and generate bug triage reports automatically.</p>
                     </div>
                     <div class="connector-footer">
                         <button class="connector-action-btn" data-tool="Jira & Confluence">
@@ -766,8 +996,11 @@
                 <!-- Linear -->
                 <div class="connector-card" data-category="developer" data-name="linear">
                     <div class="connector-card-header">
-                        <div class="connector-icon" style="background: linear-gradient(135deg, #5e6ad2, #39429e); color: #ffffff;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 3.5h17v17h-17zM6 6v12h12V6H6zm2 2h8v2H8V8zm0 3h8v2H8v-2zm0 3h5v2H8v-2z"/></svg>
+                        <div class="connector-icon"
+                            style="background: linear-gradient(135deg, #5e6ad2, #39429e); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3.5 3.5h17v17h-17zM6 6v12h12V6H6zm2 2h8v2H8V8zm0 3h8v2H8v-2zm0 3h5v2H8v-2z" />
+                            </svg>
                         </div>
                         <span class="connector-status-badge">
                             <span class="status-pulse-dot"></span> Coming Soon
@@ -778,7 +1011,8 @@
                             <h4>Linear</h4>
                             <span class="connector-category-tag">Developer</span>
                         </div>
-                        <p class="connector-desc">High-speed project management sync, milestone tracking, automated issue creation, and cycle velocity analytics.</p>
+                        <p class="connector-desc">High-speed project management sync, milestone tracking, automated
+                            issue creation, and cycle velocity analytics.</p>
                     </div>
                     <div class="connector-footer">
                         <button class="connector-action-btn" data-tool="Linear">
@@ -790,8 +1024,12 @@
                 <!-- Discord -->
                 <div class="connector-card" data-category="communication" data-name="discord">
                     <div class="connector-card-header">
-                        <div class="connector-icon" style="background: linear-gradient(135deg, #5865F2, #3c45a5); color: #ffffff;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                        <div class="connector-icon"
+                            style="background: linear-gradient(135deg, #5865F2, #3c45a5); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                            </svg>
                         </div>
                         <span class="connector-status-badge">
                             <span class="status-pulse-dot"></span> Coming Soon
@@ -802,7 +1040,8 @@
                             <h4>Discord</h4>
                             <span class="connector-category-tag">Communication</span>
                         </div>
-                        <p class="connector-desc">Integrate AI agent bots into Discord servers for community helpdesk, real-time question answering, and moderation.</p>
+                        <p class="connector-desc">Integrate AI agent bots into Discord servers for community helpdesk,
+                            real-time question answering, and moderation.</p>
                     </div>
                     <div class="connector-footer">
                         <button class="connector-action-btn" data-tool="Discord">
@@ -814,8 +1053,13 @@
                 <!-- Custom Webhooks / REST API -->
                 <div class="connector-card" data-category="developer" data-name="webhook api custom http">
                     <div class="connector-card-header">
-                        <div class="connector-icon" style="background: linear-gradient(135deg, #FF6B35, #E55827); color: #ffffff;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        <div class="connector-icon"
+                            style="background: linear-gradient(135deg, #FF6B35, #E55827); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                            </svg>
                         </div>
                         <span class="connector-status-badge">
                             <span class="status-pulse-dot"></span> Coming Soon
@@ -826,7 +1070,8 @@
                             <h4>Custom Webhooks & REST</h4>
                             <span class="connector-category-tag">Developer</span>
                         </div>
-                        <p class="connector-desc">Plug in any internal microservice, custom API endpoint, or event webhook directly as an autonomous agent callable tool.</p>
+                        <p class="connector-desc">Plug in any internal microservice, custom API endpoint, or event
+                            webhook directly as an autonomous agent callable tool.</p>
                     </div>
                     <div class="connector-footer">
                         <button class="connector-action-btn" data-tool="Custom Webhooks">
@@ -844,8 +1089,11 @@
             <div class="ocr-header">
                 <div class="ocr-header-text">
                     <span class="ocr-eyebrow">Vision AI & Deep Learning</span>
-                    <h2 id="ocr-title">EasyOCR Image Text Extractor</h2>
-                    <p class="ocr-subtitle">Upload any document screenshot, photo, receipt, or image to extract structured text using EasyOCR models.</p>
+                    <h2 id="ocr-title">EasyOCR Image Text Extractor <span class="sidebar-badge-ocr"
+                            style="display: inline-block; vertical-align: middle; margin-left: 8px; font-size: 0.68rem; padding: 2px 8px;">Beta</span>
+                    </h2>
+                    <p class="ocr-subtitle">Upload any document screenshot, photo, receipt, or image to extract
+                        structured text using EasyOCR models.</p>
                 </div>
                 <button class="ocr-close" id="ocr-close" aria-label="Close OCR" title="Close">&times;</button>
             </div>
@@ -854,13 +1102,15 @@
                 <!-- Left: Upload & Preview Area -->
                 <div class="ocr-left-col">
                     <div class="ocr-dropzone" id="ocr-dropzone">
-                        <input type="file" id="ocr-file-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/bmp" hidden>
+                        <input type="file" id="ocr-file-input"
+                            accept="image/png,image/jpeg,image/jpg,image/webp,image/bmp" hidden>
                         <div class="dropzone-empty" id="ocr-dropzone-empty">
                             <div class="dropzone-icon">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                                    <polyline points="21 15 16 10 5 21"/>
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                    <polyline points="21 15 16 10 5 21" />
                                 </svg>
                             </div>
                             <h4>Drag & drop an image here</h4>
@@ -872,7 +1122,8 @@
                             <img id="ocr-preview-img" src="" alt="Selected image preview">
                             <div class="preview-overlay">
                                 <span class="preview-filename" id="ocr-preview-filename">image.png</span>
-                                <button type="button" class="preview-remove-btn" id="ocr-preview-remove" title="Remove image">&times;</button>
+                                <button type="button" class="preview-remove-btn" id="ocr-preview-remove"
+                                    title="Remove image">&times;</button>
                             </div>
                         </div>
                     </div>
@@ -912,16 +1163,26 @@
                     </div>
 
                     <div class="ocr-result-box">
-                        <textarea id="ocr-result-text" placeholder="Extracted text will appear here with line breaks and formatting after running EasyOCR..." readonly></textarea>
+                        <textarea id="ocr-result-text"
+                            placeholder="Extracted text will appear here with line breaks and formatting after running EasyOCR..."
+                            readonly></textarea>
                     </div>
 
                     <div class="ocr-actions-bar">
                         <button type="button" class="ocr-action-btn" id="ocr-copy-btn" disabled>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
                             <span>Copy Text</span>
                         </button>
                         <button type="button" class="ocr-action-btn primary" id="ocr-send-chat-btn" disabled>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13" />
+                                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                            </svg>
                             <span>Insert into Chat</span>
                         </button>
                     </div>
@@ -930,290 +1191,7 @@
         </section>
     </div>
 
-    <!-- Line-by-Line Code Visualizer & Step-Through Explainer Dialog -->
-    <div class="codevis-backdrop" id="codevis-backdrop" hidden>
-        <section class="codevis-dialog" role="dialog" aria-modal="true" aria-labelledby="codevis-title">
-            <!-- Header -->
-            <div class="codevis-header">
-                <div class="codevis-header-left">
-                    <div class="codevis-icon-wrap">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="4 17 10 11 4 5"/>
-                            <line x1="12" y1="19" x2="20" y2="19"/>
-                        </svg>
-                    </div>
-                    <div class="codevis-header-text">
-                        <div class="codevis-title-row">
-                            <h2 id="codevis-title">Line-by-Line Code Visualizer & Explainer</h2>
-                            <span class="codevis-status-badge">
-                                <span class="status-pulse-dot green"></span> Live Execution Stepper
-                            </span>
-                        </div>
-                        <p class="codevis-subtitle">Paste any program to step through line-by-line with active execution pointers, live variable memory watcher, and deep explanations.</p>
-                    </div>
-                </div>
 
-                <div class="codevis-header-actions">
-                    <!-- Language Selection -->
-                    <div class="codevis-select-wrap">
-                        <label for="codevis-lang-select" class="codevis-field-label">Language:</label>
-                        <select id="codevis-lang-select" class="codevis-select">
-                            <option value="python">🐍 Python</option>
-                            <option value="javascript">⚡ JavaScript / TS</option>
-                            <option value="cpp">⚙️ C / C++</option>
-                            <option value="java">☕ Java</option>
-                            <option value="go">🐹 Go</option>
-                            <option value="rust">🦀 Rust</option>
-                            <option value="sql">🗄️ SQL</option>
-                        </select>
-                    </div>
-
-                    <!-- Presets / Algorithms -->
-                    <div class="codevis-select-wrap">
-                        <label for="codevis-preset-select" class="codevis-field-label">Presets:</label>
-                        <select id="codevis-preset-select" class="codevis-select">
-                            <option value="binary_search">🔍 Binary Search Algorithm</option>
-                            <option value="fibonacci">🧮 Fibonacci (Recursion & Memo)</option>
-                            <option value="bubble_sort">📊 Bubble Sort & Swaps</option>
-                            <option value="two_sum">🎯 Two Pointer Target Sum</option>
-                            <option value="linked_list">🔗 Reverse Linked List</option>
-                            <option value="tree_dfs">🌲 Binary Tree DFS Traversal</option>
-                            <option value="custom">📝 Custom / Paste Your Code</option>
-                        </select>
-                    </div>
-
-                    <button class="codevis-close" id="codevis-close" aria-label="Close Code Visualizer" title="Close">&times;</button>
-                </div>
-            </div>
-
-            <!-- Toolbar with Stepper Controls & Actions -->
-            <div class="codevis-toolbar">
-                <div class="codevis-toolbar-left">
-                    <!-- Main Analyze CTA Button -->
-                    <button type="button" class="codevis-btn primary pulse-on-hover" id="codevis-analyze-btn" title="Analyze & Step Through Line-by-Line">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        <span>Visualize Line-by-Line</span>
-                    </button>
-
-                    <!-- Stepper Playback Controls -->
-                    <div class="codevis-stepper-controls" id="codevis-stepper-controls">
-                        <button type="button" class="stepper-btn" id="stepper-first-btn" title="First Step (Home)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="11 19 2 12 11 5 11 19"/><polygon points="22 19 13 12 22 5 22 19"/></svg>
-                        </button>
-                        <button type="button" class="stepper-btn" id="stepper-prev-btn" title="Previous Line Step (Left Arrow)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/></svg>
-                            <span>Prev</span>
-                        </button>
-                        <button type="button" class="stepper-btn play-btn" id="stepper-play-btn" title="Auto Step Play/Pause (Space)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" id="stepper-play-icon"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                            <span id="stepper-play-text">Auto Play</span>
-                        </button>
-                        <button type="button" class="stepper-btn" id="stepper-next-btn" title="Next Line Step (Right Arrow)">
-                            <span>Next</span>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/></svg>
-                        </button>
-                        <button type="button" class="stepper-btn" id="stepper-last-btn" title="Last Step (End)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/></svg>
-                        </button>
-                        <button type="button" class="stepper-btn reset-btn" id="stepper-reset-btn" title="Reset to Beginning">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                        </button>
-                    </div>
-
-                    <!-- Step Speed Dropdown -->
-                    <div class="codevis-speed-wrap">
-                        <select id="codevis-speed-select" class="codevis-speed-select" title="Auto-play speed">
-                            <option value="1800">Speed: 1x (1.8s)</option>
-                            <option value="1000">Speed: 1.5x (1.0s)</option>
-                            <option value="600">Speed: 2.5x (0.6s)</option>
-                            <option value="2800">Speed: 0.5x (2.8s)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="codevis-toolbar-right">
-                    <!-- Mode Tabs -->
-                    <div class="codevis-view-tabs" id="codevis-view-tabs">
-                        <button class="view-tab-btn active" data-view="stepper">
-                            <span>👣 Stepper & Memory</span>
-                        </button>
-                        <button class="view-tab-btn" data-view="full-breakdown">
-                            <span>📑 Full Line Breakdown</span>
-                        </button>
-                    </div>
-
-                    <button type="button" class="codevis-btn" id="codevis-copy-btn" title="Copy Source Code">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                        <span>Copy</span>
-                    </button>
-                    <button type="button" class="codevis-btn" id="codevis-insert-chat-btn" title="Send Code & Explanation to Chat">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                        <span>Insert to Chat</span>
-                    </button>
-                    <button type="button" class="codevis-btn danger" id="codevis-clear-btn" title="Clear Code">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Main Split Body -->
-            <div class="codevis-body-layout">
-                <!-- Left Pane: Code Editor & Interactive Line Highlighting -->
-                <div class="codevis-editor-pane">
-                    <div class="codevis-pane-header">
-                        <div class="pane-header-title">
-                            <span class="editor-dot red"></span>
-                            <span class="editor-dot yellow"></span>
-                            <span class="editor-dot green"></span>
-                            <span class="pane-label" id="codevis-editor-label">Program Source (Paste or Type Below)</span>
-                        </div>
-                        <div class="editor-mode-toggle">
-                            <button type="button" class="mode-pill-btn active" id="codevis-mode-edit-btn">✏️ Edit Mode</button>
-                            <button type="button" class="mode-pill-btn" id="codevis-mode-trace-btn">👁️ Trace Highlighting</button>
-                        </div>
-                    </div>
-
-                    <!-- Dual Layer: Editable Textarea & Rendered Interactive Trace View -->
-                    <div class="codevis-editor-container" id="codevis-editor-container">
-                        <!-- Standard Editable Textarea -->
-                        <div class="codevis-editor-wrap" id="codevis-raw-editor-wrap">
-                            <div class="codevis-line-numbers" id="codevis-line-numbers">1</div>
-                            <textarea id="codevis-editor-textarea" spellcheck="false" placeholder="Write or paste your code here (Python, JavaScript, C++, Java, etc.)...&#10;&#10;Click 'Visualize Line-by-Line' or press Ctrl+Enter to generate the interactive execution breakdown."></textarea>
-                        </div>
-
-                        <!-- Interactive Trace Highlight View (Line rows with active pointer) -->
-                        <div class="codevis-trace-wrap" id="codevis-trace-wrap" style="display: none;">
-                            <div class="trace-lines-list" id="codevis-trace-lines-list">
-                                <!-- Generated line rows with execution arrow -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="codevis-pane-footer">
-                        <div class="footer-stats">
-                            <span id="codevis-line-count">1 line</span>
-                            <span class="stat-divider">•</span>
-                            <span id="codevis-char-count">0 chars</span>
-                        </div>
-                        <div class="footer-tip">
-                            💡 Tip: Click any line in Trace mode to inspect its step!
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Pane: Live Step-by-Step Explanation & Variable Watcher -->
-                <div class="codevis-explanation-pane" id="codevis-explanation-pane">
-                    <!-- Top Step Progress Card -->
-                    <div class="step-progress-banner">
-                        <div class="step-badge-row">
-                            <div class="current-step-badge" id="stepper-badge">
-                                <span class="step-dot pulse"></span>
-                                <span id="stepper-badge-text">Step 1 of 1</span>
-                            </div>
-                            <div class="current-line-badge" id="stepper-line-badge">
-                                <span>Line 1</span>
-                            </div>
-                            <div class="algo-complexity-tags" id="algo-complexity-tags">
-                                <span class="complexity-pill time" id="algo-time-complexity">⏱ Time: O(N)</span>
-                                <span class="complexity-pill space" id="algo-space-complexity">💾 Space: O(1)</span>
-                            </div>
-                        </div>
-                        <div class="step-progress-bar-wrap">
-                            <div class="step-progress-bar-fill" id="stepper-progress-fill" style="width: 10%;"></div>
-                        </div>
-                    </div>
-
-                    <!-- View 1: Active Step Deep Dive & Memory Watcher -->
-                    <div class="codevis-view-content" id="codevis-stepper-view">
-                        <!-- Active Line Spotlight Box -->
-                        <div class="active-line-spotlight-card">
-                            <div class="spotlight-header">
-                                <span class="spotlight-label">⚡ Currently Executing Line</span>
-                                <span class="spotlight-line-no" id="spotlight-line-no">Line 1</span>
-                            </div>
-                            <div class="spotlight-code-snippet" id="spotlight-code-snippet">
-                                <code>// Click "Visualize Line-by-Line" to start</code>
-                            </div>
-                        </div>
-
-                        <!-- Deep Explanations Accordion Cards -->
-                        <div class="step-cards-container">
-                            <!-- Plain English Breakdown -->
-                            <div class="step-info-card plain-english">
-                                <div class="card-title-row">
-                                    <span class="card-icon">🎯</span>
-                                    <h4>What This Line Does</h4>
-                                </div>
-                                <div class="card-content" id="step-explanation-text">
-                                    Paste your program on the left and click <strong>"Visualize Line-by-Line"</strong>. Antigravity will trace every execution step, variable modification, and runtime mechanic.
-                                </div>
-                            </div>
-
-                            <!-- Under the Hood & Memory Mechanics -->
-                            <div class="step-info-card mechanics">
-                                <div class="card-title-row">
-                                    <span class="card-icon">⚙️</span>
-                                    <h4>Under the Hood Mechanics</h4>
-                                </div>
-                                <div class="card-content" id="step-mechanics-text">
-                                    Evaluates expressions, allocates memory pointers, checks loop bounds, or pushes/pops function call frames.
-                                </div>
-                            </div>
-
-                            <!-- Variable & Memory Watcher Table -->
-                            <div class="step-info-card memory-watcher">
-                                <div class="card-title-row">
-                                    <span class="card-icon">📊</span>
-                                    <h4>Live Variable Watcher & Memory State</h4>
-                                    <span class="memory-count-badge" id="memory-count-badge">0 variables</span>
-                                </div>
-                                <div class="variables-table-wrap">
-                                    <div class="variables-grid" id="step-variables-grid">
-                                        <div class="var-empty-state">No variables initialized yet on this line.</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Call Stack & Frame Trace -->
-                            <div class="step-info-card call-stack">
-                                <div class="card-title-row">
-                                    <span class="card-icon">📚</span>
-                                    <h4>Call Stack Frame</h4>
-                                </div>
-                                <div class="call-stack-list" id="step-call-stack-list">
-                                    <span class="stack-frame-pill active">&lt;global scope&gt;</span>
-                                </div>
-                            </div>
-
-                            <!-- Edge Cases & Gotchas -->
-                            <div class="step-info-card edge-cases" id="step-edge-cases-card">
-                                <div class="card-title-row">
-                                    <span class="card-icon">⚠️</span>
-                                    <h4>Edge Cases & Pitfalls</h4>
-                                </div>
-                                <div class="card-content" id="step-edge-cases-text">
-                                    Watch out for boundary values, empty collections, or type mismatches.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- View 2: Full Program Line-by-Line Breakdown Table -->
-                    <div class="codevis-view-content" id="codevis-full-breakdown-view" style="display: none;">
-                        <div class="full-breakdown-header">
-                            <div class="overview-box" id="full-breakdown-overview">
-                                <h3>Program Algorithmic Summary</h3>
-                                <p id="full-overview-text">Run visualization to generate full line-by-line breakdown.</p>
-                            </div>
-                        </div>
-                        <div class="full-lines-accordion" id="full-lines-accordion">
-                            <!-- Dynamically populated line cards -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
 
 
     <!-- Floating Toast Notification -->
@@ -1223,4 +1201,5 @@
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>

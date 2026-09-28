@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation | Multi-Agent Orchestration System</title>
+    <meta name="description"
+        content="Comprehensive developer documentation for the Multi-Agent System: LangGraph Workflows, Dynamic Intent Routing, RAG Knowledge Base, Vision OCR, and REST APIs.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Mermaid for Architecture Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { darkMode: true, primaryColor: '#FF6B35' } });
+    </script>
+    <link rel="stylesheet" href="docs.css">
+</head>
+
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="docs-navbar">
+        <div class="docs-nav-left">
+            <a href="index.html" class="docs-brand">
+                <div class="docs-brand-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                </div>
+                <span>Multi-Agent System</span>
+                <span class="docs-version-tag">v1.2.0 Docs</span>
+            </a>
+
+            <div class="docs-search-bar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" placeholder="Search documentation, routes..." class="docs-search-input"
+                    id="docs-search-input">
+                <kbd class="docs-search-kbd">Ctrl K</kbd>
+            </div>
+        </div>
+
+        <div class="docs-nav-right">
+            <a href="app.html" class="docs-nav-btn primary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                </svg>
+                Open Workspace
+            </a>
+            <a href="index.html" class="docs-nav-btn">Home</a>
+            <a href="http://localhost:8990/docs" target="_blank" class="docs-nav-btn" title="Open Interactive FastAPI Swagger UI">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                Swagger UI
+            </a>
+            <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle Theme" title="Toggle Light/Dark Theme">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Docs Layout -->
+    <div class="docs-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="docs-sidebar">
+            <div class="docs-sidebar-group">
+                <div class="docs-sidebar-title">Getting Started</div>
+                <ul class="docs-sidebar-list">
+                    <li><a href="#overview" class="docs-sidebar-link active">Overview & Intro</a></li>
+                    <li><a href="#quickstart" class="docs-sidebar-link">Quickstart & Setup</a></li>
+                    <li><a href="#architecture" class="docs-sidebar-link">System Architecture</a></li>
+                </ul>
+            </div>
+
+            <div class="docs-sidebar-group">
+                <div class="docs-sidebar-title">Core Modules</div>
+                <ul class="docs-sidebar-list">
+                    <li><a href="#langgraph" class="docs-sidebar-link">LangGraph Engine</a></li>
+                    <li><a href="#router" class="docs-sidebar-link">Intent Router</a></li>
+                    <li><a href="#rag" class="docs-sidebar-link">RAG & Vector DB</a></li>
+                    <li><a href="#ocr" class="docs-sidebar-link">Vision OCR Engine <span class="badge-method beta">Beta</span></a></li>
+                    <li><a href="#memory" class="docs-sidebar-link">State & MongoDB</a></li>
+                </ul>
+            </div>
+
+            <div class="docs-sidebar-group">
+                <div class="docs-sidebar-title">API Reference</div>
+                <ul class="docs-sidebar-list">
+                    <li><a href="#api-chat" class="docs-sidebar-link"><span class="badge-method post">POST</span> /chat</a></li>
+                    <li><a href="#api-router" class="docs-sidebar-link"><span class="badge-method post">POST</span> /router/execute</a></li>
+                    <li><a href="#api-langgraph" class="docs-sidebar-link"><span class="badge-method post">POST</span> /langgraph/chat</a></li>
+                    <li><a href="#api-rag" class="docs-sidebar-link"><span class="badge-method post">POST</span> /rag/query</a></li>
+                    <li><a href="#api-upload" class="docs-sidebar-link"><span class="badge-method post">POST</span> /upload</a></li>
+                    <li><a href="#api-ocr" class="docs-sidebar-link"><span class="badge-method post">POST</span> /ocr/extract</a></li>
+                    <li><a href="#api-conversations" class="docs-sidebar-link"><span class="badge-method get">GET</span> /conversations</a></li>
+                    <li><a href="#api-health" class="docs-sidebar-link"><span class="badge-method get">GET</span> /health</a></li>
+                </ul>
+            </div>
+
+            <div class="docs-sidebar-group">
+                <div class="docs-sidebar-title">Developer Tools</div>
+                <ul class="docs-sidebar-list">
+                    <li><a href="#api-tester" class="docs-sidebar-link">Live API Tester</a></li>
+                    <li><a href="#sdks" class="docs-sidebar-link">Client Code SDKs</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Center Content -->
+        <main class="docs-content">
+            <!-- Section 1: Overview -->
+            <section class="docs-section" id="overview">
+                <h1>Multi-Agent Orchestration Platform</h1>
+                <p class="docs-lead">
+                    An enterprise-grade, stateful Multi-Agent AI system powered by <strong>LangGraph</strong>, 
+                    <strong>Google Gemini / LangChain LLMs</strong>, <strong>Chroma Vector DB</strong>, and <strong>EasyOCR Deep Learning</strong>.
+                </p>
+
+                <div class="docs-callout tip">
+                    <div class="docs-callout-icon">💡</div>
+                    <div class="docs-callout-content">
+                        <h4>Production Ready Architecture</h4>
+                        <p>This backend orchestrates independent specialized agents (Coder, Researcher, RAG Specialist, Vision Inspector, Math & Logic) behind a unified intent classification router with streaming response capabilities.</p>
+                    </div>
+                </div>
+
+                <div class="docs-grid-2">
+                    <div class="docs-card">
+                        <div class="docs-card-icon">⚡</div>
+                        <h3>LangGraph State Machine</h3>
+                        <p>Deterministic cyclical and branching agent graphs with thread checkpoints, memory rewind, and Human-In-The-Loop support.</p>
+                    </div>
+                    <div class="docs-card">
+                        <div class="docs-card-icon">🧠</div>
+                        <h3>Intelligent Intent Router</h3>
+                        <p>Zero-latency semantic dispatch classifying queries into Math, Coding, RAG search, Vision OCR, or General reasoning.</p>
+                    </div>
+                    <div class="docs-card">
+                        <div class="docs-card-icon">📚</div>
+                        <h3>Contextual RAG Pipeline</h3>
+                        <p>Chunking, embedding, and vector storage for uploaded PDFs and documentation with citations and score filtering.</p>
+                    </div>
+                    <div class="docs-card">
+                        <div class="docs-card-icon">👁️</div>
+                        <h3>Deep Learning Vision OCR</h3>
+                        <p>Multi-language EasyOCR inference for extracting text from document scans, receipts, handwriting, and photos with confidence scoring.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Quickstart -->
+            <section class="docs-section" id="quickstart">
+                <h2>Quickstart & Setup</h2>
+                <p>Get the backend and frontend up and running locally in under 3 minutes.</p>
+
+                <h3>1. Environment Configuration</h3>
+                <p>Create a <code>.env</code> file in the <code>backend/</code> directory:</p>
+
+                <div class="docs-code-card">
+                    <div class="docs-code-header">
+                        <span class="param-type">backend/.env</span>
+                        <button class="docs-copy-btn" data-target="code-env">Copy</button>
+                    </div>
+                    <pre class="docs-code-block" id="code-env">
+PROJECT_NAME="Multi-Agent System"
+VERSION="1.2.0"
+API_V1_STR="/api/v1"
+
+# LLM Providers
+GOOGLE_API_KEY="your-gemini-api-key"
+OPENAI_API_KEY="your-openai-api-key"
+
+# Database
+MONGO_URI="mongodb://localhost:27017/multiagent"
+CHROMA_PERSIST_DIR="./chroma_db"
+                    </pre>
+                </div>
+
+                <h3>2. Run Backend & Frontend</h3>
+                <div class="docs-code-card">
+                    <div class="docs-code-header">
+                        <div class="docs-code-tabs">
+                            <button class="docs-code-tab active">PowerShell / Windows</button>
+                            <button class="docs-code-tab">Linux / macOS</button>
+                        </div>
+                        <button class="docs-copy-btn" data-target="code-run">Copy</button>
+                    </div>
+                    <pre class="docs-code-block" id="code-run">
+# 1. Start FastAPI Backend (Port 8990)
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python server.py
+
+# 2. Start Frontend Dev Server (Port 5173)
+cd ../frontend
+npm install
+npm run dev
+                    </pre>
+                </div>
+            </section>
+
+            <!-- Section 3: Architecture -->
+            <section class="docs-section" id="architecture">
+                <h2>System Architecture</h2>
+                <p>The system utilizes a hierarchical supervisor-worker pattern combined with directed cyclic graphs (DAGs) in LangGraph.</p>
+
+                <div class="docs-diagram-card">
+                    <pre class="mermaid">
+flowchart TD
+    User([User Request]) --> Router{Semantic Intent Router}
+    Router -->|Code Generation| AgentCode[Coder Agent]
+    Router -->|Document Search| AgentRAG[RAG Retrieval Agent]
+    Router -->|Vision / Image| AgentOCR[EasyOCR Vision Agent]
+    Router -->|Complex Workflow| LangGraphWorkflow[LangGraph Supervisor Graph]
+    
+    AgentRAG --> ChromaDB[(Chroma Vector DB)]
+    AgentOCR --> EasyOCREngine[PyTorch Vision Engine]
+    LangGraphWorkflow --> MongoDB[(MongoDB Session State)]
+    
+    AgentCode --> StreamEngine[SSE Streaming Response]
+    AgentRAG --> StreamEngine
+    AgentOCR --> StreamEngine
+    LangGraphWorkflow --> StreamEngine
+    StreamEngine --> WebApp([Frontend Workspace UI])
+                    </pre>
+                </div>
+            </section>
+
+            <!-- Section 4: LangGraph Engine -->
+            <section class="docs-section" id="langgraph">
+                <h2>LangGraph Workflow Engine</h2>
+                <p>The LangGraph module provides stateful orchestration with persistent checkpoints stored in MongoDB. It handles multi-step reasoning, evaluator-optimizer loops, and tool execution.</p>
+
+                <h3>Core State Schema</h3>
+                <div class="docs-code-card">
+                    <div class="docs-code-header">
+                        <span class="param-type">Python TypedDict State</span>
+                        <button class="docs-copy-btn" data-target="code-state">Copy</button>
+                    </div>
+                    <pre class="docs-code-block" id="code-state">
+from typing import TypedDict, Annotated, Sequence
+from langchain_core.messages import BaseMessage
+import operator
+
+class AgentGraphState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], operator.add]
+    intent: str
+    context_documents: list[str]
+    current_agent: str
+    iterations: int
+                    </pre>
+                </div>
+            </section>
+
+            <!-- Section 5: Intent Router -->
+            <section class="docs-section" id="router">
+                <h2>Intelligent Intent Router</h2>
+                <p>The Semantic Router analyzes incoming user queries using lightweight embedding classification and few-shot reasoning to delegate to the best specialized subagent.</p>
+                <div class="docs-table-wrap">
+                    <table class="docs-table">
+                        <thead>
+                            <tr>
+                                <th>Intent Class</th>
+                                <th>Target Subagent</th>
+                                <th>Specialized Tools</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="param-name">code</span></td>
+                                <td>Coding & Debugging Agent</td>
+                                <td>Code generation, Refactoring, Linter</td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">rag</span></td>
+                                <td>Document Knowledge Agent</td>
+                                <td>Vector Similarity, Chunk Summarization</td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">vision_ocr</span></td>
+                                <td>Vision AI & OCR Agent</td>
+                                <td>EasyOCR, Bounding Box Detectors</td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">web_search</span></td>
+                                <td>Live Web Researcher</td>
+                                <td>Search API, Real-time Information</td>
+                            </tr>
+                            <tr>
+                                <td><span class="param-name">general</span></td>
+                                <td>Conversational Supervisor</td>
+                                <td>Context Memory, Persona Styling</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Section 6: RAG Engine -->
+            <section class="docs-section" id="rag">
+                <h2>RAG & Vector Knowledge Base</h2>
+                <p>Retrieval-Augmented Generation ingests PDFs, parses structured text, generates dense vector embeddings using Google Generative AI / HuggingFace, and performs semantic retrieval.</p>
+            </section>
+
+            <!-- Section 7: Vision OCR Engine -->
+            <section class="docs-section" id="ocr">
+                <h2>Vision OCR Deep Learning Engine <span class="badge-method beta">Beta</span></h2>
+                <p>The OCR subsystem provides automated optical character recognition utilizing PyTorch and EasyOCR across 80+ supported languages.</p>
+                <div class="docs-callout info">
+                    <div class="docs-callout-icon">ℹ️</div>
+                    <div class="docs-callout-content">
+                        <h4>GPU & CPU Acceleration</h4>
+                        <p>EasyOCR auto-detects CUDA availability for GPU hardware acceleration while falling back gracefully to multi-threaded CPU inference.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 8: Memory & State -->
+            <section class="docs-section" id="memory">
+                <h2>State & MongoDB Persistence</h2>
+                <p>All conversation threads, token counts, and LangGraph checkpoints persist automatically in MongoDB, enabling resuming chats across browser restarts.</p>
+            </section>
+
+            <!-- Section 9: API Reference -->
+            <section class="docs-section" id="api-reference">
+                <h2>REST API Reference</h2>
+
+                <!-- Route 1: Chat -->
+                <div class="docs-section" id="api-chat">
+                    <h3><code>POST</code> /api/v1/chat</h3>
+                    <p>Send a message to the Multi-Agent router with persistent conversation session tracking.</p>
+
+                    <div class="docs-table-wrap">
+                        <table class="docs-table">
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Type</th>
+                                    <th>Required</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="param-name">message</span></td>
+                                    <td><span class="param-type">string</span></td>
+                                    <td><span class="param-required">Yes</span></td>
+                                    <td>The user message or query.</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="param-name">conversation_id</span></td>
+                                    <td><span class="param-type">string</span></td>
+                                    <td><span class="param-required">No</span></td>
+                                    <td>Unique session UUID. Auto-generated if omitted.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="docs-code-card">
+                        <div class="docs-code-header">
+                            <div class="docs-code-tabs">
+                                <button class="docs-code-tab active">cURL</button>
+                                <button class="docs-code-tab">Python</button>
+                                <button class="docs-code-tab">JavaScript</button>
+                            </div>
+                            <button class="docs-copy-btn" data-target="code-chat-example">Copy</button>
+                        </div>
+                        <pre class="docs-code-block" id="code-chat-example">
+curl -X POST "http://localhost:8990/api/v1/chat" \
+     -H "Content-Type: application/json" \
+     -d '{"message": "Explain quantum computing in simple terms", "conversation_id": "test-123"}'
+                        </pre>
+                    </div>
+                </div>
+
+                <!-- Route 2: Router -->
+                <div class="docs-section" id="api-router">
+                    <h3><code>POST</code> /api/v1/router/execute</h3>
+                    <p>Directly query the Semantic Intent Classifier without executing full agent loops.</p>
+                </div>
+
+                <!-- Route 3: LangGraph -->
+                <div class="docs-section" id="api-langgraph">
+                    <h3><code>POST</code> /api/v1/langgraph/chat</h3>
+                    <p>Execute structured cyclic graph workflows with intermediate state tracking.</p>
+                </div>
+
+                <!-- Route 4: RAG Query -->
+                <div class="docs-section" id="api-rag">
+                    <h3><code>POST</code> /api/v1/rag/query</h3>
+                    <p>Semantic vector search across indexed documents.</p>
+                </div>
+
+                <!-- Route 5: OCR Extract -->
+                <div class="docs-section" id="api-ocr">
+                    <h3><code>POST</code> /api/v1/ocr/extract</h3>
+                    <p>Upload a multipart image file (PNG, JPG, WEBP) to receive extracted text and confidence scores.</p>
+                </div>
+
+                <!-- Route 6: Health -->
+                <div class="docs-section" id="api-health">
+                    <h3><code>GET</code> /health</h3>
+                    <p>Diagnostics and readiness probe for MongoDB connection and service health.</p>
+                </div>
+            </section>
+
+            <!-- Section 10: Interactive API Tester -->
+            <section class="docs-section" id="api-tester">
+                <h2>Interactive API Tester</h2>
+                <p>Test live backend endpoints directly from your browser.</p>
+
+                <div class="api-tester-card">
+                    <div class="api-tester-header">
+                        <h3>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" stroke-width="2">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                            Live Endpoint Explorer
+                        </h3>
+                        <select id="api-tester-endpoint" class="api-tester-method">
+                            <option value="chat">POST /api/v1/chat</option>
+                            <option value="router">POST /api/v1/router/execute</option>
+                            <option value="langgraph">POST /api/v1/langgraph/chat</option>
+                            <option value="rag_query">POST /api/v1/rag/query</option>
+                            <option value="health">GET /health</option>
+                        </select>
+                    </div>
+
+                    <div class="api-tester-form">
+                        <div class="api-tester-url-row">
+                            <input type="text" id="api-tester-method" class="api-tester-method" value="POST" readonly style="width: 90px; text-align: center;">
+                            <input type="text" id="api-tester-url" class="api-tester-url" value="http://localhost:8990/api/v1/chat">
+                        </div>
+
+                        <textarea id="api-tester-body" class="api-tester-body-input" placeholder="Request JSON Body">{
+  "message": "How does the Multi-Agent router decide which agent to run?",
+  "conversation_id": "demo-session-1"
+}</textarea>
+
+                        <div class="api-tester-actions">
+                            <span class="param-type">Endpoint: Local FastAPI Server</span>
+                            <button id="api-send-btn" class="api-send-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                Send Request
+                            </button>
+                        </div>
+                    </div>
+
+                    <pre id="api-tester-response" class="api-tester-response">Click "Send Request" to test endpoint response...</pre>
+                </div>
+            </section>
+
+            <!-- Section 11: Client SDKs -->
+            <section class="docs-section" id="sdks">
+                <h2>Client SDKs & Integration</h2>
+
+                <h3>Python Integration</h3>
+                <div class="docs-code-card">
+                    <div class="docs-code-header">
+                        <span class="param-type">client.py</span>
+                        <button class="docs-copy-btn" data-target="code-sdk-py">Copy</button>
+                    </div>
+                    <pre class="docs-code-block" id="code-sdk-py">
+import requests
+
+BASE_URL = "http://localhost:8990/api/v1"
+
+def send_chat(message: str, session_id: str = "python-client"):
+    response = requests.post(
+        f"{BASE_URL}/chat",
+        json={"message": message, "conversation_id": session_id}
+    )
+    return response.json()
+
+if __name__ == "__main__":
+    res = send_chat("Generate a binary search algorithm in Python")
+    print(res["response"])
+                    </pre>
+                </div>
+            </section>
+        </main>
+
+        <!-- Table of Contents -->
+        <aside class="docs-toc">
+            <div class="docs-toc-title">On this page</div>
+            <ul class="docs-toc-list">
+                <li class="docs-toc-item"><a href="#overview" class="docs-toc-link active">Overview & Intro</a></li>
+                <li class="docs-toc-item"><a href="#quickstart" class="docs-toc-link">Quickstart & Setup</a></li>
+                <li class="docs-toc-item"><a href="#architecture" class="docs-toc-link">System Architecture</a></li>
+                <li class="docs-toc-item"><a href="#langgraph" class="docs-toc-link">LangGraph Engine</a></li>
+                <li class="docs-toc-item"><a href="#router" class="docs-toc-link">Intent Router</a></li>
+                <li class="docs-toc-item"><a href="#rag" class="docs-toc-link">RAG & Vector DB</a></li>
+                <li class="docs-toc-item"><a href="#ocr" class="docs-toc-link">Vision OCR Engine</a></li>
+                <li class="docs-toc-item"><a href="#memory" class="docs-toc-link">State & MongoDB</a></li>
+                <li class="docs-toc-item"><a href="#api-reference" class="docs-toc-link">REST API Reference</a></li>
+                <li class="docs-toc-item"><a href="#api-tester" class="docs-toc-link">Live API Tester</a></li>
+                <li class="docs-toc-item"><a href="#sdks" class="docs-toc-link">Client SDKs</a></li>
+            </ul>
+        </aside>
+    </div>
+
+    <script src="docs.js"></script>
+</body>
+
+</html>
