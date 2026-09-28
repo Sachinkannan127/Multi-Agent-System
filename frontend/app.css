@@ -3882,3 +3882,84 @@ body.dark .ocr-action-btn {
     background: #171722;
     border-color: #28283a;
 }
+
+/* ============================================
+   Clerk Auth Modal & User Widget Styles
+   ============================================ */
+.clerk-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: clerkFadeIn 0.22s ease both;
+}
+
+.clerk-modal-backdrop[hidden] {
+    display: none !important;
+}
+
+.clerk-modal-card {
+    position: relative;
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
+    border-radius: 24px;
+    padding: 20px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.55);
+    animation: clerkScaleUp 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+body.dark .clerk-modal-card {
+    background: #15151e;
+    border-color: #262635;
+}
+
+.clerk-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    color: var(--text-secondary, #8E8EA0);
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+    background: var(--bg-card, #ffffff);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 100;
+}
+
+body.dark .clerk-modal-close {
+    background: #1f1f2e;
+    color: #ECECEC;
+    border-color: #313145;
+}
+
+.clerk-modal-close:hover {
+    color: var(--orange-500, #FF6B35);
+    transform: scale(1.08);
+}
+
+@keyframes clerkFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes clerkScaleUp {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: scale(1); }
+}

@@ -2613,19 +2613,19 @@ body.dark .api-section {
 .tok-number { color: #79c0ff; }
 .tok-builtin { color: #d2a8ff; font-weight: 500; }
 
-/* Clerk Modal Card & Backdrop */
+/* Clerk Modal Card & Backdrop for Landing Page */
 .clerk-modal-backdrop {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 16px;
-    animation: fadeIn 0.2s ease both;
+    animation: fade-in 0.22s ease both;
 }
 
 .clerk-modal-backdrop[hidden] {
@@ -2634,35 +2634,56 @@ body.dark .api-section {
 
 .clerk-modal-card {
     position: relative;
-    background: var(--bg-card, #1c1917);
-    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
-    border-radius: 20px;
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
+    border-radius: 24px;
     padding: 24px;
-    max-width: 460px;
+    max-width: 480px;
     width: 100%;
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+    animation: scale-up 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+body.dark .clerk-modal-card {
+    background: #1c1917;
+    border-color: #383838;
 }
 
 .clerk-modal-close {
     position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 28px;
-    height: 28px;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.9rem;
-    color: var(--text-muted, #a8a29e);
+    font-size: 0.95rem;
+    color: var(--text-muted, #8E8EA0);
     border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
-    background: transparent;
+    background: var(--bg-card, #ffffff);
     cursor: pointer;
     transition: all 0.2s ease;
     z-index: 10;
 }
 
+body.dark .clerk-modal-close {
+    background: #282828;
+    color: #ECECEC;
+}
+
 .clerk-modal-close:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.1);
+    color: var(--orange-500, #D97706);
+    transform: scale(1.08);
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scale-up {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: scale(1); }
 }

@@ -149,39 +149,66 @@ async function refreshSessionToken() {
 
 async function initClerkAuth() {
     try {
-        let publishableKey = '';
+        let publishableKey = 'pk_test_c2hpbmluZy1saXphcmQtNTc4MC5jbGVyay5hY2NvdW50cy5kZXYk';
         try {
             const res = await fetch(`${API_V1}/auth/config`);
             if (res.ok) {
                 const cfg = await res.json();
-                publishableKey = cfg.publishable_key || '';
+                if (cfg.publishable_key) publishableKey = cfg.publishable_key;
             }
-        } catch { /* Fallback */ }
+        } catch { /* Fallback to default */ }
 
-        if (!publishableKey) {
-            publishableKey = 'pk_test_bW9yZS1naXJhZmZlLTQxLmNsZXJrLmFjY291bnRzLmRldiQ';
-        }
-
-        // Wait for Clerk SDK if loading
-        const getClerk = () => window.Clerk;
+        // Wait for Clerk SDK if still loading
         let attempts = 0;
-        while (!getClerk() && attempts < 25) {
-            await new Promise(r => setTimeout(r, 120));
+        while (!window.Clerk && attempts < 30) {
+            await new Promise(r => setTimeout(r, 100));
             attempts++;
         }
 
         if (window.Clerk) {
-            clerk = window.Clerk;
-            await clerk.load({
-                publishableKey: publishableKey
-            });
+            if (typeof window.Clerk === 'function') {
+                clerk = new window.Clerk(publishableKey);
+                await clerk.load();
+            } else if (typeof window.Clerk.load === 'function') {
+                clerk = window.Clerk;
+                await clerk.load({ publishableKey });
+            } else {
+                clerk = window.Clerk;
+            }
 
             updateAuthUI();
 
-            clerk.addListener(({ user }) => {
-                currentClerkUser = user;
-                updateAuthUI();
-            });
+            if (clerk.addListener) {
+                clerk.addListener(({ user }) => {
+                    currentClerkUser = user;
+                    updateAuthUI();
+                    const modalBackdrop = $('clerk-modal-backdrop');
+                    if (user && modalBackdrop) modalBackdrop.hidden = true;
+                });
+            }
+
+            // Prompt sign-in modal if not logged in and not explicitly in guest mode
+            const urlParams = new URLSearchParams(window.location.search);
+            if (!clerk.user && urlParams.get('guest') !== 'true') {
+                if (typeof clerk.openSignIn === 'function') {
+                    clerk.openSignIn({
+                        afterSignInUrl: window.location.origin + '/app.html',
+                        afterSignUpUrl: window.location.origin + '/app.html'
+                    });
+                } else {
+                    const modalBackdrop = $('clerk-modal-backdrop');
+                    const signInTarget = $('clerk-sign-in-target');
+                    if (modalBackdrop && signInTarget) {
+                        modalBackdrop.hidden = false;
+                        if (!signInTarget.hasChildNodes()) {
+                            clerk.mountSignIn(signInTarget, {
+                                afterSignInUrl: window.location.origin + '/app.html',
+                                afterSignUpUrl: window.location.origin + '/app.html'
+                            });
+                        }
+                    }
+                }
+            }
         }
     } catch (err) {
         console.warn('Clerk initialization notice:', err);
@@ -245,16 +272,22 @@ function setupAuthListeners() {
 
     const handleSignIn = () => {
         if (clerk) {
-            if (modalBackdrop && signInTarget) {
+            if (typeof clerk.openSignIn === 'function') {
+                clerk.openSignIn({
+                    afterSignInUrl: window.location.origin + '/app.html',
+                    afterSignUpUrl: window.location.origin + '/app.html'
+                });
+            } else if (modalBackdrop && signInTarget) {
                 modalBackdrop.hidden = false;
                 if (!signInTarget.hasChildNodes()) {
-                    clerk.mountSignIn(signInTarget);
+                    clerk.mountSignIn(signInTarget, {
+                        afterSignInUrl: window.location.origin + '/app.html',
+                        afterSignUpUrl: window.location.origin + '/app.html'
+                    });
                 }
-            } else {
-                clerk.openSignIn();
             }
         } else {
-            showToast('ℹ️ Clerk Auth is active. Set your publishable key in .env to connect live account.');
+            showToast('ℹ️ Clerk Auth is loading. Please check your network connection.');
         }
     };
 
@@ -266,12 +299,6 @@ function setupAuthListeners() {
     modalBackdrop?.addEventListener('click', (e) => {
         if (e.target === modalBackdrop) modalBackdrop.hidden = true;
     });
-
-    // Check if sign-in requested via URL parameter or prompt
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('signin') === 'true' && !clerk?.user) {
-        setTimeout(handleSignIn, 600);
-    }
 }
 
 function setupEventListeners() {
