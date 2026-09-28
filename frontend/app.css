@@ -364,21 +364,50 @@ textarea {
     gap: 9px;
     min-width: 0;
     flex: 1;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 10px;
+    transition: background var(--fast);
+}
+
+.profile-info-wrap:hover {
+    background: var(--bg-hover);
+}
+
+.profile-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.profile-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 5px;
+    border-radius: 6px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #10B981;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 .profile-avatar {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
     background: var(--gray-800);
     color: white;
-    font-size: 0.72rem;
+    font-size: 0.76rem;
     font-weight: 700;
     flex-shrink: 0;
     overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 
 .profile-avatar img {
@@ -395,7 +424,7 @@ textarea {
 }
 
 .profile-meta strong {
-    font-size: 0.76rem;
+    font-size: 0.78rem;
     font-weight: 600;
     color: var(--text-primary);
     white-space: nowrap;
@@ -410,6 +439,14 @@ textarea {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.profile-subtext {
+    margin-top: 2px;
+    font-size: 0.62rem;
+    font-weight: 500;
+    color: var(--orange-500);
+    letter-spacing: 0.02em;
 }
 
 .profile-actions {
@@ -437,48 +474,65 @@ textarea {
     border-color: var(--orange-500);
 }
 
-/* Topbar Auth Widget */
-.topbar-auth {
-    display: flex;
+.profile-signout-btn {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    border-radius: 8px;
+    color: var(--text-faint);
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all var(--fast);
 }
 
+.profile-signout-btn:hover {
+    color: #EF4444;
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+    transform: scale(1.05);
+}
+
+/* Topbar Sign In Button (shown only when guest) */
 .auth-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     height: 36px;
-    padding: 0 12px;
+    padding: 0 14px;
     border-radius: 10px;
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     font-weight: 600;
-    color: var(--orange-500);
-    border: 1px solid rgba(217, 119, 6, 0.35);
-    background: rgba(217, 119, 6, 0.08);
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--orange-500), var(--orange-400));
+    border: none;
+    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
     cursor: pointer;
     transition: all var(--fast);
 }
 
 .auth-btn:hover {
-    background: var(--orange-500);
+    background: linear-gradient(135deg, var(--orange-600), var(--orange-500));
     color: #ffffff;
-    border-color: var(--orange-500);
     transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(255, 107, 53, 0.4);
 }
 
 /* Clerk Modal Card & Backdrop */
 .clerk-modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    z-index: 999;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 99999;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 16px;
+    padding: 75px 16px 24px;
+    overflow-y: auto;
     animation: fade-in 0.2s ease both;
 }
 
@@ -2638,6 +2692,7 @@ body.dark .theme-toggle .icon-moon {
 }
 
 @media (max-width: 768px) {
+
     /* Off-canvas mobile drawer sidebar */
     .sidebar {
         position: fixed;
@@ -3881,85 +3936,4 @@ body.dark .ocr-result-box textarea {
 body.dark .ocr-action-btn {
     background: #171722;
     border-color: #28283a;
-}
-
-/* ============================================
-   Clerk Auth Modal & User Widget Styles
-   ============================================ */
-.clerk-modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.72);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    animation: clerkFadeIn 0.22s ease both;
-}
-
-.clerk-modal-backdrop[hidden] {
-    display: none !important;
-}
-
-.clerk-modal-card {
-    position: relative;
-    background: var(--bg-card, #ffffff);
-    border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
-    border-radius: 24px;
-    padding: 20px;
-    max-width: 480px;
-    width: 100%;
-    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.55);
-    animation: clerkScaleUp 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-body.dark .clerk-modal-card {
-    background: #15151e;
-    border-color: #262635;
-}
-
-.clerk-modal-close {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.95rem;
-    color: var(--text-secondary, #8E8EA0);
-    border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
-    background: var(--bg-card, #ffffff);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    z-index: 100;
-}
-
-body.dark .clerk-modal-close {
-    background: #1f1f2e;
-    color: #ECECEC;
-    border-color: #313145;
-}
-
-.clerk-modal-close:hover {
-    color: var(--orange-500, #FF6B35);
-    transform: scale(1.08);
-}
-
-@keyframes clerkFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes clerkScaleUp {
-    from { opacity: 0; transform: scale(0.94); }
-    to { opacity: 1; transform: scale(1); }
 }

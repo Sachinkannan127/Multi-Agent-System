@@ -201,9 +201,9 @@ document.addEventListener('DOMContentLoaded', () => {
         style.textContent = `@keyframes ripple { to { width:200px;height:200px;margin-top:-100px;margin-left:-100px;opacity:0; } }`;
         document.head.appendChild(style);
 
-        heroCta.addEventListener('click', function(e) {
+        heroCta.addEventListener('click', function (e) {
             const r = document.createElement('span');
-            r.style.cssText = `position:absolute;border-radius:50%;background:rgba(255,255,255,0.4);width:20px;height:20px;top:${e.offsetY-10}px;left:${e.offsetX-10}px;animation:ripple 0.6s ease-out forwards;pointer-events:none;`;
+            r.style.cssText = `position:absolute;border-radius:50%;background:rgba(255,255,255,0.4);width:20px;height:20px;top:${e.offsetY - 10}px;left:${e.offsetX - 10}px;animation:ripple 0.6s ease-out forwards;pointer-events:none;`;
             this.appendChild(r);
             setTimeout(() => r.remove(), 600);
         });
@@ -247,9 +247,36 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch { /* Fallback */ }
 
+        // Derive frontend API domain
+        let domain = 'shining-lizard-5780.clerk.accounts.dev';
+        try {
+            const parts = publishableKey.split('_');
+            if (parts.length >= 3) domain = atob(parts[2]).slice(0, -1);
+        } catch { /* Default */ }
+
+        // Ensure Clerk UI bundle is loaded
+        if (!window.__internal_ClerkUICtor) {
+            await new Promise((resolve) => {
+                const existing = document.querySelector('script[src*="@clerk/ui"]');
+                if (existing) {
+                    existing.addEventListener('load', resolve, { once: true });
+                    setTimeout(resolve, 2000);
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = `https://${domain}/npm/@clerk/ui@1/dist/ui.browser.js`;
+                script.async = true;
+                script.crossOrigin = 'anonymous';
+                script.onload = resolve;
+                script.onerror = resolve;
+                document.head.appendChild(script);
+                setTimeout(resolve, 3000);
+            });
+        }
+
         // Wait for Clerk SDK
         let attempts = 0;
-        while (!window.Clerk && attempts < 30) {
+        while (!window.Clerk && attempts < 40) {
             await new Promise(r => setTimeout(r, 100));
             attempts++;
         }
@@ -258,24 +285,27 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 if (typeof window.Clerk === 'function') {
                     clerkLanding = new window.Clerk(publishableKey);
-                    await clerkLanding.load();
-                } else if (typeof window.Clerk.load === 'function') {
-                    clerkLanding = window.Clerk;
-                    await clerkLanding.load({ publishableKey });
                 } else {
                     clerkLanding = window.Clerk;
                 }
 
-                if (clerkLanding.user) {
-                    const navCta = document.getElementById('nav-cta');
-                    const heroCta = document.getElementById('hero-cta');
-                    const navLogin = document.getElementById('nav-login');
-                    if (navCta) navCta.textContent = 'Go to Workspace →';
-                    if (navLogin) navLogin.textContent = 'Workspace →';
-                    if (heroCta) {
-                        const span = heroCta.querySelector('span');
-                        if (span) span.textContent = 'Open the workspace →';
-                    }
+                const loadOptions = {};
+                if (window.__internal_ClerkUICtor) {
+                    loadOptions.ui = { ClerkUI: window.__internal_ClerkUICtor };
+                }
+
+                await clerkLanding.load(loadOptions);
+
+                // Initial dynamic UI update
+                updateLandingAuthUI(clerkLanding.user);
+
+                // Real-time listener for live auth transitions (Sign In, Sign Out, Token Refresh)
+                if (typeof clerkLanding.addListener === 'function') {
+                    clerkLanding.addListener(({ user }) => {
+                        updateLandingAuthUI(user);
+                        const modalBackdrop = document.getElementById('clerk-modal-backdrop');
+                        if (user && modalBackdrop) modalBackdrop.hidden = true;
+                    });
                 }
             } catch (err) {
                 console.warn('Clerk landing notice:', err);
@@ -283,6 +313,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         setupAuthGateway();
+    }
+
+    function updateLandingAuthUI(user) {
+        const navCta = document.getElementById('nav-cta');
+        const heroCta = document.getElementById('hero-cta');
+        const navLoginBtn = document.getElementById('nav-login-btn');
+        const navLoginLegacy = document.getElementById('nav-login');
+        const navUserBtn = document.getElementById('nav-clerk-user-button');
+
+        if (user) {
+            const firstName = user.firstName || user.fullName || user.username || 'User';
+            if (navLoginBtn) navLoginBtn.style.display = 'none';
+            if (navLoginLegacy) navLoginLegacy.style.display = 'none';
+
+            if (navCta) {
+                navCta.textContent = 'Go to Workspace →';
+                navCta.href = 'app.html';
+            }
+
+            if (heroCta) {
+                const span = heroCta.querySelector('span');
+                if (span) span.textContent = `Open Workspace (${firstName}) →`;
+                heroCta.href = 'app.html';
+            }
+
+            if (clerkLanding && navUserBtn && !navUserBtn.hasChildNodes()) {
+                try {
+                    clerkLanding.mountUserButton(navUserBtn, { afterSignOutUrl: '/' });
+                } catch (err) {
+                    console.warn('mountUserButton notice:', err);
+                }
+            }
+        } else {
+            if (navLoginBtn) navLoginBtn.style.display = 'inline-flex';
+            if (navUserBtn) navUserBtn.innerHTML = '';
+
+            if (navCta) {
+                navCta.textContent = 'Get Started';
+                navCta.href = 'app.html';
+            }
+
+            if (heroCta) {
+                const span = heroCta.querySelector('span');
+                if (span) span.textContent = 'Open the workspace';
+                heroCta.href = 'app.html';
+            }
+        }
     }
 
     function setupAuthGateway() {
@@ -299,20 +376,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             e.preventDefault();
             if (clerkLanding) {
-                if (typeof clerkLanding.openSignIn === 'function') {
+                if (modalBackdrop && signInTarget) {
+                    modalBackdrop.hidden = false;
+                    if (!signInTarget.hasChildNodes()) {
+                        try {
+                            clerkLanding.mountSignIn(signInTarget, {
+                                afterSignInUrl: window.location.origin + '/app.html',
+                                afterSignUpUrl: window.location.origin + '/app.html',
+                            });
+                        } catch (mountErr) {
+                            console.warn('mountSignIn fallback:', mountErr);
+                            if (typeof clerkLanding.openSignIn === 'function') {
+                                clerkLanding.openSignIn();
+                            }
+                        }
+                    }
+                } else if (typeof clerkLanding.openSignIn === 'function') {
                     clerkLanding.openSignIn({
                         redirectUrl: window.location.origin + '/app.html',
                         afterSignInUrl: window.location.origin + '/app.html',
                         afterSignUpUrl: window.location.origin + '/app.html'
                     });
-                } else if (modalBackdrop && signInTarget) {
-                    modalBackdrop.hidden = false;
-                    if (!signInTarget.hasChildNodes()) {
-                        clerkLanding.mountSignIn(signInTarget, {
-                            afterSignInUrl: window.location.origin + '/app.html',
-                            afterSignUpUrl: window.location.origin + '/app.html',
-                        });
-                    }
                 }
             } else {
                 window.location.href = 'app.html';
@@ -321,11 +405,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const heroCtaBtn = document.getElementById('hero-cta');
         const navCtaBtn = document.getElementById('nav-cta');
-        const navLoginBtn = document.getElementById('nav-login');
+        const navLoginBtn = document.getElementById('nav-login-btn');
+        const navLoginLegacy = document.getElementById('nav-login');
 
         if (heroCtaBtn) heroCtaBtn.addEventListener('click', requireAuthForWorkspace);
         if (navCtaBtn) navCtaBtn.addEventListener('click', requireAuthForWorkspace);
         if (navLoginBtn) navLoginBtn.addEventListener('click', requireAuthForWorkspace);
+        if (navLoginLegacy) navLoginLegacy.addEventListener('click', requireAuthForWorkspace);
 
         if (modalClose) {
             modalClose.addEventListener('click', () => {

@@ -251,6 +251,71 @@ img {
     color: var(--orange-500);
 }
 
+.nav-login-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 18px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--gray-800);
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.15));
+    border-radius: var(--btn-radius, 10px);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.nav-login-btn:hover {
+    color: var(--orange-500);
+    border-color: var(--orange-500);
+    background: rgba(255, 107, 53, 0.06);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.18);
+}
+
+body.dark .nav-login-btn {
+    color: #e5e7eb;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+body.dark .nav-login-btn:hover {
+    color: #ffffff;
+    border-color: var(--orange-400);
+    background: rgba(255, 107, 53, 0.15);
+}
+
+.nav-user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: rgba(255, 107, 53, 0.08);
+    border: 1px solid rgba(255, 107, 53, 0.25);
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--orange-500);
+    transition: all var(--transition-fast);
+}
+
+.nav-user-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10B981;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+
+body.dark .nav-user-chip {
+    background: rgba(255, 107, 53, 0.12);
+    border-color: rgba(255, 107, 53, 0.35);
+    color: var(--orange-400);
+}
+
 .nav-cta {
     display: inline-flex;
     padding: 10px 24px;
@@ -2620,11 +2685,12 @@ body.dark .api-section {
     background: rgba(0, 0, 0, 0.65);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    z-index: 9999;
+    z-index: 99999;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 16px;
+    padding: 80px 16px 32px;
+    overflow-y: auto;
     animation: fade-in 0.22s ease both;
 }
 
