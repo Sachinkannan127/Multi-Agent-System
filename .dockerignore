@@ -1,0 +1,19 @@
+# Ignore local virtual environment and caches
+**/venv/
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache/
+.git/
+.gitignore
+.env
+backend/.env
+**/upload/*
+!**/upload/.gitkeep
+node_modules/
+**/node_modules/
+dist/
+.DS_Store
+*.md

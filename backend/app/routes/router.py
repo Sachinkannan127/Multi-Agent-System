@@ -99,3 +99,22 @@ def classify_prompt_intent(request: ClassifyPromptRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Intent classification failed: {str(e)}",
         )
+
+
+@router.post("/stream", summary="Smart Router Streaming (SSE)")
+async def smart_router_stream(request: RouterChatRequest):
+    """
+    Real-time SSE streaming endpoint.
+    Classifies intent, then streams LLM tokens live.
+    """
+    from fastapi.responses import StreamingResponse
+    return StreamingResponse(
+        orchestrator.stream_route_execution(
+            prompt=request.prompt,
+            provider=request.provider,
+            top_k_rag=request.top_k,
+            history=request.history,
+            conversation_id=request.conversation_id,
+        ),
+        media_type="text/event-stream",
+    )

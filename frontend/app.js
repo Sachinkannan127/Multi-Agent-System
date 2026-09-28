@@ -33,7 +33,11 @@ const pdfUpload = $('pdf-upload');
 const searchInput = $('search-input');
 const settingsBackdrop = $('settings-backdrop');
 const themeSelect = $('theme-select');
+const ttsAutoSelect = $('tts-auto-select');
 const voiceBtn = $('voice-btn');
+
+// --- TTS State ---
+let currentSpeakingBtn = null;
 
 // ============================
 //  INITIALIZATION
@@ -51,12 +55,34 @@ function initTheme() {
     const savedTheme = localStorage.getItem('ma_theme') || (systemPrefersDark ? 'dark' : 'light');
     const isDark = savedTheme === 'dark';
     document.body.classList.toggle('dark', isDark);
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
     if (themeSelect) themeSelect.value = isDark ? 'dark' : 'light';
+    if (ttsAutoSelect) ttsAutoSelect.value = localStorage.getItem('ma_tts_auto') || 'off';
+
+    const savedAccent = localStorage.getItem('ma_accent') || 'amber';
+    applyAccentColor(savedAccent);
+}
+
+function applyAccentColor(accent) {
+    const accents = {
+        amber: { primary: '#FF6B35', hover: '#EA580C' },
+        emerald: { primary: '#10B981', hover: '#059669' },
+        violet: { primary: '#8B5CF6', hover: '#7C3AED' },
+        cyan: { primary: '#06B6D4', hover: '#0891B2' },
+        indigo: { primary: '#6366F1', hover: '#4F46E5' },
+        rose: { primary: '#F43F5E', hover: '#E11D48' },
+    };
+    const sel = accents[accent] || accents.amber;
+    document.documentElement.style.setProperty('--orange-500', sel.primary);
+    document.documentElement.style.setProperty('--orange-600', sel.hover);
+    document.documentElement.style.setProperty('--accent-color', sel.primary);
+    localStorage.setItem('ma_accent', accent);
 }
 
 function toggleTheme() {
     const isDark = document.body.classList.toggle('dark');
     const newTheme = isDark ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('ma_theme', newTheme);
     if (themeSelect) themeSelect.value = newTheme;
 }
@@ -79,19 +105,366 @@ function setupEventListeners() {
     if (settingsBackdrop) settingsBackdrop.addEventListener('click', event => {
         if (event.target === settingsBackdrop) closeSettings();
     });
+
+    // Connectors Dialog Setup
+    const sidebarConnectorsLink = $('sidebar-connectors-link');
+    const connectorsBackdrop = $('connectors-backdrop');
+    const connectorsClose = $('connectors-close');
+    const connectorsSearchInput = $('connectors-search-input');
+    const connectorsTabs = $('connectors-tabs');
+
+    function openConnectors() {
+        if (connectorsBackdrop) connectorsBackdrop.hidden = false;
+    }
+
+    function closeConnectors() {
+        if (connectorsBackdrop) connectorsBackdrop.hidden = true;
+    }
+
+    if (sidebarConnectorsLink) sidebarConnectorsLink.addEventListener('click', openConnectors);
+    if (connectorsClose) connectorsClose.addEventListener('click', closeConnectors);
+    if (connectorsBackdrop) connectorsBackdrop.addEventListener('click', event => {
+        if (event.target === connectorsBackdrop) closeConnectors();
+    });
+
+    // Connectors Category Tabs Filter
+    if (connectorsTabs) {
+        connectorsTabs.addEventListener('click', event => {
+            const btn = event.target.closest('.connector-tab-btn');
+            if (!btn) return;
+            connectorsTabs.querySelectorAll('.connector-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterConnectors();
+        });
+    }
+
+    // Connectors Search Input Filter
+    if (connectorsSearchInput) {
+        connectorsSearchInput.addEventListener('input', filterConnectors);
+    }
+
+    function filterConnectors() {
+        const activeTab = connectorsTabs?.querySelector('.connector-tab-btn.active')?.dataset.category || 'all';
+        const query = connectorsSearchInput ? connectorsSearchInput.value.toLowerCase().trim() : '';
+        const cards = document.querySelectorAll('.connector-card');
+
+        cards.forEach(card => {
+            const cardCat = card.dataset.category || '';
+            const cardName = (card.dataset.name || '') + ' ' + card.textContent.toLowerCase();
+            const matchesCat = activeTab === 'all' || cardCat === activeTab;
+            const matchesQuery = !query || cardName.includes(query);
+            card.style.display = (matchesCat && matchesQuery) ? 'flex' : 'none';
+        });
+    }
+
+    // Connectors "Notify Me" buttons
+    const connectorsGrid = $('connectors-grid');
+    if (connectorsGrid) {
+        connectorsGrid.addEventListener('click', event => {
+            const btn = event.target.closest('.connector-action-btn');
+            if (!btn) return;
+            const tool = btn.dataset.tool || 'Connector';
+            const isSubscribed = btn.classList.toggle('subscribed');
+            if (isSubscribed) {
+                btn.innerHTML = `<span class="action-icon">✔</span> <span>Subscribed</span>`;
+                showToast(`🔔 Subscribed! You will be notified when ${tool} launches.`);
+            } else {
+                btn.innerHTML = `<span class="action-icon">🔔</span> <span>Notify Me</span>`;
+                showToast(`Notification preference removed for ${tool}.`);
+            }
+        });
+    }
+
+    // OCR Dialog Setup
+    const sidebarOcrLink = $('sidebar-ocr-link');
+    const ocrBackdrop = $('ocr-backdrop');
+    const ocrClose = $('ocr-close');
+    const ocrDropzone = $('ocr-dropzone');
+    const ocrFileInput = $('ocr-file-input');
+    const ocrBrowseBtn = $('ocr-browse-btn');
+    const ocrDropzoneEmpty = $('ocr-dropzone-empty');
+    const ocrDropzonePreview = $('ocr-dropzone-preview');
+    const ocrPreviewImg = $('ocr-preview-img');
+    const ocrPreviewFilename = $('ocr-preview-filename');
+    const ocrPreviewRemove = $('ocr-preview-remove');
+    const ocrLangSelect = $('ocr-lang-select');
+    const ocrExtractBtn = $('ocr-extract-btn');
+    const ocrResultText = $('ocr-result-text');
+    const ocrStatsChips = $('ocr-stats-chips');
+    const ocrStatLines = $('ocr-stat-lines');
+    const ocrStatConf = $('ocr-stat-conf');
+    const ocrCopyBtn = $('ocr-copy-btn');
+    const ocrSendChatBtn = $('ocr-send-chat-btn');
+    let selectedOcrFile = null;
+
+    function openOcr() {
+        if (ocrBackdrop) ocrBackdrop.hidden = false;
+    }
+
+    function closeOcr() {
+        if (ocrBackdrop) ocrBackdrop.hidden = true;
+    }
+
+    if (sidebarOcrLink) sidebarOcrLink.addEventListener('click', openOcr);
+    if (ocrClose) ocrClose.addEventListener('click', closeOcr);
+    if (ocrBackdrop) ocrBackdrop.addEventListener('click', event => {
+        if (event.target === ocrBackdrop) closeOcr();
+    });
+
+    if (ocrBrowseBtn) ocrBrowseBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        ocrFileInput?.click();
+    });
+    if (ocrDropzone) ocrDropzone.addEventListener('click', () => {
+        if (!selectedOcrFile) ocrFileInput?.click();
+    });
+
+    if (ocrDropzone) {
+        ocrDropzone.addEventListener('dragover', e => {
+            e.preventDefault();
+            ocrDropzone.classList.add('drag-over');
+        });
+        ocrDropzone.addEventListener('dragleave', () => {
+            ocrDropzone.classList.remove('drag-over');
+        });
+        ocrDropzone.addEventListener('drop', e => {
+            e.preventDefault();
+            ocrDropzone.classList.remove('drag-over');
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleOcrFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+    }
+
+    if (ocrFileInput) {
+        ocrFileInput.addEventListener('change', e => {
+            if (e.target.files && e.target.files[0]) {
+                handleOcrFileSelect(e.target.files[0]);
+            }
+        });
+    }
+
+    function handleOcrFileSelect(file) {
+        if (!file.type.startsWith('image/')) {
+            showToast('⚠️ Please upload an image file (PNG, JPG, WEBP, BMP).');
+            return;
+        }
+        selectedOcrFile = file;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            if (ocrPreviewImg) ocrPreviewImg.src = ev.target.result;
+            if (ocrPreviewFilename) ocrPreviewFilename.textContent = file.name;
+            if (ocrDropzoneEmpty) ocrDropzoneEmpty.style.display = 'none';
+            if (ocrDropzonePreview) ocrDropzonePreview.style.display = 'flex';
+            if (ocrExtractBtn) ocrExtractBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    if (ocrPreviewRemove) {
+        ocrPreviewRemove.addEventListener('click', e => {
+            e.stopPropagation();
+            resetOcrForm();
+        });
+    }
+
+    function resetOcrForm() {
+        selectedOcrFile = null;
+        if (ocrFileInput) ocrFileInput.value = '';
+        if (ocrPreviewImg) ocrPreviewImg.src = '';
+        if (ocrDropzoneEmpty) ocrDropzoneEmpty.style.display = 'flex';
+        if (ocrDropzonePreview) ocrDropzonePreview.style.display = 'none';
+        if (ocrExtractBtn) ocrExtractBtn.disabled = true;
+    }
+
+    // Extract Text via EasyOCR API
+    if (ocrExtractBtn) {
+        ocrExtractBtn.addEventListener('click', async () => {
+            if (!selectedOcrFile) return;
+
+            const btnText = ocrExtractBtn.querySelector('.btn-text');
+            const btnSpinner = ocrExtractBtn.querySelector('.btn-spinner');
+            ocrExtractBtn.disabled = true;
+            if (btnText) btnText.textContent = 'Processing with EasyOCR...';
+            if (btnSpinner) btnSpinner.style.display = 'inline-block';
+
+            const formData = new FormData();
+            formData.append('file', selectedOcrFile);
+            formData.append('languages', ocrLangSelect?.value || 'en');
+
+            try {
+                const res = await fetch(`${API_V1}/ocr/extract`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'OCR extraction failed');
+
+                if (ocrResultText) ocrResultText.value = data.text || 'No text detected in this image.';
+                if (ocrStatLines) ocrStatLines.textContent = data.total_lines || 0;
+                if (ocrStatConf) ocrStatConf.textContent = (data.avg_confidence * 100).toFixed(1) + '%';
+                if (ocrStatsChips) ocrStatsChips.style.display = 'flex';
+                if (ocrCopyBtn) ocrCopyBtn.disabled = !data.text;
+                if (ocrSendChatBtn) ocrSendChatBtn.disabled = !data.text;
+
+                showToast(`✨ EasyOCR extracted ${data.total_lines} lines of text (${(data.avg_confidence * 100).toFixed(1)}% confidence)!`);
+            } catch (err) {
+                showToast(`⚠️ OCR Error: ${err.message}`);
+                if (ocrResultText) ocrResultText.value = `Error: ${err.message}`;
+            } finally {
+                ocrExtractBtn.disabled = false;
+                if (btnText) btnText.textContent = '✨ Extract Text (EasyOCR)';
+                if (btnSpinner) btnSpinner.style.display = 'none';
+            }
+        });
+    }
+
+    if (ocrCopyBtn) {
+        ocrCopyBtn.addEventListener('click', async () => {
+            if (!ocrResultText || !ocrResultText.value) return;
+            try {
+                await navigator.clipboard.writeText(ocrResultText.value);
+                const originalHtml = ocrCopyBtn.innerHTML;
+                ocrCopyBtn.innerHTML = `<span>Copied! ✔</span>`;
+                setTimeout(() => { ocrCopyBtn.innerHTML = originalHtml; }, 1800);
+                showToast('📋 Extracted text copied to clipboard!');
+            } catch {
+                showToast('Failed to copy to clipboard.');
+            }
+        });
+    }
+
+    if (ocrSendChatBtn) {
+        ocrSendChatBtn.addEventListener('click', () => {
+            if (!ocrResultText || !ocrResultText.value) return;
+            const textToInsert = ocrResultText.value.trim();
+            if (chatInput) {
+                chatInput.value = (chatInput.value ? chatInput.value + '\n\n' : '') + textToInsert;
+                sendBtn.disabled = false;
+                autoResizeTextarea();
+                chatInput.focus();
+            }
+            closeOcr();
+            showToast('💬 Extracted text inserted into chat prompt!');
+        });
+    }
+
+    // ChatGPT Settings Tab Switching
+    const settingsTabsNav = $('settings-tabs-nav');
+    if (settingsTabsNav) {
+        settingsTabsNav.addEventListener('click', e => {
+            const btn = e.target.closest('.cg-nav-item');
+            if (!btn) return;
+            const targetTab = btn.dataset.tab;
+            settingsTabsNav.querySelectorAll('.cg-nav-item').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.cg-tab-panel').forEach(panel => {
+                panel.classList.toggle('active', panel.id === `settings-panel-${targetTab}`);
+            });
+        });
+    }
+
+    // Custom Instructions Form
+    const customUserField = $('custom-instructions-user');
+    const customStyleField = $('custom-instructions-style');
+    const saveInstructionsBtn = $('save-instructions-btn');
+    if (customUserField) customUserField.value = localStorage.getItem('ma_custom_user') || '';
+    if (customStyleField) customStyleField.value = localStorage.getItem('ma_custom_style') || '';
+    if (saveInstructionsBtn) {
+        saveInstructionsBtn.addEventListener('click', () => {
+            localStorage.setItem('ma_custom_user', customUserField?.value || '');
+            localStorage.setItem('ma_custom_style', customStyleField?.value || '');
+            showToast('✨ Custom instructions saved successfully!');
+        });
+    }
+
+    // TTS Speed & Voice Controls
+    const ttsSpeedSlider = $('setting-tts-speed');
+    const ttsSpeedVal = $('tts-speed-val');
+    const voiceSelect = $('setting-voice-select');
+    if (ttsSpeedSlider && ttsSpeedVal) {
+        const savedSpeed = localStorage.getItem('ma_tts_speed') || '1.0';
+        ttsSpeedSlider.value = savedSpeed;
+        ttsSpeedVal.textContent = savedSpeed + 'x';
+        ttsSpeedSlider.addEventListener('input', () => {
+            ttsSpeedVal.textContent = ttsSpeedSlider.value + 'x';
+            localStorage.setItem('ma_tts_speed', ttsSpeedSlider.value);
+        });
+    }
+    if (voiceSelect) {
+        voiceSelect.value = localStorage.getItem('ma_voice') || 'alloy';
+        voiceSelect.addEventListener('change', () => {
+            localStorage.setItem('ma_voice', voiceSelect.value);
+        });
+    }
+
+    // Export Chat History
+    const exportHistoryBtn = $('export-history-btn');
+    if (exportHistoryBtn) {
+        exportHistoryBtn.addEventListener('click', () => {
+            if (!conversations || conversations.length === 0) {
+                showToast('ℹ️ No chat conversations to export.');
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(conversations, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `multi-agent-chats-${new Date().toISOString().slice(0, 10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast('📦 Chat history exported successfully!');
+        });
+    }
+
+    // Language & Orchestrator Preferences
+    const languageSelect = $('setting-language');
+    const orchestratorSelect = $('setting-orchestrator-mode');
+    if (languageSelect) {
+        languageSelect.value = localStorage.getItem('ma_language') || 'auto';
+        languageSelect.addEventListener('change', () => {
+            localStorage.setItem('ma_language', languageSelect.value);
+            showToast(`🌐 Language set to ${languageSelect.options[languageSelect.selectedIndex].text}`);
+        });
+    }
+    if (orchestratorSelect) {
+        orchestratorSelect.value = localStorage.getItem('ma_orchestrator_mode') || 'auto';
+        orchestratorSelect.addEventListener('change', () => {
+            localStorage.setItem('ma_orchestrator_mode', orchestratorSelect.value);
+            showToast(`🤖 Routing mode: ${orchestratorSelect.options[orchestratorSelect.selectedIndex].text}`);
+        });
+    }
+
     if (themeSelect) themeSelect.addEventListener('change', event => {
         const isDark = event.target.value === 'dark';
         document.body.classList.toggle('dark', isDark);
         localStorage.setItem('ma_theme', isDark ? 'dark' : 'light');
     });
+    if (ttsAutoSelect) ttsAutoSelect.addEventListener('change', event => {
+        localStorage.setItem('ma_tts_auto', event.target.value);
+    });
     if (clearHistoryBtn) clearHistoryBtn.addEventListener('click', () => {
+        if (!confirm('Are you sure you want to clear all conversation history?')) return;
         conversations = [];
         activeConversationId = null;
         localStorage.removeItem('ma_conversations');
         renderChatList();
+        setHomeState(true);
         closeSettings();
+        showToast('🗑️ All conversation history cleared.');
     });
     messagesContainer.addEventListener('click', async event => {
+        const ttsButton = event.target.closest('.tts-btn');
+        if (ttsButton) {
+            const msgContentEl = ttsButton.closest('.msg-bubble')?.querySelector('.msg-content');
+            if (msgContentEl) {
+                const rawContent = msgContentEl.dataset.rawContent
+                    ? decodeURIComponent(msgContentEl.dataset.rawContent)
+                    : msgContentEl.textContent;
+                speakMessage(rawContent, ttsButton);
+            }
+            return;
+        }
         const copyButton = event.target.closest('.copy-code-btn');
         if (copyButton) {
             try {
@@ -115,7 +488,11 @@ function setupEventListeners() {
         }
     });
     document.addEventListener('keydown', event => {
-        if (event.key === 'Escape' && settingsBackdrop && !settingsBackdrop.hidden) closeSettings();
+        if (event.key === 'Escape') {
+            if (settingsBackdrop && !settingsBackdrop.hidden) closeSettings();
+            if (connectorsBackdrop && !connectorsBackdrop.hidden) closeConnectors();
+            if (ocrBackdrop && !ocrBackdrop.hidden) closeOcr();
+        }
     });
 
     // Send
@@ -372,6 +749,84 @@ function renderChatList() {
 }
 
 // ============================
+//  TEXT-TO-SPEECH (TTS) HELPERS
+// ============================
+function cleanMarkdownForSpeech(text) {
+    if (!text) return '';
+    let clean = text;
+    clean = clean.replace(/```[\s\S]*?```/g, ' Code snippet omitted for speech. ');
+    clean = clean.replace(/#{1,6}\s+/g, '');
+    clean = clean.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+    clean = clean.replace(/[*_]{1,3}([^*_]+)[*_]{1,3}/g, '$1');
+    clean = clean.replace(/`([^`]+)`/g, '$1');
+    clean = clean.replace(/[📌💡📚⚡📄🌐💻💬⚠️]/g, '');
+    clean = clean.replace(/\s+/g, ' ').trim();
+    return clean;
+}
+
+function speakMessage(text, btnElement) {
+    if (!('speechSynthesis' in window)) {
+        alert('Text-to-speech is not supported in this browser.');
+        return;
+    }
+    const synth = window.speechSynthesis;
+
+    if (synth.speaking && currentSpeakingBtn === btnElement) {
+        synth.cancel();
+        resetTtsButton(btnElement);
+        currentSpeakingBtn = null;
+        return;
+    }
+
+    if (synth.speaking) {
+        synth.cancel();
+        if (currentSpeakingBtn) resetTtsButton(currentSpeakingBtn);
+    }
+
+    const cleanText = cleanMarkdownForSpeech(text);
+    if (!cleanText) return;
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    const voices = synth.getVoices();
+    const preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
+    if (preferredVoice) utterance.voice = preferredVoice;
+
+    setTtsButtonSpeaking(btnElement);
+    currentSpeakingBtn = btnElement;
+
+    utterance.onend = () => {
+        resetTtsButton(btnElement);
+        if (currentSpeakingBtn === btnElement) currentSpeakingBtn = null;
+    };
+
+    utterance.onerror = () => {
+        resetTtsButton(btnElement);
+        if (currentSpeakingBtn === btnElement) currentSpeakingBtn = null;
+    };
+
+    synth.speak(utterance);
+}
+
+function setTtsButtonSpeaking(btn) {
+    if (!btn) return;
+    btn.classList.add('is-speaking');
+    btn.title = 'Stop reading aloud';
+    btn.setAttribute('aria-label', 'Stop reading aloud');
+    btn.innerHTML = `<svg class="tts-icon-stop" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>`;
+}
+
+function resetTtsButton(btn) {
+    if (!btn) return;
+    btn.classList.remove('is-speaking');
+    btn.title = 'Read aloud';
+    btn.setAttribute('aria-label', 'Read aloud');
+    btn.innerHTML = `<svg class="tts-icon-speaker" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
+}
+
+// ============================
 //  MESSAGES
 // ============================
 function clearMessages() {
@@ -403,33 +858,42 @@ function appendMessage(role, content, meta = {}, animate = true) {
     let metaHtml = '';
     if (meta.route) {
         const routeClass = `route-${meta.route}`;
-        const routeLabels = { rag: '📄 RAG', toolcalling: '🔧 Tools', direct: '💬 Direct' };
+        const routeLabels = {
+            rag: '📄 Document Agent',
+            toolcalling: '🌐 Web Search Agent',
+            coding: '💻 Coding Agent',
+            direct: '💬 Direct LLM'
+        };
         metaHtml += `<span class="msg-route-badge ${routeClass}">${routeLabels[meta.route] || meta.route}</span>`;
     }
     if (meta.model) metaHtml += `<span>${meta.model}</span>`;
     if (meta.confidence) metaHtml += `<span>Confidence: ${(meta.confidence * 100).toFixed(0)}%</span>`;
 
-    const sourcesHtml = meta.sources?.length
-        ? `<div class="context-panel"><div class="context-panel-title"><span>Retrieved context</span><span>${meta.sources.length} chunks</span></div>${meta.sources.map((source, index) => `
-            <details class="context-card" ${index === 0 ? 'open' : ''}>
-                <summary><span class="context-index">${String(index + 1).padStart(2, '0')}</span><span class="context-name">${escapeHtml(source.metadata?.filename || 'Uploaded document')}</span><span class="context-chevron">+</span></summary>
-                <p>${escapeHtml(source.text || '')}</p>
-            </details>`).join('')}</div>`
-        : '';
     const followUpsHtml = !isUser ? `<div class="follow-ups"><span>Continue with</span><button class="follow-up-btn" data-prompt="Summarize that in three concise points">Summarize it</button><button class="follow-up-btn" data-prompt="Explain that in simpler terms">Explain simply</button><button class="follow-up-btn" data-prompt="What should I look at next?">What next?</button></div>` : '';
+
+    const ttsBtnHtml = !isUser
+        ? `<button class="tts-btn" title="Read aloud" aria-label="Read aloud"><svg class="tts-icon-speaker" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>`
+        : '';
 
     row.innerHTML = `
         ${avatarHtml}
         <div class="msg-bubble">
-            <div class="msg-name ${isUser ? 'user-name' : 'ai-name'}">${isUser ? 'You' : 'MultiAgent AI'}</div>
+            <div class="msg-header">
+                <div class="msg-name ${isUser ? 'user-name' : 'ai-name'}">${isUser ? 'You' : 'MultiAgent AI'}</div>
+                ${ttsBtnHtml}
+            </div>
             <div class="msg-content" data-raw-content="${encodeURIComponent(content)}">${formatMessage(content)}</div>
-            ${sourcesHtml}
             ${followUpsHtml}
             ${metaHtml ? `<div class="msg-meta">${metaHtml}</div>` : ''}
         </div>
     `;
     messagesContainer.appendChild(row);
     scrollToBottom();
+
+    if (!isUser && localStorage.getItem('ma_tts_auto') === 'on') {
+        const btn = row.querySelector('.tts-btn');
+        if (btn) speakMessage(content, btn);
+    }
 }
 
 function createStreamingMessage() {
@@ -439,7 +903,10 @@ function createStreamingMessage() {
     row.innerHTML = `
         <div class="msg-avatar ai"><img src="assets/bot-avatar.jpg" alt="AI"></div>
         <div class="msg-bubble">
-            <div class="msg-name ai-name">MultiAgent AI</div>
+            <div class="msg-header">
+                <div class="msg-name ai-name">MultiAgent AI</div>
+                <button class="tts-btn" title="Read aloud" aria-label="Read aloud"><svg class="tts-icon-speaker" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
+            </div>
             <div class="agent-activity"><span class="activity-pulse"></span><span class="activity-label">Routing your request</span><span class="activity-time">now</span></div>
             <div class="msg-content streaming-content"><span class="stream-cursor" aria-hidden="true"></span></div>
             <div class="msg-meta streaming-meta"></div>
@@ -512,6 +979,11 @@ async function streamChatResponse(text, history = []) {
     row.querySelector('.agent-activity')?.remove();
     metaElement.classList.remove('streaming-meta');
     row.querySelector('.msg-bubble').insertAdjacentHTML('beforeend', '<div class="follow-ups"><span>Continue with</span><button class="follow-up-btn" data-prompt="Summarize that in three concise points">Summarize it</button><button class="follow-up-btn" data-prompt="Explain that in simpler terms">Explain simply</button><button class="follow-up-btn" data-prompt="What should I look at next?">What next?</button></div>');
+
+    if (localStorage.getItem('ma_tts_auto') === 'on') {
+        const btn = row.querySelector('.tts-btn');
+        if (btn) speakMessage(fullText, btn);
+    }
     return { content: fullText, meta: { model: streamMeta.model_used, route: 'direct' } };
 }
 
@@ -571,16 +1043,83 @@ async function sendMessage() {
             removeTyping();
             appendMessage('assistant', data.answer, meta);
         } else if (currentMode === 'Smart') {
-            response = await fetch(`${API_V1}/router/chat`, {
+            removeTyping();
+            response = await fetch(`${API_V1}/router/stream`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
                 body: JSON.stringify({ prompt: text, provider: 'groq', top_k: 3, history: conversationHistory, conversation_id: activeConversationId })
             });
-            data = await response.json();
-            if (!response.ok) throw new Error(data.detail || 'Router error');
-            meta = { route: data.selected_route, confidence: data.confidence, model: data.metadata?.model_used };
-            removeTyping();
-            appendMessage('assistant', data.response, meta);
+            if (!response.ok || !response.body) {
+                let detail = 'Router streaming failed';
+                try { detail = (await response.json()).detail || detail; } catch { /* default */ }
+                throw new Error(detail);
+            }
+
+            const routeLabels = {
+                rag: '📄 Document Agent',
+                toolcalling: '🌐 Web Search Agent',
+                coding: '💻 Coding Agent',
+                direct: '💬 Direct LLM'
+            };
+            const row = createStreamingMessage();
+            const streamContent = row.querySelector('.streaming-content');
+            const streamMetaEl = row.querySelector('.streaming-meta');
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buf = '';
+            let fullText = '';
+            let sMeta = {};
+
+            const handleSSE = raw => {
+                const dLine = raw.split('\n').find(l => l.startsWith('data:'));
+                if (!dLine) return false;
+                const payload = dLine.slice(5).trim();
+                if (payload === '[DONE]') return true;
+                const ev = JSON.parse(payload);
+                if (ev.error) throw new Error(ev.error);
+                if (ev.event === 'start') {
+                    sMeta = ev;
+                    const rc = `route-${ev.selected_route || 'direct'}`;
+                    const rl = routeLabels[ev.selected_route] || '💬 Direct LLM';
+                    row.querySelector('.activity-label').textContent = 'Streaming response';
+                    streamMetaEl.innerHTML = `<span class="msg-route-badge ${rc}">${rl}</span><span>${escapeHtml(ev.model_used || '')}</span>`;
+                    if (ev.confidence) streamMetaEl.innerHTML += `<span>Confidence: ${(ev.confidence * 100).toFixed(0)}%</span>`;
+                }
+                if (ev.content) {
+                    fullText += ev.content;
+                    streamContent.innerHTML = `${formatMessage(fullText)}<span class="stream-cursor" aria-hidden="true"></span>`;
+                    scrollToBottom();
+                }
+                return false;
+            };
+
+            let streamDone = false;
+            while (!streamDone) {
+                const chunk = await reader.read();
+                buf += decoder.decode(chunk.value || new Uint8Array(), { stream: !chunk.done });
+                const parts = buf.split('\n\n');
+                buf = parts.pop() || '';
+                for (const part of parts) {
+                    if (part.trim()) streamDone = handleSSE(part) || streamDone;
+                }
+                if (chunk.done) {
+                    if (buf.trim()) handleSSE(buf);
+                    streamDone = true;
+                }
+            }
+
+            streamContent.classList.remove('streaming-content');
+            streamContent.querySelector('.stream-cursor')?.remove();
+            streamContent.dataset.rawContent = encodeURIComponent(fullText);
+            row.querySelector('.agent-activity')?.remove();
+            streamMetaEl.classList.remove('streaming-meta');
+            row.querySelector('.msg-bubble').insertAdjacentHTML('beforeend', '<div class="follow-ups"><span>Continue with</span><button class="follow-up-btn" data-prompt="Summarize that in three concise points">Summarize it</button><button class="follow-up-btn" data-prompt="Explain that in simpler terms">Explain simply</button><button class="follow-up-btn" data-prompt="What should I look at next?">What next?</button></div>');
+
+            if (localStorage.getItem('ma_tts_auto') === 'on') {
+                const tBtn = row.querySelector('.tts-btn');
+                if (tBtn) speakMessage(fullText, tBtn);
+            }
+            meta = { route: sMeta.selected_route || 'direct', model: sMeta.model_used, confidence: sMeta.confidence };
         } else if (currentMode === 'LangGraph') {
             // Use LangGraph stateful workflow
             response = await fetch(`${API_V1}/graph/chat`, {
@@ -705,6 +1244,18 @@ function escapeHtml(text) {
     return d.innerHTML;
 }
 
+function showToast(message) {
+    const container = $('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast-item';
+    toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
 function formatMessage(text) {
     const normalizedText = String(text || '')
         .replace(/<br\s*\/?>/gi, '\n')
@@ -732,6 +1283,7 @@ function formatMessage(text) {
     const output = [];
     let paragraph = [];
     let listType = null;
+    let inSourcesDetails = false;
 
     const closeParagraph = () => {
         if (paragraph.length) {
@@ -743,6 +1295,14 @@ function formatMessage(text) {
         if (listType) {
             output.push(`</${listType}>`);
             listType = null;
+        }
+    };
+    const closeSourcesDetails = () => {
+        if (inSourcesDetails) {
+            closeParagraph();
+            closeList();
+            output.push(`</div></details>`);
+            inSourcesDetails = false;
         }
     };
     const addListItem = (type, content) => {
@@ -763,6 +1323,7 @@ function formatMessage(text) {
         } else if (/^\u0000CODE_\d+\u0000$/.test(line)) {
             closeParagraph();
             closeList();
+            closeSourcesDetails();
             const index = Number(line.match(/\d+/)[0]);
             const block = codeBlocks[index];
             const langName = (block.language || 'code').trim().toLowerCase();
@@ -786,7 +1347,30 @@ function formatMessage(text) {
             closeParagraph();
             closeList();
             const heading = line.match(/^(#{1,3})\s+(.+)$/);
-            output.push(`<h${heading[1].length}>${inline(heading[2])}</h${heading[1].length}>`);
+            if (!heading) {
+                paragraph.push(inline(line));
+                continue;
+            }
+            const headingText = heading[2].trim();
+            const cleanHeading = headingText.replace(/^[📚📌💡\s]+/, '').replace(/&amp;/g, '&').trim();
+
+            if (/^(references|sources|references\s*&\s*sources|references\s*and\s*sources)/i.test(cleanHeading)) {
+                closeSourcesDetails();
+                inSourcesDetails = true;
+                output.push(
+                    `<details class="collapsible-sources">` +
+                    `<summary class="sources-summary">` +
+                    `<span class="sources-icon">📚</span>` +
+                    `<span class="sources-title"><strong>${inline(headingText)}</strong></span>` +
+                    `<span class="sources-badge">Toggle</span>` +
+                    `<span class="sources-chevron">▾</span>` +
+                    `</summary>` +
+                    `<div class="sources-body">`
+                );
+            } else {
+                closeSourcesDetails();
+                output.push(`<h${heading[1].length}>${inline(headingText)}</h${heading[1].length}>`);
+            }
         } else if (/^[-*]\s+/.test(line)) {
             addListItem('ul', line.replace(/^[-*]\s+/, ''));
         } else if (/^\d+\.\s+/.test(line)) {
@@ -794,6 +1378,7 @@ function formatMessage(text) {
         } else if (line.trim().startsWith('|') && lines[lineIndex + 1]?.trim().match(/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/)) {
             closeParagraph();
             closeList();
+            closeSourcesDetails();
             const tableRows = [line];
             lineIndex += 2;
             while (lineIndex < lines.length && lines[lineIndex].trim().startsWith('|') && lines[lineIndex].trim()) {
@@ -812,6 +1397,7 @@ function formatMessage(text) {
         } else if (/^---+$/.test(line.trim())) {
             closeParagraph();
             closeList();
+            closeSourcesDetails();
             output.push('<hr>');
         } else {
             closeList();
@@ -821,5 +1407,6 @@ function formatMessage(text) {
 
     closeParagraph();
     closeList();
+    closeSourcesDetails();
     return output.join('');
 }

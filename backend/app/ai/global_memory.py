@@ -8,11 +8,11 @@ logger = logging.getLogger("app.ai.global_memory")
 def get_global_conversational_context(
     exclude_conv_id: Optional[str] = None,
     query: Optional[str] = None,
-    max_past_chats: int = 5,
+    max_past_chats: int = 2,
 ) -> str:
     """
-    Retrieves global memory context across ALL past conversation sessions in MongoDB.
-    Allows the AI to relate facts, topics, and details across different chat threads.
+    Retrieves concise global memory context across past conversation sessions in MongoDB.
+    Optimized for low token usage.
     """
     try:
         db = get_db()
@@ -24,8 +24,8 @@ def get_global_conversational_context(
         if exclude_conv_id:
             query_filter["id"] = {"$ne": exclude_conv_id}
 
-        # Fetch recent past conversations sorted by update time
-        cursor = collection.find(query_filter, {"_id": 0}).sort("updated_at", -1).limit(max_past_chats)
+        # Fetch recent past conversations sorted by update time (project only necessary fields for minimal latency)
+        cursor = collection.find(query_filter, {"_id": 0, "title": 1, "messages": 1}).sort("updated_at", -1).limit(max_past_chats)
         past_chats = list(cursor)
 
         if not past_chats:
@@ -36,20 +36,20 @@ def get_global_conversational_context(
             title = chat.get("title", "Untitled Chat")
             messages = chat.get("messages", [])
 
-            # Extract recent message turns from past conversation (up to last 6 turns)
+            # Extract recent message turns from past conversation (up to last 3 turns)
             recent_turns = []
-            for msg in messages[-6:]:
+            for msg in messages[-3:]:
                 role = "User" if msg.get("role") == "user" else "AI"
                 content = (msg.get("content") or "").strip()
 
-                # Clean markdown tags if needed and truncate long text for memory efficiency
-                if len(content) > 250:
-                    content = content[:250] + "..."
+                # Truncate text to 120 characters for minimal token overhead
+                if len(content) > 120:
+                    content = content[:120] + "..."
                 if content:
                     recent_turns.append(f"  - {role}: {content}")
 
             if recent_turns:
-                chat_summary = f"• [Past Chat Session #{idx}: \"{title}\"]\n" + "\n".join(recent_turns)
+                chat_summary = f"• [Past Chat #{idx}: \"{title}\"]\n" + "\n".join(recent_turns)
                 memory_snippets.append(chat_summary)
 
         if not memory_snippets:

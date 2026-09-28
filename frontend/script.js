@@ -8,15 +8,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggleBtn = document.getElementById('theme-toggle');
     const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     const savedTheme = localStorage.getItem('ma_theme') || (systemPrefersDark ? 'dark' : 'light');
-    if (savedTheme === 'dark') {
-        document.body.classList.add('dark');
-    } else {
-        document.body.classList.remove('dark');
-    }
+    const isDark = savedTheme === 'dark';
+    document.body.classList.toggle('dark', isDark);
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+
+    const savedAccent = localStorage.getItem('ma_accent') || 'amber';
+    const accents = {
+        amber: { primary: '#FF6B35', hover: '#EA580C' },
+        emerald: { primary: '#10B981', hover: '#059669' },
+        violet: { primary: '#8B5CF6', hover: '#7C3AED' },
+        cyan: { primary: '#06B6D4', hover: '#0891B2' },
+        indigo: { primary: '#6366F1', hover: '#4F46E5' },
+        rose: { primary: '#F43F5E', hover: '#E11D48' },
+    };
+    const sel = accents[savedAccent] || accents.amber;
+    document.documentElement.style.setProperty('--orange-500', sel.primary);
+    document.documentElement.style.setProperty('--orange-600', sel.hover);
+    document.documentElement.style.setProperty('--accent-color', sel.primary);
+
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
-            const isDark = document.body.classList.toggle('dark');
-            localStorage.setItem('ma_theme', isDark ? 'dark' : 'light');
+            const darkNow = document.body.classList.toggle('dark');
+            const newTheme = darkNow ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('ma_theme', newTheme);
         });
     }
 

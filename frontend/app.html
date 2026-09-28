@@ -51,6 +51,23 @@
             </div>
 
             <div class="sidebar-footer">
+                <button class="sidebar-link sidebar-ocr-link" id="sidebar-ocr-link" title="OCR Image Text Extractor (EasyOCR)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/>
+                        <rect x="7" y="7" width="10" height="10" rx="1.5"/>
+                        <line x1="9" y1="12" x2="15" y2="12"/>
+                    </svg>
+                    <span>OCR</span>
+                    <span class="sidebar-badge-ocr"></span>
+                </button>
+                <button class="sidebar-link sidebar-connectors-link" id="sidebar-connectors-link" title="Connectors & Integrations">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                        <circle cx="12" cy="12" r="4"/>
+                    </svg>
+                    <span>Connectors</span>
+                    <span class="sidebar-badge-soon">Soon</span>
+                </button>
                 <button class="sidebar-link sidebar-settings-link" id="sidebar-settings-link">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 1.7-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-2.4v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L8 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6.7v-2.4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L8 8.6l1.7-1.7.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h2.4v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.7 1.7-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2v2.4h-.2a1.7 1.7 0 0 0-1.5 1Z"/></svg>
                     Settings
@@ -178,41 +195,735 @@
 
     </div>
 
-    <!-- Settings Dialog -->
+    <!-- Settings Dialog (ChatGPT Style) -->
     <div class="settings-backdrop" id="settings-backdrop" hidden>
-        <section class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-            <div class="settings-header">
-                <div>
-                    <span class="settings-eyebrow">Workspace</span>
-                    <h2 id="settings-title">Settings</h2>
-                </div>
+        <section class="settings-dialog cg-settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <div class="cg-settings-header">
+                <h2 id="settings-title">Settings</h2>
                 <button class="settings-close" id="settings-close" aria-label="Close settings" title="Close settings">&times;</button>
             </div>
 
-            <div class="settings-section">
-                <h3>Appearance</h3>
-                <label class="settings-row settings-select-row">
-                    <span><strong>Theme</strong><small>Choose how the workspace looks.</small></span>
-                    <select id="theme-select">
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                    </select>
-                </label>
-            </div>
+            <div class="cg-settings-container">
+                <!-- Left Tab Navigation Sidebar -->
+                <nav class="cg-settings-nav" id="settings-tabs-nav" aria-label="Settings navigation">
+                    <button type="button" class="cg-nav-item active" data-tab="general">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.7 1.7-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-2.4v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L8 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H6.7v-2.4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L8 8.6l1.7-1.7.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h2.4v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.7 1.7-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2v2.4h-.2a1.7 1.7 0 0 0-1.5 1Z"/>
+                        </svg>
+                        <span>General</span>
+                    </button>
+                    <button type="button" class="cg-nav-item" data-tab="personalization">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <span>Personalization</span>
+                    </button>
+                    <button type="button" class="cg-nav-item" data-tab="speech">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                            <line x1="12" y1="19" x2="12" y2="23"/>
+                            <line x1="8" y1="23" x2="16" y2="23"/>
+                        </svg>
+                        <span>Speech</span>
+                    </button>
+                    <button type="button" class="cg-nav-item" data-tab="data-controls">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                        </svg>
+                        <span>Data controls</span>
+                    </button>
+                    <button type="button" class="cg-nav-item" data-tab="models">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="4" width="16" height="16" rx="2"/>
+                            <rect x="9" y="9" width="6" height="6"/>
+                            <line x1="9" y1="1" x2="9" y2="4"/>
+                            <line x1="15" y1="1" x2="15" y2="4"/>
+                            <line x1="9" y1="20" x2="9" y2="23"/>
+                            <line x1="15" y1="20" x2="15" y2="23"/>
+                            <line x1="20" y1="9" x2="23" y2="9"/>
+                            <line x1="20" y1="14" x2="23" y2="14"/>
+                            <line x1="1" y1="9" x2="4" y2="9"/>
+                            <line x1="1" y1="14" x2="4" y2="14"/>
+                        </svg>
+                        <span>AI & Multi-Agent</span>
+                    </button>
+                    <button type="button" class="cg-nav-item" data-tab="account">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="5" width="20" height="14" rx="2"/>
+                            <line x1="2" y1="10" x2="22" y2="10"/>
+                        </svg>
+                        <span>Account & System</span>
+                    </button>
+                </nav>
 
-            <div class="settings-section">
-                <h3>AI configuration</h3>
-                <div class="settings-row"><span><strong>Provider</strong><small>Default provider for routed requests.</small></span><b>Groq</b></div>
-                <div class="settings-row"><span><strong>Model</strong><small>Tool-calling model selected by the backend.</small></span><b>GPT OSS 20B</b></div>
-                <div class="settings-row"><span><strong>API endpoint</strong><small>Active local backend service.</small></span><b class="settings-value">localhost:8990</b></div>
-            </div>
+                <!-- Right Content Panel -->
+                <div class="cg-settings-content">
+                    <!-- Tab: General -->
+                    <div class="cg-tab-panel active" id="settings-panel-general">
+                        <div class="cg-panel-header">
+                            <h3>General</h3>
+                        </div>
 
-            <div class="settings-section settings-danger">
-                <h3>Local data</h3>
-                <div class="settings-row"><span><strong>Conversation history</strong><small>Remove chats stored in this browser.</small></span><button class="danger-btn" id="clear-history-btn">Clear history</button></div>
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Theme</strong>
+                                <small>Choose your interface appearance mode.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <select id="theme-select" class="cg-select">
+                                    <option value="light">Light</option>
+                                    <option value="dark">Dark</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Language</strong>
+                                <small>Preferred language for conversation and user interface.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <select id="setting-language" class="cg-select">
+                                    <option value="auto">Auto-Detect</option>
+                                    <option value="en">English (US)</option>
+                                    <option value="es">Spanish</option>
+                                    <option value="fr">French</option>
+                                    <option value="de">German</option>
+                                    <option value="zh">Chinese</option>
+                                    <option value="ja">Japanese</option>
+                                    <option value="hi">Hindi</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Show Tool & Code Execution</strong>
+                                <small>Display live reasoning, code blocks, and tool arguments inline.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <label class="cg-switch">
+                                    <input type="checkbox" id="setting-show-code" checked>
+                                    <span class="cg-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Interactive Collapsible Sources</strong>
+                                <small>Group retrieved documents & citations into clean expandable cards.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <label class="cg-switch">
+                                    <input type="checkbox" id="setting-show-citations" checked>
+                                    <span class="cg-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Personalization -->
+                    <div class="cg-tab-panel" id="settings-panel-personalization">
+                        <div class="cg-panel-header">
+                            <h3>Personalization</h3>
+                        </div>
+
+                        <div class="cg-personalization-form">
+                            <div class="cg-field-group">
+                                <label class="cg-field-label" for="custom-instructions-user">
+                                    <strong>What would you like the AI to know about you?</strong>
+                                    <small>Background, profession, primary tech stack, or context for responses.</small>
+                                </label>
+                                <textarea id="custom-instructions-user" class="cg-textarea" rows="3" placeholder="e.g. I am a software engineer building multi-agent systems with Python and JavaScript..."></textarea>
+                            </div>
+
+                            <div class="cg-field-group">
+                                <label class="cg-field-label" for="custom-instructions-style">
+                                    <strong>How would you like the AI agents to respond?</strong>
+                                    <small>Tone, formatting style, brevity, or specific instructions.</small>
+                                </label>
+                                <textarea id="custom-instructions-style" class="cg-textarea" rows="3" placeholder="e.g. Be concise, direct, provide structured code examples, and skip generic fluff..."></textarea>
+                            </div>
+
+                            <div class="cg-form-footer">
+                                <button type="button" class="cg-primary-btn" id="save-instructions-btn">Save Instructions</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Speech -->
+                    <div class="cg-tab-panel" id="settings-panel-speech">
+                        <div class="cg-panel-header">
+                            <h3>Speech & Audio</h3>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Text to Speech</strong>
+                                <small>Choose whether responses read aloud automatically or on click.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <select id="tts-auto-select" class="cg-select">
+                                    <option value="off">Off (Click 🔊 to play)</option>
+                                    <option value="on">Auto-Read On</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Voice</strong>
+                                <small>Select your preferred AI vocal identity.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <select id="setting-voice-select" class="cg-select">
+                                    <option value="alloy">Alloy (Neutral & Versatile)</option>
+                                    <option value="echo">Echo (Warm & Rounded)</option>
+                                    <option value="fable">Fable (Expressive & Clear)</option>
+                                    <option value="onyx">Onyx (Deep & Authoritative)</option>
+                                    <option value="nova">Nova (Bright & Energetic)</option>
+                                    <option value="shimmer">Shimmer (Gentle & Smooth)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Speech Playback Speed</strong>
+                                <small>Adjust the narration speed for text-to-speech audio.</small>
+                            </div>
+                            <div class="cg-row-control cg-speed-control">
+                                <input type="range" id="setting-tts-speed" min="0.75" max="1.5" step="0.05" value="1.0" class="cg-range">
+                                <span class="cg-pill" id="tts-speed-val">1.0x</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Data controls -->
+                    <div class="cg-tab-panel" id="settings-panel-data-controls">
+                        <div class="cg-panel-header">
+                            <h3>Data Controls</h3>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Save Chat History</strong>
+                                <small>Persist chat sessions and agent routing metrics locally in browser.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <label class="cg-switch">
+                                    <input type="checkbox" id="setting-save-history" checked>
+                                    <span class="cg-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Export Chat Data</strong>
+                                <small>Download a JSON backup of all conversations and knowledge links.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <button type="button" class="cg-btn" id="export-history-btn">Export</button>
+                            </div>
+                        </div>
+
+                        <div class="cg-settings-row cg-danger-row">
+                            <div class="cg-row-label">
+                                <strong>Clear All Chats</strong>
+                                <small>Permanently delete all active chat sessions and locally saved messages.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <button type="button" class="danger-btn" id="clear-history-btn">Clear history</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: AI & Multi-Agent -->
+                    <div class="cg-tab-panel" id="settings-panel-models">
+                        <div class="cg-panel-header">
+                            <h3>AI & Multi-Agent Architecture</h3>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Provider</strong>
+                                <small>Ultra-low latency LLM inference provider.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <span class="cg-pill">Groq Cloud</span>
+                            </div>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Default LLM Model</strong>
+                                <small>Tool-calling foundation model selected for orchestration.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <span class="cg-pill">GPT OSS 20B</span>
+                            </div>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Agent Routing Strategy</strong>
+                                <small>How requests are partitioned between RAG, Tool-calling, and Direct LLM.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <select id="setting-orchestrator-mode" class="cg-select">
+                                    <option value="auto">Auto Orchestrated</option>
+                                    <option value="rag">Knowledge / RAG First</option>
+                                    <option value="tools">Tools & Actions First</option>
+                                    <option value="direct">Direct LLM Response</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Vision & OCR Engine</strong>
+                                <small>Deep learning text extraction pipeline for images and documents.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <span class="cg-pill">EasyOCR (PyTorch)</span>
+                            </div>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>API Service Endpoint</strong>
+                                <small>Active FastAPI backend microservice.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <span class="settings-value cg-pill">http://localhost:8990</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Account & System -->
+                    <div class="cg-tab-panel" id="settings-panel-account">
+                        <div class="cg-panel-header">
+                            <h3>Account & System</h3>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Workspace Plan</strong>
+                                <small>Your active tier and feature access.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <span class="cg-badge-pro">Multi-Agent Pro</span>
+                            </div>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Workspace Name</strong>
+                                <small>Active project namespace in runtime.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <span class="cg-pill">Multi-Agent-System</span>
+                            </div>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Backend Service Status</strong>
+                                <small>Live health status of orchestrator and tool routers.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <span class="cg-status-online">● Operational</span>
+                            </div>
+                        </div>
+
+                        <div class="cg-settings-row">
+                            <div class="cg-row-label">
+                                <strong>Version</strong>
+                                <small>Frontend and backend orchestrator release version.</small>
+                            </div>
+                            <div class="cg-row-control">
+                                <span class="cg-pill">v2.4.0 (Enterprise)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
+
+    <!-- Connectors & Integrations Dialog -->
+    <div class="connectors-backdrop" id="connectors-backdrop" hidden>
+        <section class="connectors-dialog" role="dialog" aria-modal="true" aria-labelledby="connectors-title">
+            <div class="connectors-header">
+                <div class="connectors-header-text">
+                    <span class="connectors-eyebrow">Integrations & Ecosystem</span>
+                    <h2 id="connectors-title">Connectors Hub</h2>
+                    <p class="connectors-subtitle">Connect your workspace tools, databases, and pipelines directly into the Multi-Agent orchestrator.</p>
+                </div>
+                <button class="connectors-close" id="connectors-close" aria-label="Close Connectors" title="Close">&times;</button>
+            </div>
+
+            <!-- Toolbar: Search & Category Filter Tabs -->
+            <div class="connectors-toolbar">
+                <div class="connectors-search-box">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    <input type="text" id="connectors-search-input" placeholder="Filter connectors (e.g. GitHub, Notion, SQL)...">
+                </div>
+                <div class="connectors-tabs" id="connectors-tabs">
+                    <button class="connector-tab-btn active" data-category="all">All Tools</button>
+                    <button class="connector-tab-btn" data-category="developer">Developer</button>
+                    <button class="connector-tab-btn" data-category="knowledge">Knowledge & Docs</button>
+                    <button class="connector-tab-btn" data-category="database">Databases</button>
+                    <button class="connector-tab-btn" data-category="communication">Communication</button>
+                </div>
+            </div>
+
+            <!-- Connectors Cards Grid -->
+            <div class="connectors-grid" id="connectors-grid">
+                <!-- GitHub -->
+                <div class="connector-card" data-category="developer" data-name="github">
+                    <div class="connector-card-header">
+                        <div class="connector-icon" style="background: linear-gradient(135deg, #24292e, #0d1117); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                        </div>
+                        <span class="connector-status-badge">
+                            <span class="status-pulse-dot"></span> Coming Soon
+                        </span>
+                    </div>
+                    <div class="connector-body">
+                        <div class="connector-title-wrap">
+                            <h4>GitHub</h4>
+                            <span class="connector-category-tag">Developer</span>
+                        </div>
+                        <p class="connector-desc">Sync repositories, automate pull request reviews, query commit history, and triage issues directly with the Coding Agent.</p>
+                    </div>
+                    <div class="connector-footer">
+                        <button class="connector-action-btn" data-tool="GitHub">
+                            <span class="action-icon">🔔</span> <span>Notify Me</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Notion -->
+                <div class="connector-card" data-category="knowledge" data-name="notion">
+                    <div class="connector-card-header">
+                        <div class="connector-icon" style="background: linear-gradient(135deg, #000000, #2f343b); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.83c-.466-.373-.746-.466-1.586-.42L3.899 2.11c-.42.046-.513.28-.326.466l.886 1.632zm-.793 3.033v13.542c0 .746.373 1.073 1.213.98l14.475-.84c.84-.046 1.073-.56 1.073-1.165V6.447c0-.606-.233-.98-.84-.933l-15.08.886c-.653.047-.84.42-.84.841zm14.195.42c.093.42 0 .84-.42.886l-.7.14v9.658c-.606.326-1.213.513-1.726.513-.933 0-1.213-.373-1.913-1.26l-4.526-6.158v6.205l1.493.326s0 .84-.98.84l-3.312.187c-.093-.373.187-.746.56-.84l.84-.233V8.873l-1.12-.093c-.093-.42.14-.84.653-.886l3.686-.233 4.806 6.392V8.453l-1.306-.14c-.093-.466.233-.84.7-.886l3.353-.187z"/></svg>
+                        </div>
+                        <span class="connector-status-badge">
+                            <span class="status-pulse-dot"></span> Coming Soon
+                        </span>
+                    </div>
+                    <div class="connector-body">
+                        <div class="connector-title-wrap">
+                            <h4>Notion</h4>
+                            <span class="connector-category-tag">Knowledge</span>
+                        </div>
+                        <p class="connector-desc">Index team wikis, project roadmaps, and meeting notes seamlessly into the RAG Document vector store with bi-directional sync.</p>
+                    </div>
+                    <div class="connector-footer">
+                        <button class="connector-action-btn" data-tool="Notion">
+                            <span class="action-icon">🔔</span> <span>Notify Me</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Google Drive -->
+                <div class="connector-card" data-category="knowledge" data-name="google drive">
+                    <div class="connector-card-header">
+                        <div class="connector-icon" style="background: linear-gradient(135deg, #1fa463, #0f9d58); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm4.86 6.5l3.43 6h7.85l-3.43-6h-7.85zm-2.07 7.5L7.07 23.5h13.71l3.43-6H10.5z"/></svg>
+                        </div>
+                        <span class="connector-status-badge">
+                            <span class="status-pulse-dot"></span> Coming Soon
+                        </span>
+                    </div>
+                    <div class="connector-body">
+                        <div class="connector-title-wrap">
+                            <h4>Google Drive</h4>
+                            <span class="connector-category-tag">Knowledge</span>
+                        </div>
+                        <p class="connector-desc">Automatically ingest and index Google Docs, Sheets, Slides, and enterprise PDFs with fine-grained permission controls.</p>
+                    </div>
+                    <div class="connector-footer">
+                        <button class="connector-action-btn" data-tool="Google Drive">
+                            <span class="action-icon">🔔</span> <span>Notify Me</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PostgreSQL / SQL -->
+                <div class="connector-card" data-category="database" data-name="postgresql mysql sql">
+                    <div class="connector-card-header">
+                        <div class="connector-icon" style="background: linear-gradient(135deg, #336791, #1e3f5a); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                        </div>
+                        <span class="connector-status-badge">
+                            <span class="status-pulse-dot"></span> Coming Soon
+                        </span>
+                    </div>
+                    <div class="connector-body">
+                        <div class="connector-title-wrap">
+                            <h4>PostgreSQL & MySQL</h4>
+                            <span class="connector-category-tag">Databases</span>
+                        </div>
+                        <p class="connector-desc">Natural language Text-to-SQL querying, automatic schema discovery, and safe read-only business data analysis.</p>
+                    </div>
+                    <div class="connector-footer">
+                        <button class="connector-action-btn" data-tool="PostgreSQL & MySQL">
+                            <span class="action-icon">🔔</span> <span>Notify Me</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Snowflake -->
+                <div class="connector-card" data-category="database" data-name="snowflake">
+                    <div class="connector-card-header">
+                        <div class="connector-icon" style="background: linear-gradient(135deg, #29b5e8, #11567f); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/><line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/></svg>
+                        </div>
+                        <span class="connector-status-badge">
+                            <span class="status-pulse-dot"></span> Coming Soon
+                        </span>
+                    </div>
+                    <div class="connector-body">
+                        <div class="connector-title-wrap">
+                            <h4>Snowflake</h4>
+                            <span class="connector-category-tag">Databases</span>
+                        </div>
+                        <p class="connector-desc">Query enterprise data cloud warehouses, run semantic KPI aggregations, and generate boardroom analytical reports.</p>
+                    </div>
+                    <div class="connector-footer">
+                        <button class="connector-action-btn" data-tool="Snowflake">
+                            <span class="action-icon">🔔</span> <span>Notify Me</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Slack -->
+                <div class="connector-card" data-category="communication" data-name="slack">
+                    <div class="connector-card-header">
+                        <div class="connector-icon" style="background: linear-gradient(135deg, #4A154B, #611f69); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></svg>
+                        </div>
+                        <span class="connector-status-badge">
+                            <span class="status-pulse-dot"></span> Coming Soon
+                        </span>
+                    </div>
+                    <div class="connector-body">
+                        <div class="connector-title-wrap">
+                            <h4>Slack</h4>
+                            <span class="connector-category-tag">Communication</span>
+                        </div>
+                        <p class="connector-desc">Listen to channels, summarize long discussions, trigger agent workflows via slash commands, and broadcast findings.</p>
+                    </div>
+                    <div class="connector-footer">
+                        <button class="connector-action-btn" data-tool="Slack">
+                            <span class="action-icon">🔔</span> <span>Notify Me</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Jira & Confluence -->
+                <div class="connector-card" data-category="developer" data-name="jira confluence atlassian">
+                    <div class="connector-card-header">
+                        <div class="connector-icon" style="background: linear-gradient(135deg, #0052cc, #2684ff); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M11.53 2c0 2.4-1.97 4.35-4.4 4.35H2.8a.8.8 0 0 0-.8.8v4.33c0 2.4 1.97 4.35 4.4 4.35h4.33a.8.8 0 0 0 .8-.8V2zM16.14 6.35c0 2.4-1.97 4.35-4.4 4.35H7.41a.8.8 0 0 0-.8.8v4.33c0 2.4 1.97 4.35 4.4 4.35h4.33a.8.8 0 0 0 .8-.8V6.35zM20.75 10.7c0 2.4-1.97 4.35-4.4 4.35h-4.33a.8.8 0 0 0-.8.8v4.33c0 2.4 1.97 4.35 4.4 4.35h4.33a.8.8 0 0 0 .8-.8V10.7z"/></svg>
+                        </div>
+                        <span class="connector-status-badge">
+                            <span class="status-pulse-dot"></span> Coming Soon
+                        </span>
+                    </div>
+                    <div class="connector-body">
+                        <div class="connector-title-wrap">
+                            <h4>Jira & Confluence</h4>
+                            <span class="connector-category-tag">Developer</span>
+                        </div>
+                        <p class="connector-desc">Automate sprint ticket grooming, search engineering specifications, and generate bug triage reports automatically.</p>
+                    </div>
+                    <div class="connector-footer">
+                        <button class="connector-action-btn" data-tool="Jira & Confluence">
+                            <span class="action-icon">🔔</span> <span>Notify Me</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Linear -->
+                <div class="connector-card" data-category="developer" data-name="linear">
+                    <div class="connector-card-header">
+                        <div class="connector-icon" style="background: linear-gradient(135deg, #5e6ad2, #39429e); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 3.5h17v17h-17zM6 6v12h12V6H6zm2 2h8v2H8V8zm0 3h8v2H8v-2zm0 3h5v2H8v-2z"/></svg>
+                        </div>
+                        <span class="connector-status-badge">
+                            <span class="status-pulse-dot"></span> Coming Soon
+                        </span>
+                    </div>
+                    <div class="connector-body">
+                        <div class="connector-title-wrap">
+                            <h4>Linear</h4>
+                            <span class="connector-category-tag">Developer</span>
+                        </div>
+                        <p class="connector-desc">High-speed project management sync, milestone tracking, automated issue creation, and cycle velocity analytics.</p>
+                    </div>
+                    <div class="connector-footer">
+                        <button class="connector-action-btn" data-tool="Linear">
+                            <span class="action-icon">🔔</span> <span>Notify Me</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Discord -->
+                <div class="connector-card" data-category="communication" data-name="discord">
+                    <div class="connector-card-header">
+                        <div class="connector-icon" style="background: linear-gradient(135deg, #5865F2, #3c45a5); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                        </div>
+                        <span class="connector-status-badge">
+                            <span class="status-pulse-dot"></span> Coming Soon
+                        </span>
+                    </div>
+                    <div class="connector-body">
+                        <div class="connector-title-wrap">
+                            <h4>Discord</h4>
+                            <span class="connector-category-tag">Communication</span>
+                        </div>
+                        <p class="connector-desc">Integrate AI agent bots into Discord servers for community helpdesk, real-time question answering, and moderation.</p>
+                    </div>
+                    <div class="connector-footer">
+                        <button class="connector-action-btn" data-tool="Discord">
+                            <span class="action-icon">🔔</span> <span>Notify Me</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom Webhooks / REST API -->
+                <div class="connector-card" data-category="developer" data-name="webhook api custom http">
+                    <div class="connector-card-header">
+                        <div class="connector-icon" style="background: linear-gradient(135deg, #FF6B35, #E55827); color: #ffffff;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        </div>
+                        <span class="connector-status-badge">
+                            <span class="status-pulse-dot"></span> Coming Soon
+                        </span>
+                    </div>
+                    <div class="connector-body">
+                        <div class="connector-title-wrap">
+                            <h4>Custom Webhooks & REST</h4>
+                            <span class="connector-category-tag">Developer</span>
+                        </div>
+                        <p class="connector-desc">Plug in any internal microservice, custom API endpoint, or event webhook directly as an autonomous agent callable tool.</p>
+                    </div>
+                    <div class="connector-footer">
+                        <button class="connector-action-btn" data-tool="Custom Webhooks">
+                            <span class="action-icon">🔔</span> <span>Notify Me</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- EasyOCR Text Extractor Dialog -->
+    <div class="ocr-backdrop" id="ocr-backdrop" hidden>
+        <section class="ocr-dialog" role="dialog" aria-modal="true" aria-labelledby="ocr-title">
+            <div class="ocr-header">
+                <div class="ocr-header-text">
+                    <span class="ocr-eyebrow">Vision AI & Deep Learning</span>
+                    <h2 id="ocr-title">EasyOCR Image Text Extractor</h2>
+                    <p class="ocr-subtitle">Upload any document screenshot, photo, receipt, or image to extract structured text using EasyOCR models.</p>
+                </div>
+                <button class="ocr-close" id="ocr-close" aria-label="Close OCR" title="Close">&times;</button>
+            </div>
+
+            <div class="ocr-body-layout">
+                <!-- Left: Upload & Preview Area -->
+                <div class="ocr-left-col">
+                    <div class="ocr-dropzone" id="ocr-dropzone">
+                        <input type="file" id="ocr-file-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/bmp" hidden>
+                        <div class="dropzone-empty" id="ocr-dropzone-empty">
+                            <div class="dropzone-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                            </div>
+                            <h4>Drag & drop an image here</h4>
+                            <p>Supports PNG, JPG, JPEG, WEBP, BMP (up to 15MB)</p>
+                            <button type="button" class="ocr-browse-btn" id="ocr-browse-btn">Browse Files</button>
+                        </div>
+
+                        <div class="dropzone-preview" id="ocr-dropzone-preview" style="display: none;">
+                            <img id="ocr-preview-img" src="" alt="Selected image preview">
+                            <div class="preview-overlay">
+                                <span class="preview-filename" id="ocr-preview-filename">image.png</span>
+                                <button type="button" class="preview-remove-btn" id="ocr-preview-remove" title="Remove image">&times;</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OCR Options -->
+                    <div class="ocr-options-bar">
+                        <label class="ocr-lang-label">
+                            <span>Language:</span>
+                            <select id="ocr-lang-select" class="ocr-select">
+                                <option value="en">English (en)</option>
+                                <option value="en,es">English + Spanish (en, es)</option>
+                                <option value="en,fr">English + French (en, fr)</option>
+                                <option value="en,de">English + German (en, de)</option>
+                                <option value="en,ch_sim">English + Chinese (en, ch_sim)</option>
+                                <option value="en,ja">English + Japanese (en, ja)</option>
+                                <option value="en,ko">English + Korean (en, ko)</option>
+                                <option value="en,ar">English + Arabic (en, ar)</option>
+                                <option value="en,hi">English + Hindi (en, hi)</option>
+                            </select>
+                        </label>
+
+                        <button type="button" class="ocr-submit-btn" id="ocr-extract-btn" disabled>
+                            <span class="btn-text">✨ Extract Text (EasyOCR)</span>
+                            <span class="btn-spinner" style="display: none;"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Extracted Result Area -->
+                <div class="ocr-right-col">
+                    <div class="ocr-results-header">
+                        <span class="results-title">Extracted Content</span>
+                        <div class="ocr-stats-chips" id="ocr-stats-chips" style="display: none;">
+                            <span class="stat-chip lines-chip"><b id="ocr-stat-lines">0</b> lines</span>
+                            <span class="stat-chip conf-chip"><b id="ocr-stat-conf">0%</b> confidence</span>
+                        </div>
+                    </div>
+
+                    <div class="ocr-result-box">
+                        <textarea id="ocr-result-text" placeholder="Extracted text will appear here with line breaks and formatting after running EasyOCR..." readonly></textarea>
+                    </div>
+
+                    <div class="ocr-actions-bar">
+                        <button type="button" class="ocr-action-btn" id="ocr-copy-btn" disabled>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            <span>Copy Text</span>
+                        </button>
+                        <button type="button" class="ocr-action-btn primary" id="ocr-send-chat-btn" disabled>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            <span>Insert into Chat</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Floating Toast Notification -->
+    <div class="toast-container" id="toast-container"></div>
 
     <script src="app.js"></script>
 </body>

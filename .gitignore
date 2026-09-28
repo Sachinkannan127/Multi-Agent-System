@@ -1,17 +1,48 @@
-# Python
-.env
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.pytest_cache/
+# Python Virtual Environments
 venv/
+.venv/
 env/
+backend/venv/
+backend/.venv/
+**/venv/
+**/.venv/
 
-# Uploads
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+**/.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment Variables
+.env
+backend/.env
+frontend/.env
+*.env.local
+
+# Uploads & Temporary storage
 backend/app/upload/*
 !backend/app/upload/.gitkeep
+backend/app/db/*.sqlite*
+backend/app/db/*.db
 
-# Node (no longer needed, kept for safety)
+# Node / Frontend Build
 node_modules/
+**/node_modules/
 dist/
+build/
+.npm/
+
+# Archives & Packages
+*.zip
+*.tar.gz
+*.tgz
+deployment_package.zip
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

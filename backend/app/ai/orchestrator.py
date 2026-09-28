@@ -53,15 +53,19 @@ class SmartMultiAgentOrchestrator:
 
         # 2. Dispatch to Selected Pipeline
 
-        # Route A: RAG (Document / PDF Vector Store QA)
+        # Route A: RAG (Document / PDF Vector Store QA Agent)
         if route == "rag":
             return self._execute_rag_pipeline(prompt, classification, top_k=top_k_rag, history=history, conversation_id=conversation_id)
 
-        # Route B: Tool Calling Agent (Tavily / ScrapeGraphAI)
+        # Route B: Web Search Agent (Tavily Search / ScrapeGraphAI Scraping)
         elif route == "toolcalling":
             return self._execute_toolcalling_pipeline(prompt, classification, provider=provider, history=history, conversation_id=conversation_id)
 
-        # Route C: Direct LLM Completion
+        # Route C: Specialized Coding Agent (Software Engineering / Script Generation)
+        elif route == "coding":
+            return self._execute_coding_pipeline(prompt, classification, provider=provider, history=history, conversation_id=conversation_id)
+
+        # Route D: Direct LLM Completion
         else:
             return self._execute_direct_pipeline(prompt, classification, provider=provider, history=history, conversation_id=conversation_id)
 
@@ -87,27 +91,50 @@ class SmartMultiAgentOrchestrator:
             ) if search_results else "No relevant document chunks found in vector store."
 
             system_instruction = (
-                "You are an expert RAG Assistant. Answer the user question accurately based on the provided document context below.\n\n"
+                "You are your Multi-Agent AI Assistant, developed by Sachin.\n\n"
+                "IDENTITY & CREATOR DIRECTIVE:\n"
+                "If asked 'Who are you?', 'Tell me about yourself', or 'Who developed you?', YOU MUST EXPLICITLY STATE:\n"
+                "'I am your Multi-Agent AI Assistant, developed by Sachin.'\n\n"
+                "APPLICATION CAPABILITIES TO HIGHLIGHT:\n"
+                "- Created & Developed By: Sachin\n"
+                "- Multi-Agent Orchestrator: Smart Intent Router dynamically classifying queries to Document Agent, Web Search Agent, Coding Agent, or Direct LLM.\n"
+                "- Real-Time Web Intelligence: Powered by Tavily Search API & ScrapeGraphAI for live web data and news.\n"
+                "- Document Intelligence (RAG): Hybrid Search (Semantic + BM25 + RRF) over MongoDB Vector Store for PDF QA.\n"
+                "- Software Engineering Agent: Dedicated code generation, debugging, and script optimization.\n"
+                "- Session Memory: Permanent MongoDB conversation storage with cross-chat context awareness.\n\n"
                 "OUTPUT FORMATTING REQUIREMENTS:\n"
-                "You MUST structure your response strictly into the following 3 markdown sections:\n"
+                "You MUST format your final response strictly into the following 3 markdown sections:\n\n"
                 "### 📌 Question Summary\n"
-                "(Brief 1-2 sentence summary of the user's question)\n\n"
-                "### 💡 Response\n"
-                "(Main detailed answer satisfying the user request based on context)\n\n"
-                "### 📚 References & Sources\n"
-                "(Bulleted list of document chunks, files, or RRF scores used)\n\n"
-                f"DOCUMENT CONTEXT:\n{context_str}"
+                "(Brief 1-2 sentence summary of the user's question or request.)\n\n"
+                "### 💡 Main Content\n"
+                "(Main detailed answer satisfying the user request based on the provided document context.)\n\n"
+                "### 📚 Sources & References\n"
+                "(Bulleted list of document chunks, files, or RRF scores relied upon.)\n\n"
+                f"DOCUMENT CONTEXT:\n{context_str}\n"
                 f"{global_mem}"
             )
 
             messages = [{"role": "system", "content": system_instruction}]
             if history:
-                for item in history:
+                for item in history[-4:]:
                     if isinstance(item, dict) and item.get("content"):
-                        messages.append({"role": item.get("role", "user"), "content": item.get("content")})
+                        role = item.get("role", "user")
+                        content = item.get("content", "").strip()
+                        if len(content) > 300:
+                            content = content[:300] + "..."
+                        messages.append({"role": role, "content": content})
             messages.append({"role": "user", "content": prompt})
 
             answer_text, model_used = self._completion_with_fallback(messages, temperature=0.2)
+
+            # Build sources metadata for UI widget rendering
+            sources_meta = []
+            for idx, r in enumerate(search_results):
+                filename = r.metadata.get("filename") or r.metadata.get("source") or f"Document Chunk {idx+1}"
+                sources_meta.append({
+                    "metadata": {"filename": filename},
+                    "text": r.text
+                })
 
             return RouterExecutionResult(
                 query=prompt,
@@ -119,6 +146,7 @@ class SmartMultiAgentOrchestrator:
                     "search_mode": "hybrid_rrf",
                     "total_chunks_retrieved": len(search_results),
                     "top_chunk_rrf_scores": [r.rrf_score for r in search_results],
+                    "sources": sources_meta,
                     "model_used": model_used
                 }
             )
@@ -165,15 +193,41 @@ class SmartMultiAgentOrchestrator:
             agent = LangChainToolAgent(model_provider=provider)
             agent_result = agent.run(prompt, history=history, conversation_id=conversation_id)
 
+            sources_meta = []
+            for tc in agent_result.get("tool_calls_executed", []):
+                tool_name = tc.get("tool", "Search Tool")
+                result_val = tc.get("result", {})
+                if isinstance(result_val, dict) and "results" in result_val:
+                    for r_item in result_val.get("results", []):
+                        if isinstance(r_item, dict):
+                            sources_meta.append({
+                                "metadata": {"filename": r_item.get("title") or r_item.get("url") or tool_name},
+                                "text": r_item.get("content") or r_item.get("snippet") or ""
+                            })
+                else:
+                    sources_meta.append({
+                        "metadata": {"filename": tool_name},
+                        "text": str(result_val)[:300]
+                    })
+
+            raw_resp = agent_result.get("final_response", "")
+            if isinstance(raw_resp, list):
+                response_str = "".join(
+                    [part.get("text", str(part)) if isinstance(part, dict) else str(part) for part in raw_resp]
+                )
+            else:
+                response_str = str(raw_resp or "")
+
             return RouterExecutionResult(
                 query=prompt,
                 selected_route="toolcalling",
                 classification_reasoning=classification.reasoning,
                 confidence=classification.confidence,
-                response=agent_result.get("final_response", ""),
+                response=response_str,
                 metadata={
                     "tool_calls_executed": agent_result.get("tool_calls_executed", []),
                     "total_iterations": agent_result.get("total_iterations", 1),
+                    "sources": sources_meta,
                     "provider": provider or "groq"
                 }
             )
@@ -203,22 +257,36 @@ class SmartMultiAgentOrchestrator:
             global_mem = get_global_conversational_context(exclude_conv_id=conversation_id)
 
             direct_system_prompt = (
-                "You are a helpful, friendly, and expert AI assistant.\n\n"
+                "You are your Multi-Agent AI Assistant, developed by Sachin.\n\n"
+                "IDENTITY & CREATOR DIRECTIVE:\n"
+                "If asked 'Who are you?', 'Tell me about yourself', or 'Who developed you?', YOU MUST EXPLICITLY STATE:\n"
+                "'I am your Multi-Agent AI Assistant, developed by Sachin.'\n\n"
+                "APPLICATION CAPABILITIES TO HIGHLIGHT:\n"
+                "- Created & Developed By: Sachin\n"
+                "- Multi-Agent Orchestrator: Smart Intent Router dynamically classifying queries to Document Agent, Web Search Agent, Coding Agent, or Direct LLM.\n"
+                "- Real-Time Web Intelligence: Powered by Tavily Search API & ScrapeGraphAI for live web data and news.\n"
+                "- Document Intelligence (RAG): Hybrid Search (Semantic + BM25 + RRF) over MongoDB Vector Store for PDF QA.\n"
+                "- Software Engineering Agent: Dedicated code generation, debugging, and script optimization.\n"
+                "- Session Memory: Permanent MongoDB conversation storage with cross-chat context awareness.\n\n"
                 "OUTPUT FORMATTING REQUIREMENTS:\n"
-                "You MUST structure your response strictly into the following 3 markdown sections:\n"
+                "You MUST format your final response strictly into the following 3 markdown sections:\n\n"
                 "### 📌 Question Summary\n"
-                "(Brief 1-2 sentence summary of the user's query)\n\n"
-                "### 💡 Response\n"
-                "(Main detailed content, solution, explanation, or code)\n\n"
-                "### 📚 References & Sources\n"
-                "(List references, model knowledge base, or relevant links used)"
+                "(Brief 1-2 sentence summary of the user's question or query.)\n\n"
+                "### 💡 Main Content\n"
+                "(Main detailed content, solution, explanation, or code satisfying the user's prompt.)\n\n"
+                "### 📚 Sources & References\n"
+                "(List references, model knowledge base, or relevant links used. If no external sources were used, state 'Internal LLM Knowledge Base'.)\n"
                 f"{global_mem}"
             )
             messages = [{"role": "system", "content": direct_system_prompt}]
             if history:
-                for item in history:
+                for item in history[-4:]:
                     if isinstance(item, dict) and item.get("content"):
-                        messages.append({"role": item.get("role", "user"), "content": item.get("content")})
+                        role = item.get("role", "user")
+                        content = item.get("content", "").strip()
+                        if len(content) > 300:
+                            content = content[:300] + "..."
+                        messages.append({"role": role, "content": content})
             messages.append({"role": "user", "content": prompt})
 
             answer_text, model_used = self._completion_with_fallback(messages, temperature=0.7)
@@ -244,6 +312,237 @@ class SmartMultiAgentOrchestrator:
                 metadata={"error": str(e)}
             )
 
+    def _execute_coding_pipeline(
+        self,
+        prompt: str,
+        classification: IntentClassification,
+        provider: Optional[str] = None,
+        history: Optional[List[Dict[str, Any]]] = None,
+        conversation_id: Optional[str] = None,
+    ) -> RouterExecutionResult:
+        """Executes Specialized Coding Agent pipeline for software engineering & script generation."""
+        print(f"[Coding Agent Route] Delegating to Specialized Software Engineering Agent...")
+        try:
+            from app.ai.global_memory import get_global_conversational_context
+            global_mem = get_global_conversational_context(exclude_conv_id=conversation_id)
 
-# Global orchestrator singleton instance
+            coding_system_prompt = (
+                "You are your Multi-Agent AI Assistant, developed by Sachin.\n\n"
+                "IDENTITY & CREATOR DIRECTIVE:\n"
+                "If asked 'Who are you?', 'Tell me about yourself', or 'Who developed you?', YOU MUST EXPLICITLY STATE:\n"
+                "'I am your Multi-Agent AI Assistant, developed by Sachin.'\n\n"
+                "APPLICATION CAPABILITIES TO HIGHLIGHT:\n"
+                "- Created & Developed By: Sachin\n"
+                "- Multi-Agent Orchestrator: Smart Intent Router dynamically classifying queries to Document Agent, Web Search Agent, Coding Agent, or Direct LLM.\n"
+                "- Real-Time Web Intelligence: Powered by Tavily Search API & ScrapeGraphAI for live web data and news.\n"
+                "- Document Intelligence (RAG): Hybrid Search (Semantic + BM25 + RRF) over MongoDB Vector Store for PDF QA.\n"
+                "- Software Engineering Agent: Dedicated code generation, debugging, and script optimization.\n"
+                "- Session Memory: Permanent MongoDB conversation storage with cross-chat context awareness.\n\n"
+                "OUTPUT FORMATTING REQUIREMENTS:\n"
+                "You MUST format your final response strictly into the following 3 markdown sections:\n\n"
+                "### 📌 Question Summary\n"
+                "(Brief 1-2 sentence summary of the programming request or code issue.)\n\n"
+                "### 💡 Main Content\n"
+                "(Complete code implementation with syntax highlighting, concise comments, and usage instructions.)\n\n"
+                "### 📚 Sources & References\n"
+                "(State tools, frameworks, programming language versions, or 'Internal LLM Knowledge Base'.)\n"
+                f"{global_mem}"
+            )
+            messages = [{"role": "system", "content": coding_system_prompt}]
+            if history:
+                for item in history[-4:]:
+                    if isinstance(item, dict) and item.get("content"):
+                        role = item.get("role", "user")
+                        content = item.get("content", "").strip()
+                        if len(content) > 300:
+                            content = content[:300] + "..."
+                        messages.append({"role": role, "content": content})
+            messages.append({"role": "user", "content": prompt})
+
+            answer_text, model_used = self._completion_with_fallback(messages, temperature=0.1)
+
+            return RouterExecutionResult(
+                query=prompt,
+                selected_route="coding",
+                classification_reasoning=classification.reasoning,
+                confidence=classification.confidence,
+                response=answer_text,
+                metadata={
+                    "agent": "Coding Agent",
+                    "model_used": model_used
+                }
+            )
+        except Exception as e:
+            logger.error(f"Coding route execution error: {e}")
+            return RouterExecutionResult(
+                query=prompt,
+                selected_route="coding",
+                classification_reasoning=classification.reasoning,
+                confidence=classification.confidence,
+                response=f"Error executing Coding Agent pipeline: {str(e)}",
+                metadata={"error": str(e)}
+            )
+
+    async def stream_route_execution(
+        self,
+        prompt: str,
+        provider: Optional[str] = None,
+        top_k_rag: int = 3,
+        history: Optional[List[Dict[str, Any]]] = None,
+        conversation_id: Optional[str] = None,
+    ):
+        """
+        Classifies prompt intent, emits SSE start event, then streams LLM tokens in real-time.
+        For toolcalling, executes the LangChain Tool Agent (Tavily Search / ScrapeGraph) and streams its response.
+        """
+        import asyncio
+        import json as _json
+
+        logger.info(f"Orchestrator streaming prompt: '{prompt}'")
+        classification: IntentClassification = self.router.classify_intent(prompt)
+        route = classification.intent
+
+        # Special handling for Web Search / Toolcalling route
+        if route == "toolcalling":
+            start_meta = _json.dumps({
+                "event": "start",
+                "selected_route": route,
+                "classification_reasoning": classification.reasoning,
+                "confidence": classification.confidence,
+                "model_used": "LangChain Web Agent (Tavily/ScrapeGraph)",
+            })
+            yield f"data: {start_meta}\n\n"
+
+            try:
+                agent_res = await asyncio.to_thread(
+                    self._execute_toolcalling_pipeline,
+                    prompt,
+                    classification,
+                    provider,
+                    history,
+                    conversation_id
+                )
+                final_text = agent_res.response or "No response from Web Search Agent."
+                # Stream chunk by chunk for fluid UX
+                chunk_size = 20
+                for i in range(0, len(final_text), chunk_size):
+                    chunk = final_text[i:i+chunk_size]
+                    yield f"data: {_json.dumps({'content': chunk})}\n\n"
+                    await asyncio.sleep(0.015)
+            except Exception as e:
+                logger.error(f"Toolcalling streaming error: {e}")
+                yield f"data: {_json.dumps({'error': str(e)})}\n\n"
+
+            yield "data: [DONE]\n\n"
+            return
+
+        from app.ai.global_memory import get_global_conversational_context
+        global_mem = get_global_conversational_context(exclude_conv_id=conversation_id)
+
+        system_instruction = (
+            "You are your Multi-Agent AI Assistant, developed by Sachin.\n\n"
+            "IDENTITY & CREATOR DIRECTIVE:\n"
+            "If asked 'Who are you?', 'Tell me about yourself', or 'Who developed you?', YOU MUST EXPLICITLY STATE:\n"
+            "'I am your Multi-Agent AI Assistant, developed by Sachin.'\n\n"
+            "APPLICATION CAPABILITIES TO HIGHLIGHT:\n"
+            "- Created & Developed By: Sachin\n"
+            "- Multi-Agent Orchestrator: Smart Intent Router dynamically classifying queries to Document Agent, Web Search Agent, Coding Agent, or Direct LLM.\n"
+            "- Real-Time Web Intelligence: Powered by Tavily Search API & ScrapeGraphAI for live web data and news.\n"
+            "- Document Intelligence (RAG): Hybrid Search (Semantic + BM25 + RRF) over MongoDB Vector Store for PDF QA.\n"
+            "- Software Engineering Agent: Dedicated code generation, debugging, and script optimization.\n"
+            "- Session Memory: Permanent MongoDB conversation storage with cross-chat context awareness.\n\n"
+            "OUTPUT FORMATTING REQUIREMENTS:\n"
+            "You MUST format your final response strictly into the following 3 markdown sections:\n\n"
+            "### 📌 Question Summary\n"
+            "(Brief 1-2 sentence summary of the user's question or request.)\n\n"
+            "### 💡 Main Content\n"
+            "(Main detailed answer satisfying the user request.)\n\n"
+            "### 📚 Sources & References\n"
+            "(Bulleted list of sources, tools, or 'Internal LLM Knowledge Base'.)\n"
+            f"{global_mem}"
+        )
+
+        if route == "rag":
+            try:
+                from app.rag.hybrid_search import hybrid_search_engine
+                search_results = hybrid_search_engine.search(query=prompt, top_k=top_k_rag)
+                context_str = "\n\n".join(
+                    [f"--- Document Chunk {i+1} (RRF Score: {r.rrf_score}) ---\n{r.text}" for i, r in enumerate(search_results)]
+                ) if search_results else "No relevant document chunks found in vector store."
+                system_instruction += f"\n\nDOCUMENT CONTEXT:\n{context_str}"
+            except Exception as e:
+                logger.warning(f"RAG context retrieval failed during streaming: {e}")
+
+        messages = [{"role": "system", "content": system_instruction}]
+        if history:
+            for item in history[-4:]:
+                if isinstance(item, dict) and item.get("content"):
+                    role = item.get("role", "user")
+                    content = item.get("content", "").strip()
+                    if len(content) > 300:
+                        content = content[:300] + "..."
+                    messages.append({"role": role, "content": content})
+        messages.append({"role": "user", "content": prompt})
+
+        candidate_models = settings.FALLBACK_SEQUENCES.get("Fast", [settings.DEFAULT_MODEL])
+        stream_resp = None
+        successful_model = None
+
+        for model in candidate_models:
+            try:
+                stream_resp = await litellm.acompletion(
+                    model=model,
+                    messages=messages,
+                    stream=True,
+                    temperature=0.1 if route == "coding" else 0.7,
+                )
+                successful_model = model
+                break
+            except Exception as err:
+                logger.warning(f"Streaming model '{model}' failed: {err}")
+
+        if not stream_resp or not successful_model:
+            yield f"data: {_json.dumps({'error': 'All models failed for streaming'})}\n\n"
+            return
+
+        start_meta = _json.dumps({
+            "event": "start",
+            "selected_route": route,
+            "classification_reasoning": classification.reasoning,
+            "confidence": classification.confidence,
+            "model_used": successful_model,
+        })
+        yield f"data: {start_meta}\n\n"
+
+        streamed_any = False
+        try:
+            async for chunk in stream_resp:
+                delta = chunk.choices[0].delta.content if chunk.choices and chunk.choices[0].delta else None
+                if delta:
+                    streamed_any = True
+                    yield f"data: {_json.dumps({'content': delta})}\n\n"
+        except Exception as e:
+            logger.error(f"Stream chunk error: {e}")
+            if not streamed_any:
+                try:
+                    fallback_text, _ = await asyncio.to_thread(
+                        self._completion_with_fallback,
+                        messages,
+                        0.1 if route == "coding" else 0.7
+                    )
+                    chunk_size = 25
+                    for i in range(0, len(fallback_text), chunk_size):
+                        yield f"data: {_json.dumps({'content': fallback_text[i:i+chunk_size]})}\n\n"
+                        await asyncio.sleep(0.01)
+                except Exception as fb_err:
+                    yield f"data: {_json.dumps({'error': str(fb_err)})}\n\n"
+            else:
+                yield f"data: {_json.dumps({'error': str(e)})}\n\n"
+
+        yield "data: [DONE]\n\n"
+
+
+# Singleton instance
 orchestrator = SmartMultiAgentOrchestrator()
+
+

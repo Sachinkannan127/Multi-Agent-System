@@ -54,9 +54,9 @@ async def upload_pdf(file: UploadFile = File(...)):
         with open(save_path, "wb") as f:
             f.write(content)
 
-        # Process with PDFLoader
+        # Process with PDFLoader and clear previous PDF chunks for static isolated document QA
         doc = PDFLoader.load_bytes(content, filename=file.filename)
-        vector_store.remove_source(doc.filename)
+        vector_store.clear()
 
         total_chunks = 0
         indexed = False

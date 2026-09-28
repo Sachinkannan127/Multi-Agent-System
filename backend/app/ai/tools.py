@@ -39,13 +39,13 @@ class TavilySearchInput(BaseModel):
 # --- Tool Implementations ---
 
 @tool("tavily_search_tool", args_schema=TavilySearchInput)
-def tavily_search_tool(query: str, max_results: int = 5) -> Dict[str, Any]:
+def tavily_search_tool(query: str, max_results: int = 4) -> Dict[str, Any]:
     """
-    Performs web search using Tavily AI Search API to retrieve real-time search results, web pages, and news snippets.
-    Use this tool for real-time web queries, news search, or factual current events lookups.
+    PRIMARY and FASTEST tool for all web searches, weather forecasts, latest news, live facts, stock prices, and general internet queries.
+    Always prefer this tool for any real-time questions, weather inquiries, or fresh online data.
     """
     logger.info(f"Executing Tavily Search for query: {query}")
-    print(f"[Tool: tavily_search_tool] Searching '{query}' (max_results={max_results})")
+    print(f"[Tool: tavily_search_tool] Ultra-fast Search: '{query}' (max_results={max_results})")
 
     api_key = settings.TAVILY_API_KEY
     if not api_key:
@@ -56,10 +56,37 @@ def tavily_search_tool(query: str, max_results: int = 5) -> Dict[str, Any]:
         }
 
     try:
+        import httpx
+        resp = httpx.post(
+            "https://api.tavily.com/search",
+            json={
+                "api_key": api_key,
+                "query": query,
+                "max_results": max_results,
+                "search_depth": "basic",
+                "include_answer": True,
+            },
+            timeout=8.0
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            return {
+                "status": "success",
+                "query": query,
+                "answer": data.get("answer", ""),
+                "results": data.get("results", []),
+                "raw_response": data
+            }
+        else:
+            logger.warning(f"Tavily REST returned {resp.status_code}: {resp.text}")
+    except Exception as e:
+        logger.warning(f"Tavily HTTP search failed: {e}")
+
+    # Fallback to TavilyClient if available
+    try:
         from tavily import TavilyClient
         client = TavilyClient(api_key=api_key)
         response = client.search(query=query, max_results=max_results, search_depth="basic")
-
         return {
             "status": "success",
             "query": query,
@@ -67,7 +94,7 @@ def tavily_search_tool(query: str, max_results: int = 5) -> Dict[str, Any]:
             "raw_response": response
         }
     except Exception as e:
-        logger.error(f"Tavily Search failed: {e}")
+        logger.error(f"Tavily fallback search failed: {e}")
         return {
             "status": "error",
             "query": query,
@@ -90,7 +117,10 @@ def scrapegraph_realtime_scraper(urls: List[str], prompt: str) -> Dict[str, Any]
     # 1. ScrapeGraph Cloud API if SGAI_API_KEY is available
     if settings.SGAI_API_KEY:
         try:
-            from scrapegraph_py import Client
+            try:
+                from scrapegraph_py import Client
+            except ImportError:
+                from scrapegraph_py.client import Client
             sgai_client = Client(api_key=settings.SGAI_API_KEY)
             results = []
             for u in urls:
@@ -111,11 +141,13 @@ def scrapegraph_realtime_scraper(urls: List[str], prompt: str) -> Dict[str, Any]
             llm_config = {
                 "api_key": settings.GEMINI_API_KEY,
                 "model": "google_genai/gemini-1.5-flash",
+                "model_tokens": 8192,
             }
         elif settings.GROQ_API_KEY:
             llm_config = {
                 "api_key": settings.GROQ_API_KEY,
                 "model": "groq/openai/gpt-oss-20b",
+                "model_tokens": 8192,
             }
         else:
             return {
@@ -150,6 +182,20 @@ def scrapegraph_realtime_scraper(urls: List[str], prompt: str) -> Dict[str, Any]
                 "status": "success"
             }
     except Exception as e:
+        logger.warning(f"ScrapeGraphAI Realtime Scraping failed ({e}), attempting HTTP + LLM extraction fallback for {urls}...")
+        fb_results = []
+        for u in urls:
+            res = _fallback_http_scrape(u, prompt)
+            if res:
+                fb_results.append(res)
+        if fb_results:
+            return {
+                "source": "http_llm_extractor_realtime",
+                "urls": urls,
+                "result": fb_results if len(fb_results) > 1 else fb_results[0]["result"],
+                "status": "success"
+            }
+
         logger.error(f"ScrapeGraphAI Realtime Scraping failed: {e}")
         return {
             "status": "error",
@@ -185,25 +231,27 @@ def scrapegraph_web_scraper(url: str, prompt: str) -> Dict[str, Any]:
         except Exception as e:
             logger.warning(f"ScrapeGraph Cloud API failed: {e}. Falling back to SmartScraperGraph local graph.")
 
-    # 2. Use SmartScraperGraph with Gemini / Groq LLM config
+    # 2. Use SmartScraperGraph with Groq / Gemini LLM config
     try:
         from scrapegraphai.graphs import SmartScraperGraph
 
         # Configure LLM based on available keys
-        if settings.GEMINI_API_KEY:
-            llm_config = {
-                "api_key": settings.GEMINI_API_KEY,
-                "model": "google_genai/gemini-1.5-flash",
-            }
-        elif settings.GROQ_API_KEY:
+        if settings.GROQ_API_KEY:
             llm_config = {
                 "api_key": settings.GROQ_API_KEY,
                 "model": "groq/openai/gpt-oss-20b",
+                "model_tokens": 8192,
+            }
+        elif settings.GEMINI_API_KEY:
+            llm_config = {
+                "api_key": settings.GEMINI_API_KEY,
+                "model": "google_genai/gemini-2.5-flash",
+                "model_tokens": 8192,
             }
         else:
             return {
                 "status": "error",
-                "message": "No valid LLM API key (GEMINI_API_KEY or GROQ_API_KEY) found for ScrapeGraphAI."
+                "message": "No valid LLM API key (GROQ_API_KEY or GEMINI_API_KEY) found for ScrapeGraphAI."
             }
 
         graph_config = {
@@ -226,12 +274,89 @@ def scrapegraph_web_scraper(url: str, prompt: str) -> Dict[str, Any]:
             "status": "success"
         }
     except Exception as e:
+        logger.warning(f"SmartScraperGraph failed ({e}), attempting HTTP + LLM extraction fallback for {url}...")
+        fb_result = _fallback_http_scrape(url, prompt)
+        if fb_result:
+            return fb_result
+
         logger.error(f"Error executing SmartScraperGraph: {e}")
         return {
             "status": "error",
             "url": url,
             "message": f"Failed to scrape webpage: {str(e)}"
         }
+
+
+def _fallback_http_scrape(url: str, prompt: str) -> Optional[Dict[str, Any]]:
+    """
+    Lightweight fallback: fetches raw HTML via httpx, cleans text, and uses LLM to extract structured answer.
+    """
+    try:
+        import httpx
+        import re
+        import litellm
+        from app.core.config import settings
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        resp = httpx.get(url, headers=headers, timeout=15.0, follow_redirects=True)
+        if resp.status_code >= 400:
+            return None
+
+        # Clean HTML to plain text
+        html_text = resp.text
+        clean_text = re.sub(r'<(script|style|noscript)[^>]*>.*?</\1>', ' ', html_text, flags=re.DOTALL | re.IGNORECASE)
+        clean_text = re.sub(r'<[^>]+>', ' ', clean_text)
+        clean_text = re.sub(r'\s+', ' ', clean_text).strip()[:16000]
+
+        if not clean_text:
+            return None
+
+        candidate_models = []
+        if settings.GROQ_API_KEY:
+            candidate_models.append((settings.DEFAULT_MODEL, settings.GROQ_API_KEY))
+            candidate_models.append(("groq/llama-3.3-70b-versatile", settings.GROQ_API_KEY))
+        if settings.GEMINI_API_KEY:
+            candidate_models.append(("gemini/gemini-2.5-flash", settings.GEMINI_API_KEY))
+            candidate_models.append(("gemini/gemini-2.0-flash", settings.GEMINI_API_KEY))
+
+        extraction = None
+        for model_name, api_key in candidate_models:
+            try:
+                llm_resp = litellm.completion(
+                    model=model_name,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a web extraction AI. Extract the requested data accurately based on the provided webpage content."
+                        },
+                        {
+                            "role": "user",
+                            "content": f"URL: {url}\n\nWebpage Text Content:\n{clean_text}\n\nTask Prompt: {prompt}\n\nProvide a structured, accurate extraction of the requested information."
+                        }
+                    ],
+                    api_key=api_key,
+                    temperature=0.1
+                )
+                extraction = llm_resp.choices[0].message.content or ""
+                if extraction:
+                    break
+            except Exception as model_err:
+                logger.warning(f"Model {model_name} failed in fallback scraper: {model_err}")
+                continue
+
+        if extraction:
+            return {
+                "source": "http_llm_extractor",
+                "url": url,
+                "result": extraction,
+                "status": "success"
+            }
+        return None
+    except Exception as e:
+        logger.warning(f"HTTP fallback scraper failed for {url}: {e}")
+        return None
 
 
 @tool("scrapegraph_web_search", args_schema=SearchWebInput)
