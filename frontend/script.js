@@ -248,4 +248,94 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(type, 600);
     }
 
+    // ----------------------------
+    // 11. Clerk Authentication for Workspace Entry
+    // ----------------------------
+    let clerkLanding = null;
+    const clerkPublishableKey = 'pk_test_c2hpbmluZy1saXphcmQtNTc4MC5jbGVyay5hY2NvdW50cy5kZXYk';
+    const modalBackdrop = document.getElementById('clerk-modal-backdrop');
+    const modalClose = document.getElementById('clerk-modal-close');
+    const signInTarget = document.getElementById('clerk-sign-in-target');
+
+    async function initLandingClerk() {
+        try {
+            // Wait for Clerk SDK if loading
+            let attempts = 0;
+            while (!window.Clerk && attempts < 25) {
+                await new Promise(r => setTimeout(r, 120));
+                attempts++;
+            }
+
+            if (window.Clerk) {
+                clerkLanding = window.Clerk;
+                await clerkLanding.load({
+                    publishableKey: clerkPublishableKey
+                });
+
+                if (clerkLanding.user) {
+                    const navCta = document.getElementById('nav-cta');
+                    const heroCta = document.getElementById('hero-cta');
+                    if (navCta) navCta.textContent = 'Go to Workspace →';
+                    if (heroCta) {
+                        const span = heroCta.querySelector('span');
+                        if (span) span.textContent = 'Enter Workspace →';
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Clerk landing notice:', e);
+        }
+    }
+
+    initLandingClerk();
+
+    function triggerWorkspaceAuth(e) {
+        // If user is already authenticated with Clerk, allow direct navigation to workspace
+        if (clerkLanding && clerkLanding.user) {
+            window.location.href = 'app.html';
+            return;
+        }
+
+        // If user is not logged in, intercept and show Clerk Sign-in
+        if (e) e.preventDefault();
+
+        if (clerkLanding) {
+            if (modalBackdrop && signInTarget) {
+                modalBackdrop.hidden = false;
+                if (!signInTarget.hasChildNodes()) {
+                    clerkLanding.mountSignIn(signInTarget, {
+                        fallbackRedirectUrl: 'app.html',
+                        signUpFallbackRedirectUrl: 'app.html',
+                    });
+                }
+            } else {
+                clerkLanding.openSignIn({
+                    fallbackRedirectUrl: 'app.html',
+                    signUpFallbackRedirectUrl: 'app.html',
+                });
+            }
+        } else {
+            // Fallback direct entry if SDK blocked
+            window.location.href = 'app.html';
+        }
+    }
+
+    // Attach to all workspace entry buttons
+    const workspaceTriggers = document.querySelectorAll('#nav-cta, #hero-cta, a[href="app.html"]');
+    workspaceTriggers.forEach(btn => {
+        btn.addEventListener('click', triggerWorkspaceAuth);
+    });
+
+    if (modalClose) {
+        modalClose.addEventListener('click', () => {
+            if (modalBackdrop) modalBackdrop.hidden = true;
+        });
+    }
+
+    if (modalBackdrop) {
+        modalBackdrop.addEventListener('click', e => {
+            if (e.target === modalBackdrop) modalBackdrop.hidden = true;
+        });
+    }
+
 });

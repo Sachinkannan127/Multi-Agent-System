@@ -266,6 +266,12 @@ function setupAuthListeners() {
     modalBackdrop?.addEventListener('click', (e) => {
         if (e.target === modalBackdrop) modalBackdrop.hidden = true;
     });
+
+    // Check if sign-in requested via URL parameter or prompt
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('signin') === 'true' && !clerk?.user) {
+        setTimeout(handleSignIn, 600);
+    }
 }
 
 function setupEventListeners() {
