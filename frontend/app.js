@@ -350,265 +350,147 @@ function setupEventListeners() {
     }
 
     const CODE_PRESETS = {
-        dashboard: {
-            lang: 'html',
-            code: `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
-  body { background: radial-gradient(circle at 10% 20%, #181926 0%, #0d0e15 100%); color: #f8fafc; min-height: 100vh; padding: 24px; display: flex; align-items: center; justify-content: center; }
-  .dashboard { width: 100%; max-width: 680px; background: rgba(26, 27, 38, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); }
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-  .header h2 { font-size: 20px; font-weight: 700; background: linear-gradient(135deg, #FF6B35, #FFB347); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .badge { background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-  .pulse { width: 7px; height: 7px; border-radius: 50%; background: #10B981; box-shadow: 0 0 10px #10B981; }
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
-  .card { background: rgba(18, 19, 28, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 16px; transition: all 0.2s ease; }
-  .card:hover { transform: translateY(-3px); border-color: rgba(255, 107, 53, 0.4); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-  .card .label { font-size: 12px; color: #94a3b8; margin-bottom: 6px; }
-  .card .value { font-size: 24px; font-weight: 800; color: #fff; }
-  .footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 20px; }
-  .btn { background: linear-gradient(135deg, #FF6B35, #EA580C); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; box-shadow: 0 4px 14px rgba(255, 107, 53, 0.35); }
-  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5); }
-</style>
-</head>
-<body>
-  <div class="dashboard">
-    <div class="header">
-      <h2>🚀 Multi-Agent Node Hub</h2>
-      <span class="badge"><span class="pulse"></span> 4 Agents Active</span>
-    </div>
-    <div class="grid">
-      <div class="card"><div class="label">RAG Retrieval</div><div class="value">99.4%</div></div>
-      <div class="card"><div class="label">Tavily Web Search</div><div class="value">&lt; 320ms</div></div>
-      <div class="card"><div class="label">Synthesized Chunks</div><div class="value" id="chunks-val">1,482</div></div>
-    </div>
-    <div class="footer">
-      <span style="font-size: 12px; color: #64748b;">State: Synchronized with MongoDB Atlas</span>
-      <button class="btn" onclick="document.getElementById('chunks-val').textContent = (parseInt(document.getElementById('chunks-val').textContent.replace(',', '')) + 15).toLocaleString(); console.log('⚡ Agent state updated!');">⚡ Simulate Load</button>
-    </div>
-  </div>
-</body>
-</html>`
-        },
-        chart: {
-            lang: 'html',
-            code: `<!DOCTYPE html>
-<html>
-<head>
-<style>
-  body { background: #0f172a; color: #f8fafc; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
-  .chart-box { background: #1e293b; padding: 24px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 20px 30px rgba(0,0,0,0.5); width: 100%; max-width: 580px; text-align: center; }
-  canvas { width: 100%; height: 260px; }
-  h3 { margin-bottom: 16px; color: #FF6B35; font-size: 18px; }
-  button { background: #FF6B35; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 16px; }
-</style>
-</head>
-<body>
-  <div class="chart-box">
-    <h3>📊 Agent Query Distribution (Real-Time)</h3>
-    <canvas id="barCanvas"></canvas>
-    <button onclick="drawChart()">🔄 Randomize Stream Data</button>
-  </div>
-  <script>
-    const canvas = document.getElementById('barCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 540; canvas.height = 260;
-
-    function drawChart() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const labels = ['Hybrid RAG', 'Web Search', 'Coding Agent', 'Direct LLM', 'Vision OCR'];
-      const colors = ['#FF6B35', '#3B82F6', '#10B981', '#8B5CF6', '#EC4899'];
-      const data = labels.map(() => Math.floor(Math.random() * 80) + 20);
-      const barWidth = 60;
-      const gap = 40;
-      const startX = 35;
-
-      labels.forEach((l, i) => {
-        const x = startX + i * (barWidth + gap);
-        const h = (data[i] / 100) * 180;
-        const y = 220 - h;
-
-        ctx.fillStyle = colors[i];
-        ctx.beginPath();
-        ctx.roundRect(x, y, barWidth, h, 8);
-        ctx.fill();
-
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 12px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(data[i] + '%', x + barWidth/2, y - 8);
-
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '11px sans-serif';
-        ctx.fillText(l, x + barWidth/2, 245);
-      });
-      console.log('Chart refreshed with values:', data);
-    }
-    drawChart();
-  </script>
-</body>
-</html>`
-        },
-        mermaid: {
-            lang: 'mermaid',
-            code: `graph TD
-    User([👤 User Request]) --> Router{🎯 Intent Router}
-    
-    Router -->|Document QA| RAG[📄 Hybrid RAG Agent]
-    Router -->|Weather / Live Facts| Web[🌐 Tavily Search REST]
-    Router -->|Code / Software| Dev[💻 Coding Agent]
-    Router -->|Chat / Fast QA| Direct[💬 Direct LLM Agent]
-
-    RAG --> Embedder[Gemini Text Embedder]
-    Embedder --> Atlas[(MongoDB Vector Store)]
-    Atlas --> RRF[🔀 Reciprocal Rank Fusion]
-
-    Web --> TavilyAPI[⚡ Tavily Search API < 350ms]
-    
-    RRF --> Synthesizer[✨ ChatGPT-Style Structured Synthesizer]
-    TavilyAPI --> Synthesizer
-    Dev --> Synthesizer
-    Direct --> Synthesizer
-
-    Synthesizer --> Output[📋 Markdown with Summary + Content + Citations]
-    Output --> Client([🖥️ Glassmorphism UI])`
-        },
-        calculator: {
-            lang: 'html',
-            code: `<!DOCTYPE html>
-<html>
-<head>
-<style>
-  body { background: #0b0c10; color: #fff; font-family: system-ui; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-  .calc { background: rgba(31, 40, 51, 0.85); backdrop-filter: blur(16px); padding: 24px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); width: 300px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
-  .screen { background: rgba(11, 12, 16, 0.8); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 18px; font-size: 28px; text-align: right; margin-bottom: 20px; color: #66fcf1; font-family: monospace; overflow-x: auto; min-height: 70px; }
-  .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  button { padding: 16px; border: none; border-radius: 10px; background: rgba(255,255,255,0.06); color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.15s; }
-  button:hover { background: rgba(255,255,255,0.15); transform: scale(1.04); }
-  button.op { background: #FF6B35; color: #fff; }
-  button.op:hover { background: #ea580c; }
-  button.clear { background: #ef4444; }
-</style>
-</head>
-<body>
-  <div class="calc">
-    <div class="screen" id="disp">0</div>
-    <div class="keys">
-      <button class="clear" onclick="clearD()">C</button>
-      <button onclick="press('(')">(</button>
-      <button onclick="press(')')">)</button>
-      <button class="op" onclick="press('/')">÷</button>
-      <button onclick="press('7')">7</button>
-      <button onclick="press('8')">8</button>
-      <button onclick="press('9')">9</button>
-      <button class="op" onclick="press('*')">×</button>
-      <button onclick="press('4')">4</button>
-      <button onclick="press('5')">5</button>
-      <button onclick="press('6')">6</button>
-      <button class="op" onclick="press('-')">−</button>
-      <button onclick="press('1')">1</button>
-      <button onclick="press('2')">2</button>
-      <button onclick="press('3')">3</button>
-      <button class="op" onclick="press('+')">+</button>
-      <button onclick="press('0')">0</button>
-      <button onclick="press('.')">.</button>
-      <button class="op" style="grid-column: span 2;" onclick="calc()">=</button>
-    </div>
-  </div>
-  <script>
-    const d = document.getElementById('disp');
-    let expr = '';
-    function press(v) { if (expr === '0') expr = ''; expr += v; d.textContent = expr; }
-    function clearD() { expr = '0'; d.textContent = '0'; }
-    function calc() {
-      try {
-        const res = eval(expr);
-        d.textContent = res;
-        console.log(\`Calculation result: \${expr} = \${res}\`);
-        expr = String(res);
-      } catch(e) { d.textContent = 'Error'; }
-    }
-  </script>
-</body>
-</html>`
-        },
-        particles: {
-            lang: 'html',
-            code: `<!DOCTYPE html>
-<html>
-<head>
-<style>
-  body { margin: 0; overflow: hidden; background: #060709; }
-  canvas { display: block; }
-</style>
-</head>
-<body>
-  <canvas id="c"></canvas>
-  <script>
-    const c = document.getElementById('c'), ctx = c.getContext('2d');
-    let w = c.width = window.innerWidth, h = c.height = window.innerHeight;
-    const particles = Array.from({length: 70}, () => ({
-      x: Math.random() * w, y: Math.random() * h,
-      vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5,
-      r: Math.random() * 3 + 1.5
-    }));
-
-    function animate() {
-      ctx.clearRect(0, 0, w, h);
-      particles.forEach((p, i) => {
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0 || p.x > w) p.vx *= -1;
-        if (p.y < 0 || p.y > h) p.vy *= -1;
-        ctx.fillStyle = '#FF6B35';
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
-
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-          if (dist < 110) {
-            ctx.strokeStyle = \`rgba(255, 107, 53, \${1 - dist / 110})\`;
-            ctx.lineWidth = 0.8;
-            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
-          }
-        }
-      });
-      requestAnimationFrame(animate);
-    }
-    animate();
-    window.onresize = () => { w = c.width = window.innerWidth; h = c.height = window.innerHeight; };
-  </script>
-</body>
-</html>`
-        },
-        python_trace: {
+        binary_search: {
             lang: 'python',
-            code: `# Multi-Agent Vector Search Algorithm Simulation
-class RRFHybridSearch:
-    def __init__(self, k: int = 60):
-        self.k = k
+            code: `def binary_search(arr, target):
+    left = 0
+    right = len(arr) - 1
 
-    def compute_rrf(self, dense_ranks: dict, sparse_ranks: dict) -> list:
-        scores = {}
-        all_docs = set(dense_ranks.keys()).union(set(sparse_ranks.keys()))
-        for doc_id in all_docs:
-            r_dense = dense_ranks.get(doc_id, 999)
-            r_sparse = sparse_ranks.get(doc_id, 999)
-            score = (1 / (self.k + r_dense)) + (1 / (self.k + r_sparse))
-            scores[doc_id] = round(score, 6)
-        return sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    while left <= right:
+        mid = (left + right) // 2
+        mid_val = arr[mid]
 
-# Run Example
-engine = RRFHybridSearch(k=60)
-dense = {"doc_101": 1, "doc_204": 2, "doc_309": 3}
-sparse = {"doc_204": 1, "doc_408": 2, "doc_101": 3}
-ranked = engine.compute_rrf(dense, sparse)
+        if mid_val == target:
+            return mid  # Found target at index mid
+        elif mid_val < target:
+            left = mid + 1  # Search right half
+        else:
+            right = mid - 1  # Search left half
 
-print("🏆 Final Re-Ranked Document Chunks:")
-for rank, (doc, score) in enumerate(ranked, start=1):
-    print(f"{rank}. {doc} -> RRF Score: {score}")`
+    return -1  # Target not found
+
+# Test Example
+numbers = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91]
+target_value = 23
+result_idx = binary_search(numbers, target_value)
+print(f"Target {target_value} found at index: {result_idx}")`
+        },
+        fibonacci: {
+            lang: 'python',
+            code: `def fib_memo(n, memo={}):
+    if n in memo:
+        return memo[n]
+    if n <= 1:
+        return n
+    
+    # Recursive calculation with memoization
+    memo[n] = fib_memo(n - 1, memo) + fib_memo(n - 2, memo)
+    return memo[n]
+
+# Compute 7th Fibonacci number
+n = 7
+result = fib_memo(n)
+print(f"Fibonacci({n}) = {result}")`
+        },
+        bubble_sort: {
+            lang: 'python',
+            code: `def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        swapped = False
+        for j in range(0, n - i - 1):
+            if arr[j] > arr[j + 1]:
+                # Swap adjacent elements
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                swapped = True
+        if not swapped:
+            break
+    return arr
+
+# Test array
+data = [64, 34, 25, 12, 22, 11, 90]
+sorted_data = bubble_sort(data)
+print("Sorted Array:", sorted_data)`
+        },
+        two_sum: {
+            lang: 'javascript',
+            code: `function twoSum(nums, target) {
+    const seen = new Map();
+
+    for (let i = 0; i < nums.length; i++) {
+        const complement = target - nums[i];
+        
+        if (seen.has(complement)) {
+            return [seen.get(complement), i];
+        }
+        seen.set(nums[i], i);
+    }
+    return [];
+}
+
+const numbers = [2, 7, 11, 15];
+const target = 9;
+const indices = twoSum(numbers, target);
+console.log("Two sum indices:", indices);`
+        },
+        linked_list: {
+            lang: 'python',
+            code: `class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+def reverse_list(head):
+    prev = None
+    curr = head
+    
+    while curr is not None:
+        next_node = curr.next
+        curr.next = prev
+        prev = curr
+        curr = next_node
+        
+    return prev
+
+# Create linked list 1 -> 2 -> 3 -> None
+head = ListNode(1, ListNode(2, ListNode(3)))
+reversed_head = reverse_list(head)`
+        },
+        tree_dfs: {
+            lang: 'python',
+            code: `class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def inorder_traversal(root):
+    res = []
+    def dfs(node):
+        if not node:
+            return
+        dfs(node.left)
+        res.append(node.val)
+        dfs(node.right)
+    dfs(root)
+    return res
+
+# Binary Tree: [4, 2, 5, 1, 3]
+root = TreeNode(4, TreeNode(2, TreeNode(1), TreeNode(3)), TreeNode(5))
+traversed = inorder_traversal(root)
+print("Inorder DFS:", traversed)`
+        },
+        custom: {
+            lang: 'python',
+            code: `# Paste or type any program here
+def calculate_factorial(n):
+    result = 1
+    for i in range(1, n + 1):
+        result *= i
+    return result
+
+num = 5
+print(f"Factorial of {num} is {calculate_factorial(num)}")`
         }
     };
 
@@ -622,42 +504,80 @@ for rank, (doc, score) in enumerate(ranked, start=1):
         const lineNumbers = $('codevis-line-numbers');
         const lineCount = $('codevis-line-count');
         const charCount = $('codevis-char-count');
+        const langSelect = $('codevis-lang-select');
         const presetSelect = $('codevis-preset-select');
-        const runBtn = $('codevis-run-btn');
+        const analyzeBtn = $('codevis-analyze-btn');
         const copyBtn = $('codevis-copy-btn');
         const insertChatBtn = $('codevis-insert-chat-btn');
         const clearBtn = $('codevis-clear-btn');
-        const reloadBtn = $('codevis-reload-btn');
-        const popoutBtn = $('codevis-popout-btn');
-        const langTabs = $('codevis-lang-tabs');
-        const previewTabs = $('codevis-preview-tabs');
-        const iframe = $('codevis-iframe');
-        const frameWrapper = $('codevis-frame-wrapper');
-        const mermaidContainer = $('codevis-mermaid-container');
-        const mermaidOutput = $('codevis-mermaid-output');
-        const mermaidTabBtn = $('codevis-mermaid-tab-btn');
-        const consoleContainer = $('codevis-console-container');
-        const consoleList = $('codevis-console-list');
-        const consoleCount = $('codevis-console-count');
-        let currentLang = 'html';
-        let consoleLogs = [];
+        
+        // Stepper DOM Elements
+        const stepperFirstBtn = $('stepper-first-btn');
+        const stepperPrevBtn = $('stepper-prev-btn');
+        const stepperPlayBtn = $('stepper-play-btn');
+        const stepperPlayIcon = $('stepper-play-icon');
+        const stepperPlayText = $('stepper-play-text');
+        const stepperNextBtn = $('stepper-next-btn');
+        const stepperLastBtn = $('stepper-last-btn');
+        const stepperResetBtn = $('stepper-reset-btn');
+        const speedSelect = $('codevis-speed-select');
+        const viewTabs = $('codevis-view-tabs');
+        
+        // Mode & Trace View Elements
+        const modeEditBtn = $('codevis-mode-edit-btn');
+        const modeTraceBtn = $('codevis-mode-trace-btn');
+        const rawEditorWrap = $('codevis-raw-editor-wrap');
+        const traceWrap = $('codevis-trace-wrap');
+        const traceLinesList = $('codevis-trace-lines-list');
+        
+        // Explanation & Variable DOM Elements
+        const stepperBadgeText = $('stepper-badge-text');
+        const stepperLineBadge = $('stepper-line-badge');
+        const stepperProgressFill = $('stepper-progress-fill');
+        const algoTimeComp = $('algo-time-complexity');
+        const algoSpaceComp = $('algo-space-complexity');
+        const spotlightLineNo = $('spotlight-line-no');
+        const spotlightSnippet = $('spotlight-code-snippet');
+        const stepExplanationText = $('step-explanation-text');
+        const stepMechanicsText = $('step-mechanics-text');
+        const stepVariablesGrid = $('step-variables-grid');
+        const memoryCountBadge = $('memory-count-badge');
+        const stepCallStackList = $('step-call-stack-list');
+        const stepEdgeCasesText = $('step-edge-cases-text');
+        
+        // Views
+        const stepperView = $('codevis-stepper-view');
+        const fullBreakdownView = $('codevis-full-breakdown-view');
+        const fullOverviewText = $('full-overview-text');
+        const fullLinesAccordion = $('full-lines-accordion');
 
-        window.openCodeVisualizer = function(initialCode = '', initialLang = 'html') {
+        // State variables
+        let currentLang = 'python';
+        let currentSteps = [];
+        let currentStepIndex = 0;
+        let playInterval = null;
+        let autoPlaySpeed = 1800;
+        let lineExplanationsMap = {};
+        let activeViewMode = 'stepper';
+        let isAnalyzing = false;
+
+        window.openCodeVisualizer = function(initialCode = '', initialLang = 'python') {
             if (codevisBackdrop) codevisBackdrop.hidden = false;
             if (initialCode) {
                 if (editorTextarea) editorTextarea.value = initialCode;
-                currentLang = (initialLang || 'html').toLowerCase();
-                syncLangTab(currentLang);
+                currentLang = (initialLang || 'python').toLowerCase();
+                if (langSelect) langSelect.value = currentLang;
                 if (presetSelect) presetSelect.value = 'custom';
             } else if (!editorTextarea?.value.trim()) {
-                // Load default dashboard preset
-                loadPreset('dashboard');
+                loadPreset('binary_search');
             }
             updateEditorStats();
-            renderVisualizerCode();
+            // Automatically analyze and visualize
+            analyzeAndVisualize();
         };
 
         window.closeCodeVisualizer = function() {
+            stopAutoPlay();
             if (codevisBackdrop) codevisBackdrop.hidden = true;
         };
 
@@ -667,52 +587,31 @@ for rank, (doc, score) in enumerate(ranked, start=1):
             if (e.target === codevisBackdrop) window.closeCodeVisualizer();
         });
 
-        function syncLangTab(lang) {
-            currentLang = lang;
-            if (langTabs) {
-                langTabs.querySelectorAll('.codevis-tab-btn').forEach(btn => {
-                    const match = btn.dataset.lang === lang || (lang === 'js' && btn.dataset.lang === 'html') || (lang === 'css' && btn.dataset.lang === 'html');
-                    btn.classList.toggle('active', match);
-                });
-            }
-            if (editorLabel) {
-                const labels = {
-                    html: 'Source Code (HTML / CSS / JS)',
-                    mermaid: 'Mermaid Flowchart / Sequence Definition',
-                    svg: 'SVG Vector Code',
-                    python: 'Python Script & Data Structure Trace'
-                };
-                editorLabel.textContent = labels[lang] || `Source Code (${lang.toUpperCase()})`;
-            }
-            if (mermaidTabBtn) {
-                mermaidTabBtn.style.display = lang === 'mermaid' ? 'inline-flex' : 'none';
-                if (lang === 'mermaid') switchPreviewTab('mermaid');
-                else if (mermaidContainer?.style.display !== 'none') switchPreviewTab('visual');
-            }
-        }
-
         function loadPreset(presetKey) {
             const preset = CODE_PRESETS[presetKey];
             if (!preset || !editorTextarea) return;
             editorTextarea.value = preset.code;
-            syncLangTab(preset.lang);
+            currentLang = preset.lang || 'python';
+            if (langSelect) langSelect.value = currentLang;
+            if (editorLabel) editorLabel.textContent = `Program Source (${currentLang.toUpperCase()})`;
             updateEditorStats();
-            renderVisualizerCode();
+            switchToEditorMode('edit');
         }
 
         if (presetSelect) {
             presetSelect.addEventListener('change', () => {
                 const val = presetSelect.value;
-                if (val !== 'custom') loadPreset(val);
+                if (val !== 'custom') {
+                    loadPreset(val);
+                    analyzeAndVisualize();
+                }
             });
         }
 
-        if (langTabs) {
-            langTabs.addEventListener('click', e => {
-                const btn = e.target.closest('.codevis-tab-btn');
-                if (!btn) return;
-                syncLangTab(btn.dataset.lang);
-                renderVisualizerCode();
+        if (langSelect) {
+            langSelect.addEventListener('change', () => {
+                currentLang = langSelect.value;
+                if (editorLabel) editorLabel.textContent = `Program Source (${currentLang.toUpperCase()})`;
             });
         }
 
@@ -738,50 +637,425 @@ for rank, (doc, score) in enumerate(ranked, start=1):
             editorTextarea.addEventListener('keydown', e => {
                 if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                     e.preventDefault();
-                    renderVisualizerCode();
+                    analyzeAndVisualize();
                 } else if (e.key === 'Tab') {
                     e.preventDefault();
                     const start = editorTextarea.selectionStart;
                     const end = editorTextarea.selectionEnd;
-                    editorTextarea.value = editorTextarea.value.substring(0, start) + '  ' + editorTextarea.value.substring(end);
-                    editorTextarea.selectionStart = editorTextarea.selectionEnd = start + 2;
+                    editorTextarea.value = editorTextarea.value.substring(0, start) + '    ' + editorTextarea.value.substring(end);
+                    editorTextarea.selectionStart = editorTextarea.selectionEnd = start + 4;
                     updateEditorStats();
                 }
             });
         }
 
-        function switchPreviewTab(tabKey) {
-            if (previewTabs) {
-                previewTabs.querySelectorAll('.preview-tab-btn').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.previewTab === tabKey);
-                });
+        // Mode Toggles (Edit vs Trace)
+        function switchToEditorMode(mode) {
+            if (mode === 'trace') {
+                if (modeEditBtn) modeEditBtn.classList.remove('active');
+                if (modeTraceBtn) modeTraceBtn.classList.add('active');
+                if (rawEditorWrap) rawEditorWrap.style.display = 'none';
+                if (traceWrap) traceWrap.style.display = 'block';
+            } else {
+                if (modeEditBtn) modeEditBtn.classList.add('active');
+                if (modeTraceBtn) modeTraceBtn.classList.remove('active');
+                if (rawEditorWrap) rawEditorWrap.style.display = 'flex';
+                if (traceWrap) traceWrap.style.display = 'none';
             }
-            if (frameWrapper) frameWrapper.style.display = tabKey === 'visual' ? 'flex' : 'none';
-            if (mermaidContainer) mermaidContainer.style.display = tabKey === 'mermaid' ? 'flex' : 'none';
-            if (consoleContainer) consoleContainer.style.display = tabKey === 'console' ? 'flex' : 'none';
         }
 
-        if (previewTabs) {
-            previewTabs.addEventListener('click', e => {
-                const btn = e.target.closest('.preview-tab-btn');
+        if (modeEditBtn) modeEditBtn.addEventListener('click', () => switchToEditorMode('edit'));
+        if (modeTraceBtn) modeTraceBtn.addEventListener('click', () => switchToEditorMode('trace'));
+
+        // View Tabs (Stepper vs Full Breakdown)
+        if (viewTabs) {
+            viewTabs.addEventListener('click', e => {
+                const btn = e.target.closest('.view-tab-btn');
                 if (!btn) return;
-                switchPreviewTab(btn.dataset.previewTab);
+                viewTabs.querySelectorAll('.view-tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeViewMode = btn.dataset.view;
+                if (stepperView) stepperView.style.display = activeViewMode === 'stepper' ? 'block' : 'none';
+                if (fullBreakdownView) fullBreakdownView.style.display = activeViewMode === 'full-breakdown' ? 'block' : 'none';
             });
         }
 
-        // Device Switcher
-        document.querySelectorAll('.codevis-device-group .device-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.codevis-device-group .device-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const device = btn.dataset.device;
-                if (!frameWrapper) return;
-                frameWrapper.className = `codevis-frame-wrapper device-${device}`;
-            });
-        });
+        // Client-side simulation fallback generator for instant zero-latency feedback
+        function generateLocalTrace(code, lang) {
+            const lines = code.split('\n');
+            const steps = [];
+            const explanations = {};
+            const simulatedVars = {};
+            let callFrame = ['<global scope>'];
 
-        if (runBtn) runBtn.addEventListener('click', renderVisualizerCode);
-        if (reloadBtn) reloadBtn.addEventListener('click', renderVisualizerCode);
+            lines.forEach((rawLine, idx) => {
+                const lineNo = idx + 1;
+                const trimmed = rawLine.trim();
+                let explanation = '';
+                let mechanics = '';
+                let modified = [];
+                let edgeCase = 'Check for null or boundary constraints.';
+
+                if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('//')) {
+                    explanation = 'Comment or empty line (skipped by runtime compiler).';
+                    mechanics = 'No CPU instructions executed.';
+                } else if (trimmed.startsWith('def ') || trimmed.startsWith('function ')) {
+                    const name = trimmed.split('(')[0].replace(/def |function /, '').trim();
+                    explanation = `Defines function <code>${escapeHtml(name)}()</code> in current namespace.`;
+                    mechanics = `Allocates function closure in symbol table with lexical scope.`;
+                    simulatedVars[name] = '[Function]';
+                    modified = [name];
+                } else if (trimmed.startsWith('return ')) {
+                    const retVal = trimmed.replace('return ', '').replace(';', '').trim();
+                    explanation = `Returns result value <code>${escapeHtml(retVal)}</code> to calling scope.`;
+                    mechanics = `Pops call frame and stores return operand in return register.`;
+                    edgeCase = 'Ensure return type matches expected signature.';
+                } else if (trimmed.startsWith('if ') || trimmed.startsWith('elif ') || trimmed.startsWith('else:')) {
+                    explanation = `Evaluates boolean conditional branch: <code>${escapeHtml(trimmed)}</code>`;
+                    mechanics = `Branches execution path based on CPU condition flag evaluation.`;
+                    edgeCase = 'Guard against truthiness coercion and off-by-one comparisons.';
+                } else if (trimmed.startsWith('while ') || trimmed.startsWith('for ')) {
+                    explanation = `Loop header: evaluates iteration condition and advances pointer.`;
+                    mechanics = `Tests loop termination boundary; initializes loop iterator.`;
+                    edgeCase = 'Verify loop termination invariant to prevent infinite execution.';
+                } else if (trimmed.includes('=') && !trimmed.startsWith('if') && !trimmed.startsWith('while')) {
+                    const parts = trimmed.split('=');
+                    const varName = parts[0].replace(/let |const |var /, '').trim();
+                    const varVal = parts[1].replace(';', '').trim();
+                    simulatedVars[varName] = varVal;
+                    modified = [varName];
+                    explanation = `Initializes/Updates variable <code>${escapeHtml(varName)}</code> = <code>${escapeHtml(varVal)}</code>.`;
+                    mechanics = `Allocates memory address on stack/heap and assigns evaluated value.`;
+                } else if (trimmed.startsWith('print(') || trimmed.startsWith('console.log(')) {
+                    explanation = `Outputs formatted result to standard output terminal.`;
+                    mechanics = `Invokes standard I/O write syscall buffer.`;
+                } else {
+                    explanation = `Executes statement: <code>${escapeHtml(trimmed)}</code>`;
+                    mechanics = `Evaluates expression sequentially in current thread frame.`;
+                }
+
+                explanations[lineNo] = explanation.replace(/<[^>]+>/g, '');
+                steps.push({
+                    step_number: idx + 1,
+                    line_number: lineNo,
+                    code: rawLine,
+                    explanation: explanation,
+                    mechanics: mechanics,
+                    variables: { ...simulatedVars },
+                    modified_vars: modified,
+                    call_stack: [...callFrame],
+                    edge_cases: edgeCase,
+                    time_complexity: 'O(1)'
+                });
+            });
+
+            return {
+                title: `${lang.toUpperCase()} Program Step-Through`,
+                total_lines: lines.length,
+                total_steps: steps.length,
+                overview: `Sequential line-by-line interactive execution breakdown of ${lines.length} lines of ${lang} code.`,
+                time_complexity_overall: 'O(N)',
+                space_complexity_overall: 'O(1)',
+                steps: steps,
+                line_explanations: explanations
+            };
+        }
+
+        // Render Trace Lines in Left Pane
+        function renderTraceLines(code, activeLineNum) {
+            if (!traceLinesList) return;
+            const lines = code.split('\n');
+            traceLinesList.innerHTML = lines.map((lineText, idx) => {
+                const lineNum = idx + 1;
+                const isActive = lineNum === activeLineNum;
+                return `
+                    <div class="trace-line-row ${isActive ? 'active-step' : ''}" data-line="${lineNum}" id="trace-line-${lineNum}">
+                        <div class="trace-line-pointer">▶</div>
+                        <div class="trace-line-num">${lineNum}</div>
+                        <div class="trace-line-code">${escapeHtml(lineText || ' ')}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // Add click listeners to jump directly to any clicked line's step
+            traceLinesList.querySelectorAll('.trace-line-row').forEach(row => {
+                row.addEventListener('click', () => {
+                    const lineNo = parseInt(row.dataset.line, 10);
+                    jumpToLine(lineNo);
+                });
+            });
+
+            // Scroll active line into view smoothly
+            const activeElem = document.getElementById(`trace-line-${activeLineNum}`);
+            if (activeElem && traceWrap) {
+                activeElem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function jumpToLine(lineNo) {
+            const stepIdx = currentSteps.findIndex(s => s.line_number === lineNo);
+            if (stepIdx !== -1) {
+                goToStep(stepIdx);
+            }
+        }
+
+        // Render Current Step in Right Pane
+        function renderCurrentStep() {
+            if (!currentSteps || currentSteps.length === 0) return;
+            const step = currentSteps[currentStepIndex];
+            if (!step) return;
+
+            // 1. Update Progress Header
+            if (stepperBadgeText) stepperBadgeText.textContent = `Step ${step.step_number} of ${currentSteps.length}`;
+            if (stepperLineBadge) stepperLineBadge.textContent = `Line ${step.line_number}`;
+            if (stepperProgressFill) {
+                const pct = ((currentStepIndex + 1) / currentSteps.length) * 100;
+                stepperProgressFill.style.width = `${pct}%`;
+            }
+
+            // 2. Update Spotlight
+            if (spotlightLineNo) spotlightLineNo.textContent = `Line ${step.line_number}`;
+            if (spotlightSnippet) {
+                spotlightSnippet.innerHTML = `<code>${escapeHtml(step.code.trim() || '// empty line')}</code>`;
+            }
+
+            // 3. Update Explanations
+            if (stepExplanationText) stepExplanationText.innerHTML = step.explanation;
+            if (stepMechanicsText) stepMechanicsText.innerHTML = step.mechanics;
+            if (stepEdgeCasesText) stepEdgeCasesText.textContent = step.edge_cases || 'Standard execution behavior. Handle boundary limits.';
+
+            // 4. Update Variables Grid
+            if (stepVariablesGrid) {
+                const varEntries = Object.entries(step.variables || {});
+                if (memoryCountBadge) memoryCountBadge.textContent = `${varEntries.length} ${varEntries.length === 1 ? 'var' : 'vars'}`;
+                
+                if (varEntries.length === 0) {
+                    stepVariablesGrid.innerHTML = '<div class="var-empty-state">No variables currently allocated in this scope.</div>';
+                } else {
+                    stepVariablesGrid.innerHTML = varEntries.map(([name, val]) => {
+                        const isModified = (step.modified_vars || []).includes(name);
+                        const valStr = typeof val === 'object' ? JSON.stringify(val) : String(val);
+                        const typeName = Array.isArray(val) ? 'array' : typeof val;
+                        return `
+                            <div class="var-chip ${isModified ? 'modified' : ''}">
+                                <div class="var-chip-header">
+                                    <span class="var-name">${escapeHtml(name)}</span>
+                                    <span class="var-type-badge">${typeName}</span>
+                                </div>
+                                <div class="var-val">${escapeHtml(valStr)}</div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // 5. Update Call Stack List
+            if (stepCallStackList) {
+                const stackFrames = step.call_stack || ['<global scope>'];
+                stepCallStackList.innerHTML = stackFrames.map((frame, idx) => `
+                    <span class="stack-frame-pill ${idx === stackFrames.length - 1 ? 'active' : ''}">${escapeHtml(frame)}</span>
+                `).join('');
+            }
+
+            // 6. Highlight active line in left trace view
+            const rawCode = editorTextarea ? editorTextarea.value : '';
+            renderTraceLines(rawCode, step.line_number);
+
+            // 7. Update button states
+            if (stepperFirstBtn) stepperFirstBtn.disabled = currentStepIndex === 0;
+            if (stepperPrevBtn) stepperPrevBtn.disabled = currentStepIndex === 0;
+            if (stepperNextBtn) stepperNextBtn.disabled = currentStepIndex === currentSteps.length - 1;
+            if (stepperLastBtn) stepperLastBtn.disabled = currentStepIndex === currentSteps.length - 1;
+        }
+
+        // Render Full Line-by-Line Breakdown Tab
+        function renderFullBreakdown(data) {
+            if (fullOverviewText) fullOverviewText.textContent = data.overview || 'Program line-by-line breakdown generated.';
+            if (!fullLinesAccordion) return;
+
+            const lines = (editorTextarea?.value || '').split('\n');
+            fullLinesAccordion.innerHTML = lines.map((lineText, idx) => {
+                const lineNo = idx + 1;
+                const exp = (data.line_explanations && data.line_explanations[lineNo]) || 
+                            (data.steps.find(s => s.line_number === lineNo)?.explanation) || 
+                            'Sequential instruction execution.';
+                const cleanExp = exp.replace(/<[^>]+>/g, '');
+                return `
+                    <div class="line-breakdown-card" onclick="window.codevisJumpToLine(${lineNo})">
+                        <div class="line-breakdown-header">
+                            <span class="line-badge-pill">Line ${lineNo}</span>
+                            <code class="line-code-snippet">${escapeHtml(lineText || ' ')}</code>
+                        </div>
+                        <div class="line-exp-text">🎯 ${escapeHtml(cleanExp)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.codevisJumpToLine = function(lineNo) {
+            // Switch tab to stepper and jump to line
+            if (viewTabs) {
+                viewTabs.querySelectorAll('.view-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'stepper'));
+            }
+            if (stepperView) stepperView.style.display = 'block';
+            if (fullBreakdownView) fullBreakdownView.style.display = 'none';
+            activeViewMode = 'stepper';
+            jumpToLine(lineNo);
+        };
+
+        // Navigation actions
+        function goToStep(idx) {
+            if (idx < 0) idx = 0;
+            if (idx >= currentSteps.length) idx = currentSteps.length - 1;
+            currentStepIndex = idx;
+            renderCurrentStep();
+        }
+
+        function nextStep() {
+            if (currentStepIndex < currentSteps.length - 1) {
+                goToStep(currentStepIndex + 1);
+            } else {
+                stopAutoPlay();
+            }
+        }
+
+        function prevStep() {
+            if (currentStepIndex > 0) {
+                goToStep(currentStepIndex - 1);
+            }
+        }
+
+        function firstStep() {
+            goToStep(0);
+        }
+
+        function lastStep() {
+            goToStep(currentSteps.length - 1);
+        }
+
+        function resetSteps() {
+            stopAutoPlay();
+            goToStep(0);
+        }
+
+        function toggleAutoPlay() {
+            if (playInterval) {
+                stopAutoPlay();
+            } else {
+                startAutoPlay();
+            }
+        }
+
+        function startAutoPlay() {
+            if (currentStepIndex >= currentSteps.length - 1) {
+                goToStep(0);
+            }
+            if (stepperPlayBtn) stepperPlayBtn.classList.add('playing');
+            if (stepperPlayIcon) stepperPlayIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+            if (stepperPlayText) stepperPlayText.textContent = 'Pause';
+            
+            playInterval = setInterval(() => {
+                if (currentStepIndex < currentSteps.length - 1) {
+                    nextStep();
+                } else {
+                    stopAutoPlay();
+                }
+            }, autoPlaySpeed);
+        }
+
+        function stopAutoPlay() {
+            if (playInterval) {
+                clearInterval(playInterval);
+                playInterval = null;
+            }
+            if (stepperPlayBtn) stepperPlayBtn.classList.remove('playing');
+            if (stepperPlayIcon) stepperPlayIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+            if (stepperPlayText) stepperPlayText.textContent = 'Auto Play';
+        }
+
+        if (stepperFirstBtn) stepperFirstBtn.addEventListener('click', firstStep);
+        if (stepperPrevBtn) stepperPrevBtn.addEventListener('click', prevStep);
+        if (stepperNextBtn) stepperNextBtn.addEventListener('click', nextStep);
+        if (stepperLastBtn) stepperLastBtn.addEventListener('click', lastStep);
+        if (stepperResetBtn) stepperResetBtn.addEventListener('click', resetSteps);
+        if (stepperPlayBtn) stepperPlayBtn.addEventListener('click', toggleAutoPlay);
+
+        if (speedSelect) {
+            speedSelect.addEventListener('change', () => {
+                autoPlaySpeed = parseInt(speedSelect.value, 10) || 1800;
+                if (playInterval) {
+                    stopAutoPlay();
+                    startAutoPlay();
+                }
+            });
+        }
+
+        // Main Analysis Trigger (Calls Backend LLM API with Client-Side Fallback)
+        async function analyzeAndVisualize() {
+            const rawCode = editorTextarea?.value || '';
+            if (!rawCode.trim()) {
+                showToast('⚠️ Please write or paste code first.');
+                return;
+            }
+
+            stopAutoPlay();
+            isAnalyzing = true;
+            if (analyzeBtn) {
+                analyzeBtn.disabled = true;
+                analyzeBtn.innerHTML = `
+                    <svg class="chat-spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                    <span>Analyzing Steps...</span>
+                `;
+            }
+
+            // 1. Generate Instant Local Simulation so user never waits
+            const localData = generateLocalTrace(rawCode, currentLang);
+            currentSteps = localData.steps;
+            lineExplanationsMap = localData.line_explanations;
+            currentStepIndex = 0;
+            switchToEditorMode('trace');
+            renderCurrentStep();
+            renderFullBreakdown(localData);
+
+            // 2. Fetch Deep AI Analysis from backend endpoint
+            try {
+                const response = await fetch(`${API_BASE_URL}/code/analyze-steps`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        code: rawCode,
+                        language: currentLang,
+                        mode: 'step_by_step'
+                    })
+                });
+
+                if (response.ok) {
+                    const aiData = await response.json();
+                    if (aiData.steps && aiData.steps.length > 0) {
+                        currentSteps = aiData.steps;
+                        lineExplanationsMap = aiData.line_explanations || {};
+                        if (algoTimeComp) algoTimeComp.textContent = `⏱ Time: ${aiData.time_complexity_overall || 'O(N)'}`;
+                        if (algoSpaceComp) algoSpaceComp.textContent = `💾 Space: ${aiData.space_complexity_overall || 'O(1)'}`;
+                        renderCurrentStep();
+                        renderFullBreakdown(aiData);
+                        showToast(`✨ Deep line-by-line analysis ready (${aiData.total_steps} execution steps)!`);
+                    }
+                }
+            } catch (err) {
+                console.warn('Backend code analysis fallback active:', err);
+            } finally {
+                isAnalyzing = false;
+                if (analyzeBtn) {
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.innerHTML = `
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        <span>Visualize Line-by-Line</span>
+                    `;
+                }
+            }
+        }
+
+        if (analyzeBtn) analyzeBtn.addEventListener('click', analyzeAndVisualize);
 
         if (copyBtn) {
             copyBtn.addEventListener('click', async () => {
@@ -798,175 +1072,34 @@ for rank, (doc, score) in enumerate(ranked, start=1):
             insertChatBtn.addEventListener('click', () => {
                 const code = editorTextarea?.value || '';
                 if (!code.trim()) return;
+                const currentStep = currentSteps[currentStepIndex];
+                const expSummary = currentStep ? `\n\n**Line ${currentStep.line_number} Explanation:**\n${currentStep.explanation.replace(/<[^>]+>/g, '')}` : '';
                 if (chatInput) {
-                    chatInput.value = (chatInput.value ? chatInput.value + '\n\n' : '') + `\`\`\`${currentLang}\n${code}\n\`\`\``;
+                    chatInput.value = (chatInput.value ? chatInput.value + '\n\n' : '') + `\`\`\`${currentLang}\n${code}\n\`\`\`${expSummary}`;
                     sendBtn.disabled = false;
                     autoResizeTextarea();
                     chatInput.focus();
                 }
                 window.closeCodeVisualizer();
-                showToast('💬 Code inserted into active chat prompt!');
+                showToast('💬 Code & line explanation inserted into chat prompt!');
             });
         }
 
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
+                stopAutoPlay();
                 if (editorTextarea) editorTextarea.value = '';
                 if (presetSelect) presetSelect.value = 'custom';
                 updateEditorStats();
-                renderVisualizerCode();
+                switchToEditorMode('edit');
+                currentSteps = [];
+                if (traceLinesList) traceLinesList.innerHTML = '';
+                if (stepExplanationText) stepExplanationText.textContent = 'Paste your code and click "Visualize Line-by-Line".';
+                if (stepVariablesGrid) stepVariablesGrid.innerHTML = '<div class="var-empty-state">No variables.</div>';
             });
-        }
-
-        if (popoutBtn) {
-            popoutBtn.addEventListener('click', () => {
-                const code = editorTextarea?.value || '';
-                const newWin = window.open('', '_blank');
-                if (newWin) {
-                    newWin.document.open();
-                    newWin.document.write(code);
-                    newWin.document.close();
-                }
-            });
-        }
-
-        // Console Log Listener from iframe
-        window.addEventListener('message', event => {
-            if (event.data && event.data.type === 'CODEVIS_LOG') {
-                addConsoleLog(event.data.level, event.data.message);
-            }
-        });
-
-        function addConsoleLog(level, message) {
-            consoleLogs.push({ level, message, time: new Date().toLocaleTimeString() });
-            if (consoleCount) consoleCount.textContent = consoleLogs.length;
-            if (!consoleList) return;
-            if (consoleLogs.length === 1) consoleList.innerHTML = '';
-            const item = document.createElement('div');
-            item.className = `console-log-item log-${level}`;
-            item.innerHTML = `<span class="log-time">${new Date().toLocaleTimeString()}</span> <span class="log-badge">${level.toUpperCase()}</span> <span class="log-msg">${escapeHtml(message)}</span>`;
-            consoleList.appendChild(item);
-            consoleList.scrollTop = consoleList.scrollHeight;
-        }
-
-        function clearConsoleLogs() {
-            consoleLogs = [];
-            if (consoleCount) consoleCount.textContent = '0';
-            if (consoleList) consoleList.innerHTML = '<div class="console-empty">Console is ready. Logs and outputs will appear here when your code runs.</div>';
-        }
-
-        function renderVisualizerCode() {
-            const rawCode = editorTextarea ? editorTextarea.value : '';
-            clearConsoleLogs();
-
-            if (currentLang === 'mermaid' || rawCode.trim().startsWith('graph ') || rawCode.trim().startsWith('sequenceDiagram') || rawCode.trim().startsWith('flowchart ') || rawCode.trim().startsWith('classDiagram')) {
-                syncLangTab('mermaid');
-                switchPreviewTab('mermaid');
-                renderMermaidDiagram(rawCode);
-                return;
-            }
-
-            if (currentLang === 'svg' || (rawCode.trim().startsWith('<svg') && rawCode.trim().endsWith('</svg>'))) {
-                switchPreviewTab('visual');
-                const fullSvgHtml = `<!DOCTYPE html><html><head><style>body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0f172a; }</style></head><body>${rawCode}</body></html>`;
-                injectIframeContent(fullSvgHtml);
-                return;
-            }
-
-            if (currentLang === 'python') {
-                switchPreviewTab('console');
-                addConsoleLog('info', 'Executing Python simulation in sandbox...');
-                setTimeout(() => {
-                    const lines = rawCode.split('\n');
-                    lines.forEach(l => {
-                        if (l.trim().startsWith('print(')) {
-                            const pMatch = l.match(/print\((.*)\)/);
-                            if (pMatch) addConsoleLog('log', pMatch[1].replace(/["']/g, ''));
-                        }
-                    });
-                    addConsoleLog('info', '✨ Python execution finished (Code simulated successfully).');
-                }, 300);
-                return;
-            }
-
-            // HTML / CSS / JS
-            switchPreviewTab('visual');
-            let fullHtml = rawCode;
-            if (!/<html[\s>]/i.test(rawCode)) {
-                fullHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  * { box-sizing: border-box; }
-  body { font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 16px; color: #f8fafc; background: #0b0c10; }
-</style>
-</head>
-<body>
-${rawCode}
-<script>
-  (function() {
-    const origLog = console.log, origWarn = console.warn, origErr = console.error;
-    console.log = function(...args) {
-      window.parent.postMessage({ type: 'CODEVIS_LOG', level: 'log', message: args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ') }, '*');
-      origLog.apply(console, args);
-    };
-    console.warn = function(...args) {
-      window.parent.postMessage({ type: 'CODEVIS_LOG', level: 'warn', message: args.join(' ') }, '*');
-      origWarn.apply(console, args);
-    };
-    console.error = function(...args) {
-      window.parent.postMessage({ type: 'CODEVIS_LOG', level: 'error', message: args.join(' ') }, '*');
-      origErr.apply(console, args);
-    };
-    window.onerror = function(msg, url, line) {
-      window.parent.postMessage({ type: 'CODEVIS_LOG', level: 'error', message: msg + ' (Line ' + line + ')' }, '*');
-    };
-  })();
-<\/script>
-</body>
-</html>`;
-            } else {
-                fullHtml = fullHtml.replace('</body>', `<script>
-  (function() {
-    const origLog = console.log;
-    console.log = function(...args) {
-      window.parent.postMessage({ type: 'CODEVIS_LOG', level: 'log', message: args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ') }, '*');
-      origLog.apply(console, args);
-    };
-  })();
-<\/script></body>`);
-            }
-            injectIframeContent(fullHtml);
-        }
-
-        function injectIframeContent(htmlContent) {
-            if (!iframe) return;
-            const blob = new Blob([htmlContent], { type: 'text/html; charset=utf-8' });
-            iframe.src = URL.createObjectURL(blob);
-        }
-
-        async function renderMermaidDiagram(code) {
-            if (!mermaidOutput) return;
-            mermaidOutput.innerHTML = '<div class="mermaid-rendering">Rendering Architecture Diagram...</div>';
-            try {
-                if (window.mermaid) {
-                    window.mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
-                    const id = `mermaid_${Date.now()}`;
-                    const { svg } = await window.mermaid.render(id, code.trim());
-                    mermaidOutput.innerHTML = svg;
-                    addConsoleLog('info', 'Mermaid diagram rendered successfully.');
-                } else {
-                    mermaidOutput.innerHTML = `<pre class="mermaid-raw">${escapeHtml(code)}</pre>`;
-                }
-            } catch (err) {
-                mermaidOutput.innerHTML = `<div class="mermaid-error">⚠️ Mermaid Syntax Error: ${escapeHtml(err.message || String(err))}</div>`;
-                addConsoleLog('error', `Mermaid render error: ${err.message || err}`);
-            }
         }
     }
+
 
     // ChatGPT Settings Tab Switching
     const settingsTabsNav = $('settings-tabs-nav');

@@ -930,40 +930,55 @@
         </section>
     </div>
 
-    <!-- Code Visualizer & Live Preview Studio Dialog -->
+    <!-- Line-by-Line Code Visualizer & Step-Through Explainer Dialog -->
     <div class="codevis-backdrop" id="codevis-backdrop" hidden>
         <section class="codevis-dialog" role="dialog" aria-modal="true" aria-labelledby="codevis-title">
+            <!-- Header -->
             <div class="codevis-header">
                 <div class="codevis-header-left">
                     <div class="codevis-icon-wrap">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="16 18 22 12 16 6"/>
-                            <polyline points="8 6 2 12 8 18"/>
+                            <polyline points="4 17 10 11 4 5"/>
+                            <line x1="12" y1="19" x2="20" y2="19"/>
                         </svg>
                     </div>
                     <div class="codevis-header-text">
                         <div class="codevis-title-row">
-                            <h2 id="codevis-title">Code Studio & Visualizer</h2>
+                            <h2 id="codevis-title">Line-by-Line Code Visualizer & Explainer</h2>
                             <span class="codevis-status-badge">
-                                <span class="status-pulse-dot green"></span> Live Sandbox
+                                <span class="status-pulse-dot green"></span> Live Execution Stepper
                             </span>
                         </div>
-                        <p class="codevis-subtitle">Interactive preview & execution for HTML, CSS, JavaScript, Mermaid diagrams, SVG, and code algorithms.</p>
+                        <p class="codevis-subtitle">Paste any program to step through line-by-line with active execution pointers, live variable memory watcher, and deep explanations.</p>
                     </div>
                 </div>
 
                 <div class="codevis-header-actions">
-                    <!-- Template Presets Selector -->
-                    <div class="codevis-preset-wrap">
-                        <label for="codevis-preset-select" class="codevis-preset-label">Templates:</label>
+                    <!-- Language Selection -->
+                    <div class="codevis-select-wrap">
+                        <label for="codevis-lang-select" class="codevis-field-label">Language:</label>
+                        <select id="codevis-lang-select" class="codevis-select">
+                            <option value="python">🐍 Python</option>
+                            <option value="javascript">⚡ JavaScript / TS</option>
+                            <option value="cpp">⚙️ C / C++</option>
+                            <option value="java">☕ Java</option>
+                            <option value="go">🐹 Go</option>
+                            <option value="rust">🦀 Rust</option>
+                            <option value="sql">🗄️ SQL</option>
+                        </select>
+                    </div>
+
+                    <!-- Presets / Algorithms -->
+                    <div class="codevis-select-wrap">
+                        <label for="codevis-preset-select" class="codevis-field-label">Presets:</label>
                         <select id="codevis-preset-select" class="codevis-select">
-                            <option value="custom">Custom Code</option>
-                            <option value="dashboard">📊 Glassmorphism Dashboard UI</option>
-                            <option value="chart">📈 Live Interactive Chart (Canvas)</option>
-                            <option value="mermaid">🔄 Multi-Agent Architecture Flow</option>
-                            <option value="calculator">⚡ Interactive Calculator Widget</option>
-                            <option value="particles">🎨 Animated Particle Canvas</option>
-                            <option value="python_trace">🐍 Python Algorithm & Trace</option>
+                            <option value="binary_search">🔍 Binary Search Algorithm</option>
+                            <option value="fibonacci">🧮 Fibonacci (Recursion & Memo)</option>
+                            <option value="bubble_sort">📊 Bubble Sort & Swaps</option>
+                            <option value="two_sum">🎯 Two Pointer Target Sum</option>
+                            <option value="linked_list">🔗 Reverse Linked List</option>
+                            <option value="tree_dfs">🌲 Binary Tree DFS Traversal</option>
+                            <option value="custom">📝 Custom / Paste Your Code</option>
                         </select>
                     </div>
 
@@ -971,42 +986,69 @@
                 </div>
             </div>
 
-            <!-- Toolbar -->
+            <!-- Toolbar with Stepper Controls & Actions -->
             <div class="codevis-toolbar">
                 <div class="codevis-toolbar-left">
-                    <div class="codevis-lang-toggle" id="codevis-lang-tabs">
-                        <button class="codevis-tab-btn active" data-lang="html">HTML / CSS / JS</button>
-                        <button class="codevis-tab-btn" data-lang="mermaid">Mermaid Diagram</button>
-                        <button class="codevis-tab-btn" data-lang="svg">SVG Graphics</button>
-                        <button class="codevis-tab-btn" data-lang="python">Python / Trace</button>
+                    <!-- Main Analyze CTA Button -->
+                    <button type="button" class="codevis-btn primary pulse-on-hover" id="codevis-analyze-btn" title="Analyze & Step Through Line-by-Line">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        <span>Visualize Line-by-Line</span>
+                    </button>
+
+                    <!-- Stepper Playback Controls -->
+                    <div class="codevis-stepper-controls" id="codevis-stepper-controls">
+                        <button type="button" class="stepper-btn" id="stepper-first-btn" title="First Step (Home)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="11 19 2 12 11 5 11 19"/><polygon points="22 19 13 12 22 5 22 19"/></svg>
+                        </button>
+                        <button type="button" class="stepper-btn" id="stepper-prev-btn" title="Previous Line Step (Left Arrow)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/></svg>
+                            <span>Prev</span>
+                        </button>
+                        <button type="button" class="stepper-btn play-btn" id="stepper-play-btn" title="Auto Step Play/Pause (Space)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" id="stepper-play-icon"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            <span id="stepper-play-text">Auto Play</span>
+                        </button>
+                        <button type="button" class="stepper-btn" id="stepper-next-btn" title="Next Line Step (Right Arrow)">
+                            <span>Next</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/></svg>
+                        </button>
+                        <button type="button" class="stepper-btn" id="stepper-last-btn" title="Last Step (End)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/></svg>
+                        </button>
+                        <button type="button" class="stepper-btn reset-btn" id="stepper-reset-btn" title="Reset to Beginning">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Step Speed Dropdown -->
+                    <div class="codevis-speed-wrap">
+                        <select id="codevis-speed-select" class="codevis-speed-select" title="Auto-play speed">
+                            <option value="1800">Speed: 1x (1.8s)</option>
+                            <option value="1000">Speed: 1.5x (1.0s)</option>
+                            <option value="600">Speed: 2.5x (0.6s)</option>
+                            <option value="2800">Speed: 0.5x (2.8s)</option>
+                        </select>
                     </div>
                 </div>
 
                 <div class="codevis-toolbar-right">
-                    <!-- Device Switcher -->
-                    <div class="codevis-device-group">
-                        <button class="device-btn active" data-device="desktop" title="Desktop View (100%)">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    <!-- Mode Tabs -->
+                    <div class="codevis-view-tabs" id="codevis-view-tabs">
+                        <button class="view-tab-btn active" data-view="stepper">
+                            <span>👣 Stepper & Memory</span>
                         </button>
-                        <button class="device-btn" data-device="tablet" title="Tablet View (768px)">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-                        </button>
-                        <button class="device-btn" data-device="mobile" title="Mobile View (375px)">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                        <button class="view-tab-btn" data-view="full-breakdown">
+                            <span>📑 Full Line Breakdown</span>
                         </button>
                     </div>
 
-                    <button type="button" class="codevis-btn primary" id="codevis-run-btn" title="Run & Render (Ctrl+Enter)">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        <span>Run & Render</span>
-                    </button>
-                    <button type="button" class="codevis-btn" id="codevis-copy-btn" title="Copy Code">
+                    <button type="button" class="codevis-btn" id="codevis-copy-btn" title="Copy Source Code">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                         <span>Copy</span>
                     </button>
-                    <button type="button" class="codevis-btn" id="codevis-insert-chat-btn" title="Insert Code into Active Chat">
+                    <button type="button" class="codevis-btn" id="codevis-insert-chat-btn" title="Send Code & Explanation to Chat">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                        <span>Insert into Chat</span>
+                        <span>Insert to Chat</span>
                     </button>
                     <button type="button" class="codevis-btn danger" id="codevis-clear-btn" title="Clear Code">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -1016,75 +1058,163 @@
 
             <!-- Main Split Body -->
             <div class="codevis-body-layout">
-                <!-- Left Pane: Code Editor -->
+                <!-- Left Pane: Code Editor & Interactive Line Highlighting -->
                 <div class="codevis-editor-pane">
                     <div class="codevis-pane-header">
                         <div class="pane-header-title">
                             <span class="editor-dot red"></span>
                             <span class="editor-dot yellow"></span>
                             <span class="editor-dot green"></span>
-                            <span class="pane-label" id="codevis-editor-label">Source Code (HTML/JS/CSS)</span>
+                            <span class="pane-label" id="codevis-editor-label">Program Source (Paste or Type Below)</span>
                         </div>
-                        <div class="editor-stats">
+                        <div class="editor-mode-toggle">
+                            <button type="button" class="mode-pill-btn active" id="codevis-mode-edit-btn">✏️ Edit Mode</button>
+                            <button type="button" class="mode-pill-btn" id="codevis-mode-trace-btn">👁️ Trace Highlighting</button>
+                        </div>
+                    </div>
+
+                    <!-- Dual Layer: Editable Textarea & Rendered Interactive Trace View -->
+                    <div class="codevis-editor-container" id="codevis-editor-container">
+                        <!-- Standard Editable Textarea -->
+                        <div class="codevis-editor-wrap" id="codevis-raw-editor-wrap">
+                            <div class="codevis-line-numbers" id="codevis-line-numbers">1</div>
+                            <textarea id="codevis-editor-textarea" spellcheck="false" placeholder="Write or paste your code here (Python, JavaScript, C++, Java, etc.)...&#10;&#10;Click 'Visualize Line-by-Line' or press Ctrl+Enter to generate the interactive execution breakdown."></textarea>
+                        </div>
+
+                        <!-- Interactive Trace Highlight View (Line rows with active pointer) -->
+                        <div class="codevis-trace-wrap" id="codevis-trace-wrap" style="display: none;">
+                            <div class="trace-lines-list" id="codevis-trace-lines-list">
+                                <!-- Generated line rows with execution arrow -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="codevis-pane-footer">
+                        <div class="footer-stats">
                             <span id="codevis-line-count">1 line</span>
                             <span class="stat-divider">•</span>
                             <span id="codevis-char-count">0 chars</span>
                         </div>
-                    </div>
-
-                    <div class="codevis-editor-wrap">
-                        <div class="codevis-line-numbers" id="codevis-line-numbers">1</div>
-                        <textarea id="codevis-editor-textarea" spellcheck="false" placeholder="Write or paste HTML, CSS, JavaScript, Mermaid, or Python code here...&#10;&#10;Press Ctrl+Enter to Run & Render live."></textarea>
+                        <div class="footer-tip">
+                            💡 Tip: Click any line in Trace mode to inspect its step!
+                        </div>
                     </div>
                 </div>
 
-                <!-- Right Pane: Live Visualization & Console -->
-                <div class="codevis-preview-pane" id="codevis-preview-pane">
-                    <div class="codevis-pane-header">
-                        <div class="preview-tabs" id="codevis-preview-tabs">
-                            <button class="preview-tab-btn active" data-preview-tab="visual">
-                                <span>🖥️ Live Preview</span>
-                            </button>
-                            <button class="preview-tab-btn" data-preview-tab="mermaid" id="codevis-mermaid-tab-btn" style="display: none;">
-                                <span>📊 Diagram</span>
-                            </button>
-                            <button class="preview-tab-btn" data-preview-tab="console">
-                                <span>📜 Console (<span id="codevis-console-count">0</span>)</span>
-                            </button>
+                <!-- Right Pane: Live Step-by-Step Explanation & Variable Watcher -->
+                <div class="codevis-explanation-pane" id="codevis-explanation-pane">
+                    <!-- Top Step Progress Card -->
+                    <div class="step-progress-banner">
+                        <div class="step-badge-row">
+                            <div class="current-step-badge" id="stepper-badge">
+                                <span class="step-dot pulse"></span>
+                                <span id="stepper-badge-text">Step 1 of 1</span>
+                            </div>
+                            <div class="current-line-badge" id="stepper-line-badge">
+                                <span>Line 1</span>
+                            </div>
+                            <div class="algo-complexity-tags" id="algo-complexity-tags">
+                                <span class="complexity-pill time" id="algo-time-complexity">⏱ Time: O(N)</span>
+                                <span class="complexity-pill space" id="algo-space-complexity">💾 Space: O(1)</span>
+                            </div>
                         </div>
-                        <div class="preview-actions">
-                            <button class="preview-icon-btn" id="codevis-reload-btn" title="Reload Preview">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                            </button>
-                            <button class="preview-icon-btn" id="codevis-popout-btn" title="Open Preview in New Window">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                            </button>
+                        <div class="step-progress-bar-wrap">
+                            <div class="step-progress-bar-fill" id="stepper-progress-fill" style="width: 10%;"></div>
                         </div>
                     </div>
 
-                    <!-- Visual iframe container -->
-                    <div class="codevis-preview-content" id="codevis-preview-content">
-                        <!-- Sandboxed iframe -->
-                        <div class="codevis-frame-wrapper" id="codevis-frame-wrapper">
-                            <iframe id="codevis-iframe" sandbox="allow-scripts allow-modals allow-same-origin allow-forms" src="about:blank"></iframe>
-                        </div>
-
-                        <!-- Mermaid SVG Container -->
-                        <div class="codevis-mermaid-container" id="codevis-mermaid-container" style="display: none;">
-                            <div class="mermaid-render-area" id="codevis-mermaid-output"></div>
-                        </div>
-
-                        <!-- Console Log Viewer -->
-                        <div class="codevis-console-container" id="codevis-console-container" style="display: none;">
-                            <div class="console-log-list" id="codevis-console-list">
-                                <div class="console-empty">Console logs, outputs, and return values will appear here when your code runs.</div>
+                    <!-- View 1: Active Step Deep Dive & Memory Watcher -->
+                    <div class="codevis-view-content" id="codevis-stepper-view">
+                        <!-- Active Line Spotlight Box -->
+                        <div class="active-line-spotlight-card">
+                            <div class="spotlight-header">
+                                <span class="spotlight-label">⚡ Currently Executing Line</span>
+                                <span class="spotlight-line-no" id="spotlight-line-no">Line 1</span>
                             </div>
+                            <div class="spotlight-code-snippet" id="spotlight-code-snippet">
+                                <code>// Click "Visualize Line-by-Line" to start</code>
+                            </div>
+                        </div>
+
+                        <!-- Deep Explanations Accordion Cards -->
+                        <div class="step-cards-container">
+                            <!-- Plain English Breakdown -->
+                            <div class="step-info-card plain-english">
+                                <div class="card-title-row">
+                                    <span class="card-icon">🎯</span>
+                                    <h4>What This Line Does</h4>
+                                </div>
+                                <div class="card-content" id="step-explanation-text">
+                                    Paste your program on the left and click <strong>"Visualize Line-by-Line"</strong>. Antigravity will trace every execution step, variable modification, and runtime mechanic.
+                                </div>
+                            </div>
+
+                            <!-- Under the Hood & Memory Mechanics -->
+                            <div class="step-info-card mechanics">
+                                <div class="card-title-row">
+                                    <span class="card-icon">⚙️</span>
+                                    <h4>Under the Hood Mechanics</h4>
+                                </div>
+                                <div class="card-content" id="step-mechanics-text">
+                                    Evaluates expressions, allocates memory pointers, checks loop bounds, or pushes/pops function call frames.
+                                </div>
+                            </div>
+
+                            <!-- Variable & Memory Watcher Table -->
+                            <div class="step-info-card memory-watcher">
+                                <div class="card-title-row">
+                                    <span class="card-icon">📊</span>
+                                    <h4>Live Variable Watcher & Memory State</h4>
+                                    <span class="memory-count-badge" id="memory-count-badge">0 variables</span>
+                                </div>
+                                <div class="variables-table-wrap">
+                                    <div class="variables-grid" id="step-variables-grid">
+                                        <div class="var-empty-state">No variables initialized yet on this line.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Call Stack & Frame Trace -->
+                            <div class="step-info-card call-stack">
+                                <div class="card-title-row">
+                                    <span class="card-icon">📚</span>
+                                    <h4>Call Stack Frame</h4>
+                                </div>
+                                <div class="call-stack-list" id="step-call-stack-list">
+                                    <span class="stack-frame-pill active">&lt;global scope&gt;</span>
+                                </div>
+                            </div>
+
+                            <!-- Edge Cases & Gotchas -->
+                            <div class="step-info-card edge-cases" id="step-edge-cases-card">
+                                <div class="card-title-row">
+                                    <span class="card-icon">⚠️</span>
+                                    <h4>Edge Cases & Pitfalls</h4>
+                                </div>
+                                <div class="card-content" id="step-edge-cases-text">
+                                    Watch out for boundary values, empty collections, or type mismatches.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- View 2: Full Program Line-by-Line Breakdown Table -->
+                    <div class="codevis-view-content" id="codevis-full-breakdown-view" style="display: none;">
+                        <div class="full-breakdown-header">
+                            <div class="overview-box" id="full-breakdown-overview">
+                                <h3>Program Algorithmic Summary</h3>
+                                <p id="full-overview-text">Run visualization to generate full line-by-line breakdown.</p>
+                            </div>
+                        </div>
+                        <div class="full-lines-accordion" id="full-lines-accordion">
+                            <!-- Dynamically populated line cards -->
                         </div>
                     </div>
                 </div>
             </div>
         </section>
     </div>
+
 
     <!-- Floating Toast Notification -->
     <div class="toast-container" id="toast-container"></div>

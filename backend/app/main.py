@@ -19,6 +19,8 @@ from app.routes.router import router as intent_router_endpoint
 from app.routes.langgraph import router as langgraph_router
 from app.routes.conversations import router as conversations_router
 from app.routes.ocr import router as ocr_router
+from app.routes.code_visualizer import router as code_visualizer_router
+
 
 
 @asynccontextmanager
@@ -72,6 +74,10 @@ app.include_router(conversations_router)
 
 app.include_router(ocr_router, prefix=settings.API_V1_STR)
 app.include_router(ocr_router)
+
+app.include_router(code_visualizer_router, prefix=settings.API_V1_STR)
+app.include_router(code_visualizer_router)
+
 
 
 @app.get("/", tags=["Landing"])
