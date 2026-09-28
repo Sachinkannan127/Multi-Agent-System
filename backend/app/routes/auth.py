@@ -3,7 +3,12 @@ import time
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, Union
 import requests
-import jwt
+
+try:
+    import jwt
+except ImportError:
+    jwt = None
+
 from fastapi import APIRouter, Header, HTTPException, status, Depends
 from pydantic import BaseModel, Field
 

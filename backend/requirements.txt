@@ -16,3 +16,5 @@ scrapegraphai
 scrapegraph-py
 tavily-python
 pymongo
+pyjwt
+requests
