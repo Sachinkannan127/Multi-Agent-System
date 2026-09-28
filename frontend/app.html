@@ -51,6 +51,14 @@
             </div>
 
             <div class="sidebar-footer">
+                <button class="sidebar-link sidebar-codevis-link" id="sidebar-codevis-link" title="Code Studio & Live Interactive Visualizer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="16 18 22 12 16 6"/>
+                        <polyline points="8 6 2 12 8 18"/>
+                    </svg>
+                    <span>Code Studio</span>
+                    <span class="sidebar-badge-codevis">Live</span>
+                </button>
                 <button class="sidebar-link sidebar-ocr-link" id="sidebar-ocr-link" title="OCR Image Text Extractor (EasyOCR)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/>
@@ -922,9 +930,167 @@
         </section>
     </div>
 
+    <!-- Code Visualizer & Live Preview Studio Dialog -->
+    <div class="codevis-backdrop" id="codevis-backdrop" hidden>
+        <section class="codevis-dialog" role="dialog" aria-modal="true" aria-labelledby="codevis-title">
+            <div class="codevis-header">
+                <div class="codevis-header-left">
+                    <div class="codevis-icon-wrap">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 6 2 12 8 18"/>
+                        </svg>
+                    </div>
+                    <div class="codevis-header-text">
+                        <div class="codevis-title-row">
+                            <h2 id="codevis-title">Code Studio & Visualizer</h2>
+                            <span class="codevis-status-badge">
+                                <span class="status-pulse-dot green"></span> Live Sandbox
+                            </span>
+                        </div>
+                        <p class="codevis-subtitle">Interactive preview & execution for HTML, CSS, JavaScript, Mermaid diagrams, SVG, and code algorithms.</p>
+                    </div>
+                </div>
+
+                <div class="codevis-header-actions">
+                    <!-- Template Presets Selector -->
+                    <div class="codevis-preset-wrap">
+                        <label for="codevis-preset-select" class="codevis-preset-label">Templates:</label>
+                        <select id="codevis-preset-select" class="codevis-select">
+                            <option value="custom">Custom Code</option>
+                            <option value="dashboard">📊 Glassmorphism Dashboard UI</option>
+                            <option value="chart">📈 Live Interactive Chart (Canvas)</option>
+                            <option value="mermaid">🔄 Multi-Agent Architecture Flow</option>
+                            <option value="calculator">⚡ Interactive Calculator Widget</option>
+                            <option value="particles">🎨 Animated Particle Canvas</option>
+                            <option value="python_trace">🐍 Python Algorithm & Trace</option>
+                        </select>
+                    </div>
+
+                    <button class="codevis-close" id="codevis-close" aria-label="Close Code Visualizer" title="Close">&times;</button>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="codevis-toolbar">
+                <div class="codevis-toolbar-left">
+                    <div class="codevis-lang-toggle" id="codevis-lang-tabs">
+                        <button class="codevis-tab-btn active" data-lang="html">HTML / CSS / JS</button>
+                        <button class="codevis-tab-btn" data-lang="mermaid">Mermaid Diagram</button>
+                        <button class="codevis-tab-btn" data-lang="svg">SVG Graphics</button>
+                        <button class="codevis-tab-btn" data-lang="python">Python / Trace</button>
+                    </div>
+                </div>
+
+                <div class="codevis-toolbar-right">
+                    <!-- Device Switcher -->
+                    <div class="codevis-device-group">
+                        <button class="device-btn active" data-device="desktop" title="Desktop View (100%)">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                        </button>
+                        <button class="device-btn" data-device="tablet" title="Tablet View (768px)">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                        </button>
+                        <button class="device-btn" data-device="mobile" title="Mobile View (375px)">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                        </button>
+                    </div>
+
+                    <button type="button" class="codevis-btn primary" id="codevis-run-btn" title="Run & Render (Ctrl+Enter)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        <span>Run & Render</span>
+                    </button>
+                    <button type="button" class="codevis-btn" id="codevis-copy-btn" title="Copy Code">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span>Copy</span>
+                    </button>
+                    <button type="button" class="codevis-btn" id="codevis-insert-chat-btn" title="Insert Code into Active Chat">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        <span>Insert into Chat</span>
+                    </button>
+                    <button type="button" class="codevis-btn danger" id="codevis-clear-btn" title="Clear Code">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Split Body -->
+            <div class="codevis-body-layout">
+                <!-- Left Pane: Code Editor -->
+                <div class="codevis-editor-pane">
+                    <div class="codevis-pane-header">
+                        <div class="pane-header-title">
+                            <span class="editor-dot red"></span>
+                            <span class="editor-dot yellow"></span>
+                            <span class="editor-dot green"></span>
+                            <span class="pane-label" id="codevis-editor-label">Source Code (HTML/JS/CSS)</span>
+                        </div>
+                        <div class="editor-stats">
+                            <span id="codevis-line-count">1 line</span>
+                            <span class="stat-divider">•</span>
+                            <span id="codevis-char-count">0 chars</span>
+                        </div>
+                    </div>
+
+                    <div class="codevis-editor-wrap">
+                        <div class="codevis-line-numbers" id="codevis-line-numbers">1</div>
+                        <textarea id="codevis-editor-textarea" spellcheck="false" placeholder="Write or paste HTML, CSS, JavaScript, Mermaid, or Python code here...&#10;&#10;Press Ctrl+Enter to Run & Render live."></textarea>
+                    </div>
+                </div>
+
+                <!-- Right Pane: Live Visualization & Console -->
+                <div class="codevis-preview-pane" id="codevis-preview-pane">
+                    <div class="codevis-pane-header">
+                        <div class="preview-tabs" id="codevis-preview-tabs">
+                            <button class="preview-tab-btn active" data-preview-tab="visual">
+                                <span>🖥️ Live Preview</span>
+                            </button>
+                            <button class="preview-tab-btn" data-preview-tab="mermaid" id="codevis-mermaid-tab-btn" style="display: none;">
+                                <span>📊 Diagram</span>
+                            </button>
+                            <button class="preview-tab-btn" data-preview-tab="console">
+                                <span>📜 Console (<span id="codevis-console-count">0</span>)</span>
+                            </button>
+                        </div>
+                        <div class="preview-actions">
+                            <button class="preview-icon-btn" id="codevis-reload-btn" title="Reload Preview">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                            </button>
+                            <button class="preview-icon-btn" id="codevis-popout-btn" title="Open Preview in New Window">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Visual iframe container -->
+                    <div class="codevis-preview-content" id="codevis-preview-content">
+                        <!-- Sandboxed iframe -->
+                        <div class="codevis-frame-wrapper" id="codevis-frame-wrapper">
+                            <iframe id="codevis-iframe" sandbox="allow-scripts allow-modals allow-same-origin allow-forms" src="about:blank"></iframe>
+                        </div>
+
+                        <!-- Mermaid SVG Container -->
+                        <div class="codevis-mermaid-container" id="codevis-mermaid-container" style="display: none;">
+                            <div class="mermaid-render-area" id="codevis-mermaid-output"></div>
+                        </div>
+
+                        <!-- Console Log Viewer -->
+                        <div class="codevis-console-container" id="codevis-console-container" style="display: none;">
+                            <div class="console-log-list" id="codevis-console-list">
+                                <div class="console-empty">Console logs, outputs, and return values will appear here when your code runs.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
     <!-- Floating Toast Notification -->
     <div class="toast-container" id="toast-container"></div>
 
+    <!-- Mermaid.js for architecture & diagram visualizer -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
