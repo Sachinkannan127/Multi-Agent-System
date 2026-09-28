@@ -11,6 +11,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="app.css">
+    <!-- Clerk Authentication SDK -->
+    <script async crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
 </head>
 
 <body>
@@ -116,9 +118,19 @@
                     </svg>
                     Documentation
                 </a>
-                <div class="sidebar-profile"><span
-                        class="profile-avatar">M</span><span><strong>MultiAgent</strong><small>Workspace</small></span><span
-                        class="profile-more">•••</span></div>
+                <div class="sidebar-profile" id="sidebar-profile">
+                    <div class="profile-info-wrap" id="profile-info-wrap">
+                        <span class="profile-avatar" id="profile-avatar">M</span>
+                        <div class="profile-meta">
+                            <strong id="profile-name">Guest User</strong>
+                            <small id="profile-email">Sign in to sync</small>
+                        </div>
+                    </div>
+                    <div class="profile-actions">
+                        <button type="button" class="clerk-sign-in-pill" id="sidebar-signin-btn" title="Sign In with Clerk">Sign In</button>
+                        <div id="clerk-user-button"></div>
+                    </div>
+                </div>
             </div>
         </aside>
 
@@ -141,6 +153,18 @@
                 </div>
 
                 <div class="topbar-controls">
+                    <!-- Clerk Auth Widget -->
+                    <div class="topbar-auth" id="topbar-auth">
+                        <button type="button" class="auth-btn" id="topbar-signin-btn" title="Sign In with Clerk">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                                <polyline points="10 17 15 12 10 7"></polyline>
+                                <line x1="15" y1="12" x2="3" y2="12"></line>
+                            </svg>
+                            <span>Sign In</span>
+                        </button>
+                        <div id="topbar-clerk-user-button"></div>
+                    </div>
                     <!-- Export / Share -->
                     <button class="topbar-btn share-btn" id="share-btn" title="Export / Share Chat" aria-label="Export Chat">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1193,6 +1217,14 @@
 
 
 
+
+    <!-- Clerk Auth Modal Backdrop & Mount Target -->
+    <div class="clerk-modal-backdrop" id="clerk-modal-backdrop" hidden>
+        <div class="clerk-modal-card">
+            <button class="clerk-modal-close" id="clerk-modal-close" title="Close">✕</button>
+            <div id="clerk-sign-in-target"></div>
+        </div>
+    </div>
 
     <!-- Floating Toast Notification -->
     <div class="toast-container" id="toast-container"></div>

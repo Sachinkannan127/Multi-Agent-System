@@ -350,46 +350,176 @@ textarea {
 .sidebar-profile {
     display: flex;
     align-items: center;
-    gap: 9px;
+    justify-content: space-between;
+    gap: 8px;
     margin-top: 8px;
     padding: 10px 8px 0;
     border-top: 1px solid var(--border-light);
     color: var(--text-secondary);
 }
 
+.profile-info-wrap {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    flex: 1;
+}
+
 .profile-avatar {
-    width: 27px;
-    height: 27px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
     background: var(--gray-800);
     color: white;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 700;
+    flex-shrink: 0;
+    overflow: hidden;
 }
 
-.sidebar-profile strong,
-.sidebar-profile small {
-    display: block;
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-.sidebar-profile strong {
-    font-size: 0.75rem;
+.profile-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
 }
 
-.sidebar-profile small {
-    margin-top: 2px;
+.profile-meta strong {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-meta small {
+    margin-top: 1px;
     color: var(--text-faint);
     font-size: 0.65rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.profile-more {
-    margin-left: auto;
-    color: var(--text-faint);
-    letter-spacing: 2px;
-    font-size: 0.65rem;
+.profile-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.clerk-sign-in-pill {
+    padding: 4px 9px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--orange-500);
+    border: 1px solid rgba(217, 119, 6, 0.35);
+    background: rgba(217, 119, 6, 0.08);
+    cursor: pointer;
+    transition: all var(--fast);
+}
+
+.clerk-sign-in-pill:hover {
+    background: var(--orange-500);
+    color: #ffffff;
+    border-color: var(--orange-500);
+}
+
+/* Topbar Auth Widget */
+.topbar-auth {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.auth-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--orange-500);
+    border: 1px solid rgba(217, 119, 6, 0.35);
+    background: rgba(217, 119, 6, 0.08);
+    cursor: pointer;
+    transition: all var(--fast);
+}
+
+.auth-btn:hover {
+    background: var(--orange-500);
+    color: #ffffff;
+    border-color: var(--orange-500);
+    transform: translateY(-1px);
+}
+
+/* Clerk Modal Card & Backdrop */
+.clerk-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: fade-in 0.2s ease both;
+}
+
+.clerk-modal-backdrop[hidden] {
+    display: none !important;
+}
+
+.clerk-modal-card {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    max-width: 460px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: scale-up 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.clerk-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: all var(--fast);
+    z-index: 10;
+}
+
+.clerk-modal-close:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
 }
 
 /* ============================

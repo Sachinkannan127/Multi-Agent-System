@@ -19,6 +19,10 @@ class Settings:
     SGAI_API_KEY: str = os.getenv("SGAI_API_KEY", "")
     TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY", "")
 
+    # Clerk Authentication
+    CLERK_PUBLISHABLE_KEY: str = os.getenv("CLERK_PUBLISHABLE_KEY", os.getenv("VITE_CLERK_PUBLISHABLE_KEY", ""))
+    CLERK_SECRET_KEY: str = os.getenv("CLERK_SECRET_KEY", "")
+
     # MongoDB Vector Store Configuration
     MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
     MONGODB_DB_NAME: str = os.getenv("MONGODB_DB_NAME", "multiagent_db")

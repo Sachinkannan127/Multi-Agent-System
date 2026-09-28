@@ -39,11 +39,16 @@ const voiceBtn = $('voice-btn');
 // --- TTS State ---
 let currentSpeakingBtn = null;
 
+// --- Clerk Authentication State ---
+let clerk = null;
+let currentClerkUser = null;
+
 // ============================
 //  INITIALIZATION
 // ============================
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
+    initClerkAuth();
     loadConversationsFromBackend();
     setHomeState(true);
     setupEventListeners();
@@ -85,6 +90,141 @@ function toggleTheme() {
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('ma_theme', newTheme);
     if (themeSelect) themeSelect.value = newTheme;
+}
+
+// ============================
+//  CLERK AUTHENTICATION
+// ============================
+async function getAuthHeaders(extraHeaders = {}) {
+    const headers = { 'Content-Type': 'application/json', ...extraHeaders };
+    if (clerk && clerk.session) {
+        try {
+            const token = await clerk.session.getToken();
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+        } catch { /* Silent */ }
+    }
+    return headers;
+}
+
+async function initClerkAuth() {
+    try {
+        let publishableKey = '';
+        try {
+            const res = await fetch(`${API_V1}/auth/config`);
+            if (res.ok) {
+                const cfg = await res.json();
+                publishableKey = cfg.publishable_key || '';
+            }
+        } catch { /* Fallback */ }
+
+        if (!publishableKey) {
+            publishableKey = 'pk_test_bW9yZS1naXJhZmZlLTQxLmNsZXJrLmFjY291bnRzLmRldiQ';
+        }
+
+        // Wait for Clerk SDK if loading
+        const getClerk = () => window.Clerk;
+        let attempts = 0;
+        while (!getClerk() && attempts < 25) {
+            await new Promise(r => setTimeout(r, 120));
+            attempts++;
+        }
+
+        if (window.Clerk) {
+            clerk = window.Clerk;
+            await clerk.load({
+                publishableKey: publishableKey
+            });
+
+            updateAuthUI();
+
+            clerk.addListener(({ user }) => {
+                currentClerkUser = user;
+                updateAuthUI();
+            });
+        }
+    } catch (err) {
+        console.warn('Clerk initialization notice:', err);
+    }
+    setupAuthListeners();
+}
+
+function updateAuthUI() {
+    const user = clerk?.user;
+    const profileName = $('profile-name');
+    const profileEmail = $('profile-email');
+    const profileAvatar = $('profile-avatar');
+    const sidebarSigninBtn = $('sidebar-signin-btn');
+    const topbarSigninBtn = $('topbar-signin-btn');
+    const clerkUserButton = $('clerk-user-button');
+    const topbarClerkUserButton = $('topbar-clerk-user-button');
+
+    if (user) {
+        currentClerkUser = user;
+        const name = user.fullName || user.firstName || user.username || 'Agent User';
+        const email = user.primaryEmailAddress?.emailAddress || 'Authenticated';
+        const imgUrl = user.imageUrl;
+
+        if (profileName) profileName.textContent = name;
+        if (profileEmail) profileEmail.textContent = email;
+        if (profileAvatar) {
+            if (imgUrl) {
+                profileAvatar.innerHTML = `<img src="${imgUrl}" alt="${name}">`;
+            } else {
+                profileAvatar.textContent = name.charAt(0).toUpperCase();
+            }
+        }
+
+        if (sidebarSigninBtn) sidebarSigninBtn.style.display = 'none';
+        if (topbarSigninBtn) topbarSigninBtn.style.display = 'none';
+
+        if (clerk && clerkUserButton && !clerkUserButton.hasChildNodes()) {
+            clerk.mountUserButton(clerkUserButton, { afterSignOutUrl: '/' });
+        }
+        if (clerk && topbarClerkUserButton && !topbarClerkUserButton.hasChildNodes()) {
+            clerk.mountUserButton(topbarClerkUserButton, { afterSignOutUrl: '/' });
+        }
+    } else {
+        currentClerkUser = null;
+        if (profileName) profileName.textContent = 'Guest User';
+        if (profileEmail) profileEmail.textContent = 'Sign in to sync';
+        if (profileAvatar) profileAvatar.textContent = 'M';
+        if (sidebarSigninBtn) sidebarSigninBtn.style.display = '';
+        if (topbarSigninBtn) topbarSigninBtn.style.display = '';
+        if (clerkUserButton) clerkUserButton.innerHTML = '';
+        if (topbarClerkUserButton) topbarClerkUserButton.innerHTML = '';
+    }
+}
+
+function setupAuthListeners() {
+    const topbarSigninBtn = $('topbar-signin-btn');
+    const sidebarSigninBtn = $('sidebar-signin-btn');
+    const modalBackdrop = $('clerk-modal-backdrop');
+    const modalClose = $('clerk-modal-close');
+    const signInTarget = $('clerk-sign-in-target');
+
+    const handleSignIn = () => {
+        if (clerk) {
+            if (modalBackdrop && signInTarget) {
+                modalBackdrop.hidden = false;
+                if (!signInTarget.hasChildNodes()) {
+                    clerk.mountSignIn(signInTarget);
+                }
+            } else {
+                clerk.openSignIn();
+            }
+        } else {
+            showToast('ℹ️ Clerk Auth is active. Set your publishable key in .env to connect live account.');
+        }
+    };
+
+    topbarSigninBtn?.addEventListener('click', handleSignIn);
+    sidebarSigninBtn?.addEventListener('click', handleSignIn);
+    modalClose?.addEventListener('click', () => {
+        if (modalBackdrop) modalBackdrop.hidden = true;
+    });
+    modalBackdrop?.addEventListener('click', (e) => {
+        if (e.target === modalBackdrop) modalBackdrop.hidden = true;
+    });
 }
 
 function setupEventListeners() {
@@ -857,7 +997,8 @@ function setupEventListeners() {
 
         async function loadConversationsFromBackend() {
             try {
-                const response = await fetch(`${API_V1}/conversations`);
+                const headers = await getAuthHeaders();
+                const response = await fetch(`${API_V1}/conversations`, { headers });
                 if (response.ok) {
                     const dbConvs = await response.json();
                     if (Array.isArray(dbConvs) && dbConvs.length > 0) {
@@ -894,9 +1035,10 @@ function setupEventListeners() {
 
             if (convToSave) {
                 try {
+                    const headers = await getAuthHeaders();
                     await fetch(`${API_V1}/conversations/save`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers,
                         body: JSON.stringify({ id: convToSave.id, title: convToSave.title, thread_id: convToSave.threadId, messages: convToSave.messages })
                     });
                 } catch { /* Silent fallback */ }
@@ -927,7 +1069,8 @@ function setupEventListeners() {
             renderChatList();
 
             try {
-                await fetch(`${API_V1}/conversations/${id}`, { method: 'DELETE' });
+                const headers = await getAuthHeaders();
+                await fetch(`${API_V1}/conversations/${id}`, { method: 'DELETE', headers });
             } catch { /* Silent fallback */ }
         }
 

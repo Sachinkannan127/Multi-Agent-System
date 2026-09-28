@@ -1,9 +1,10 @@
 from typing import Any, Dict, List, Optional
 import time
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.db import get_db
+from app.routes.auth import verify_clerk_session
 
 router = APIRouter(prefix="/conversations", tags=["Permanent Conversations Memory"])
 
@@ -17,31 +18,39 @@ class SaveConversationRequest(BaseModel):
 
 @router.get("", summary="Get all permanent conversations from MongoDB")
 @router.get("/", include_in_schema=False)
-def list_conversations():
+def list_conversations(authorization: Optional[str] = Header(None)):
     """
-    Fetches all permanently stored conversations from MongoDB sorted by last update time.
+    Fetches stored conversations from MongoDB, optionally scoped by authenticated Clerk user.
     """
     try:
         db = get_db()
         if db is None:
             return []
 
+        session = verify_clerk_session(authorization)
+        user_id = session.get("user_id")
+
         collection = db["conversations"]
-        cursor = collection.find({}, {"_id": 0}).sort("updated_at", -1).limit(50)
+        # If authenticated, fetch user's chats or legacy unauthenticated chats
+        query = {"$or": [{"user_id": user_id}, {"user_id": None}, {"user_id": "guest_user"}]} if user_id and user_id != "guest_user" else {}
+        cursor = collection.find(query, {"_id": 0}).sort("updated_at", -1).limit(50)
         return list(cursor)
     except Exception as e:
         return []
 
 
 @router.post("/save", summary="Save or update permanent conversation in MongoDB")
-def save_conversation(request: SaveConversationRequest):
+def save_conversation(request: SaveConversationRequest, authorization: Optional[str] = Header(None)):
     """
-    Saves or updates a conversation session and its messages permanently in MongoDB.
+    Saves or updates a conversation session and its messages permanently in MongoDB with Clerk user ID.
     """
     try:
         db = get_db()
         if db is None:
             return {"status": "error", "message": "MongoDB not connected"}
+
+        session = verify_clerk_session(authorization)
+        user_id = session.get("user_id", "guest_user")
 
         collection = db["conversations"]
         now = time.time()
@@ -51,11 +60,12 @@ def save_conversation(request: SaveConversationRequest):
             "title": request.title,
             "threadId": request.thread_id or f"thread_{request.id}",
             "messages": request.messages,
+            "user_id": user_id,
             "updated_at": now,
         }
 
         collection.update_one({"id": request.id}, {"$set": doc}, upsert=True)
-        return {"status": "success", "conversation_id": request.id}
+        return {"status": "success", "conversation_id": request.id, "user_id": user_id}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
