@@ -1,4 +1,10 @@
+import os
 import sys
+
+# Ensure backend root directory is in sys.path so app modules always resolve correctly
+_backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
 
 # Ensure stdout and stderr use UTF-8 on Windows console
 if hasattr(sys.stdout, "reconfigure"):

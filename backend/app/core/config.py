@@ -2,8 +2,11 @@ import os
 from typing import Dict, List
 from dotenv import load_dotenv
 
-# Load environment variables from .env file (override=True ensures changes in .env are picked up immediately)
+# Load environment variables from .env file (check current directory and backend directory)
 load_dotenv(override=True)
+_backend_env = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env")
+if os.path.exists(_backend_env):
+    load_dotenv(_backend_env, override=False)
 
 
 

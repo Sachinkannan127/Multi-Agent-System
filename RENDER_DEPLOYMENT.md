@@ -34,15 +34,15 @@ If you prefer to configure the Web Service manually:
 2. Connect your Git repository.
 3. Fill in the following settings:
 
-| Setting | Value |
-|---|---|
-| **Name** | `multi-agent-backend` (or any name you prefer) |
-| **Language / Runtime** | `Python 3` |
-| **Branch** | `main` |
-| **Root Directory** | `backend` *(⚠️ Critical! Since code is in `backend/`)* |
-| **Build Command** | `pip install -r requirements.txt` |
-| **Start Command** | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
-| **Plan** | `Free` |
+| Setting | Recommended Value (from Root) | Alternative (if Root Directory = `backend`) |
+|---|---|---|
+| **Name** | `multi-agent-backend` | `multi-agent-backend` |
+| **Language / Runtime** | `Python 3` | `Python 3` |
+| **Branch** | `main` | `main` |
+| **Root Directory** | *(Leave blank)* | `backend` |
+| **Build Command** | `pip install -r requirements.txt` | `pip install -r requirements.txt` |
+| **Start Command** | `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT` | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| **Plan** | `Free` | `Free` |
 
 4. Expand **Advanced** and set:
    - **Health Check Path**: `/health`
