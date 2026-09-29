@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "cleanUrls": true,
-  "buildCommand": "echo 'Frontend static assets ready'",
-  "outputDirectory": "frontend"
+  "framework": null,
+  "outputDirectory": "frontend",
+  "cleanUrls": true
 }
+
