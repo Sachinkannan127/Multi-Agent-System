@@ -39,6 +39,7 @@ class SmartMultiAgentOrchestrator:
         top_k_rag: int = 3,
         history: Optional[List[Dict[str, Any]]] = None,
         conversation_id: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> RouterExecutionResult:
         """
         Main entry point: classifies prompt and dispatches to the corresponding pipeline with history memory and global context.
@@ -55,19 +56,19 @@ class SmartMultiAgentOrchestrator:
 
         # Route A: RAG (Document / PDF Vector Store QA Agent)
         if route == "rag":
-            return self._execute_rag_pipeline(prompt, classification, top_k=top_k_rag, history=history, conversation_id=conversation_id)
+            return self._execute_rag_pipeline(prompt, classification, top_k=top_k_rag, history=history, conversation_id=conversation_id, user_id=user_id)
 
         # Route B: Web Search Agent (Tavily Search / ScrapeGraphAI Scraping)
         elif route == "toolcalling":
-            return self._execute_toolcalling_pipeline(prompt, classification, provider=provider, history=history, conversation_id=conversation_id)
+            return self._execute_toolcalling_pipeline(prompt, classification, provider=provider, history=history, conversation_id=conversation_id, user_id=user_id)
 
         # Route C: Specialized Coding Agent (Software Engineering / Script Generation)
         elif route == "coding":
-            return self._execute_coding_pipeline(prompt, classification, provider=provider, history=history, conversation_id=conversation_id)
+            return self._execute_coding_pipeline(prompt, classification, provider=provider, history=history, conversation_id=conversation_id, user_id=user_id)
 
         # Route D: Direct LLM Completion
         else:
-            return self._execute_direct_pipeline(prompt, classification, provider=provider, history=history, conversation_id=conversation_id)
+            return self._execute_direct_pipeline(prompt, classification, provider=provider, history=history, conversation_id=conversation_id, user_id=user_id)
 
     def _execute_rag_pipeline(
         self,
@@ -76,6 +77,7 @@ class SmartMultiAgentOrchestrator:
         top_k: int = 3,
         history: Optional[List[Dict[str, Any]]] = None,
         conversation_id: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> RouterExecutionResult:
         """Executes Hybrid Search (Semantic + BM25 + RRF) + LLM synthesis."""
         print(f"[RAG Route] Executing Hybrid Search (Semantic + BM25 + RRF) for context...")
@@ -83,8 +85,8 @@ class SmartMultiAgentOrchestrator:
             from app.rag.hybrid_search import hybrid_search_engine
             from app.ai.global_memory import get_global_conversational_context
 
-            search_results = hybrid_search_engine.search(query=prompt, top_k=top_k)
-            global_mem = get_global_conversational_context(exclude_conv_id=conversation_id)
+            search_results = hybrid_search_engine.search(query=prompt, top_k=top_k, user_id=user_id)
+            global_mem = get_global_conversational_context(user_id=user_id, exclude_conv_id=conversation_id)
 
             context_str = "\n\n".join(
                 [f"--- Document Chunk {i+1} (RRF Score: {r.rrf_score}) ---\n{r.text}" for i, r in enumerate(search_results)]
@@ -186,12 +188,13 @@ class SmartMultiAgentOrchestrator:
         provider: Optional[str] = None,
         history: Optional[List[Dict[str, Any]]] = None,
         conversation_id: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> RouterExecutionResult:
         """Executes LangChain Tool Calling Agent (Tavily / ScrapeGraphAI)."""
         print(f"[ToolCalling Route] Delegating to LangChain Tool Agent...")
         try:
             agent = LangChainToolAgent(model_provider=provider)
-            agent_result = agent.run(prompt, history=history, conversation_id=conversation_id)
+            agent_result = agent.run(prompt, history=history, conversation_id=conversation_id, user_id=user_id)
 
             sources_meta = []
             for tc in agent_result.get("tool_calls_executed", []):
@@ -249,12 +252,13 @@ class SmartMultiAgentOrchestrator:
         provider: Optional[str] = None,
         history: Optional[List[Dict[str, Any]]] = None,
         conversation_id: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> RouterExecutionResult:
         """Executes Direct LLM Completion."""
         print(f"[Direct Route] Generating direct LLM response...")
         try:
             from app.ai.global_memory import get_global_conversational_context
-            global_mem = get_global_conversational_context(exclude_conv_id=conversation_id)
+            global_mem = get_global_conversational_context(user_id=user_id, exclude_conv_id=conversation_id)
 
             direct_system_prompt = (
                 "You are your Multi-Agent AI Assistant, developed by Sachin.\n\n"
@@ -319,12 +323,13 @@ class SmartMultiAgentOrchestrator:
         provider: Optional[str] = None,
         history: Optional[List[Dict[str, Any]]] = None,
         conversation_id: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> RouterExecutionResult:
         """Executes Specialized Coding Agent pipeline for software engineering & script generation."""
         print(f"[Coding Agent Route] Delegating to Specialized Software Engineering Agent...")
         try:
             from app.ai.global_memory import get_global_conversational_context
-            global_mem = get_global_conversational_context(exclude_conv_id=conversation_id)
+            global_mem = get_global_conversational_context(user_id=user_id, exclude_conv_id=conversation_id)
 
             coding_system_prompt = (
                 "You are your Multi-Agent AI Assistant, developed by Sachin.\n\n"
@@ -390,6 +395,7 @@ class SmartMultiAgentOrchestrator:
         top_k_rag: int = 3,
         history: Optional[List[Dict[str, Any]]] = None,
         conversation_id: Optional[str] = None,
+        user_id: Optional[str] = None,
     ):
         """
         Classifies prompt intent, emits SSE start event, then streams LLM tokens in real-time.
@@ -420,7 +426,8 @@ class SmartMultiAgentOrchestrator:
                     classification,
                     provider,
                     history,
-                    conversation_id
+                    conversation_id,
+                    user_id
                 )
                 final_text = agent_res.response or "No response from Web Search Agent."
                 # Stream chunk by chunk for fluid UX
@@ -437,7 +444,7 @@ class SmartMultiAgentOrchestrator:
             return
 
         from app.ai.global_memory import get_global_conversational_context
-        global_mem = get_global_conversational_context(exclude_conv_id=conversation_id)
+        global_mem = get_global_conversational_context(user_id=user_id, exclude_conv_id=conversation_id)
 
         system_instruction = (
             "You are your Multi-Agent AI Assistant, developed by Sachin.\n\n"
@@ -465,7 +472,7 @@ class SmartMultiAgentOrchestrator:
         if route == "rag":
             try:
                 from app.rag.hybrid_search import hybrid_search_engine
-                search_results = hybrid_search_engine.search(query=prompt, top_k=top_k_rag)
+                search_results = hybrid_search_engine.search(query=prompt, top_k=top_k_rag, user_id=user_id)
                 context_str = "\n\n".join(
                     [f"--- Document Chunk {i+1} (RRF Score: {r.rrf_score}) ---\n{r.text}" for i, r in enumerate(search_results)]
                 ) if search_results else "No relevant document chunks found in vector store."

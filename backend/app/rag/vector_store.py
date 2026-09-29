@@ -91,10 +91,11 @@ class MongoDBVectorStore:
 
         return len(chunks)
 
-    def similarity_search(self, query_embedding: List[float], top_k: int = 3) -> List[SearchResult]:
+    def similarity_search(self, query_embedding: List[float], top_k: int = 3, user_id: Optional[str] = None) -> List[SearchResult]:
         """
         Performs Vector Similarity Search over MongoDB collection.
-        Supports MongoDB Atlas $vectorSearch pipeline stage if available.
+        Supports MongoDB Atlas $vectorSearch pipeline stage if available,
+        scoped to a specific user_id if provided.
         """
         if not query_embedding:
             return []
@@ -102,16 +103,18 @@ class MongoDBVectorStore:
         # 1. Try MongoDB Atlas Vector Search pipeline if connected
         if self._collection is not None:
             try:
+                search_stage = {
+                    "index": self.vector_index_name,
+                    "path": "embedding",
+                    "queryVector": query_embedding,
+                    "numCandidates": top_k * 10,
+                    "limit": top_k if not user_id else top_k * 5,
+                }
+                if user_id:
+                    search_stage["filter"] = {"metadata.user_id": {"$eq": user_id}}
+
                 pipeline = [
-                    {
-                        "$vectorSearch": {
-                            "index": self.vector_index_name,
-                            "path": "embedding",
-                            "queryVector": query_embedding,
-                            "numCandidates": top_k * 10,
-                            "limit": top_k,
-                        }
-                    },
+                    {"$vectorSearch": search_stage},
                     {
                         "$project": {
                             "_id": 1,
@@ -125,22 +128,26 @@ class MongoDBVectorStore:
                 cursor = self._collection.aggregate(pipeline)
                 results = []
                 for doc in cursor:
+                    meta = doc.get("metadata", {})
+                    if user_id and meta.get("user_id") != user_id:
+                        continue
                     results.append(
                         SearchResult(
                             chunk_id=doc.get("chunk_id", str(doc.get("_id"))),
                             score=round(float(doc.get("score", 0.0)), 4),
                             text=doc.get("text", ""),
-                            metadata=doc.get("metadata", {}),
+                            metadata=meta,
                         )
                     )
                 if results:
-                    return results
+                    return results[:top_k]
             except Exception:
                 pass
 
             # 2. MongoDB Cosine Matching over collection documents
             try:
-                cursor = self._collection.find({}, {"_id": 1, "chunk_id": 1, "text": 1, "embedding": 1, "metadata": 1})
+                find_filter = {"metadata.user_id": user_id} if user_id else {}
+                cursor = self._collection.find(find_filter, {"_id": 1, "chunk_id": 1, "text": 1, "embedding": 1, "metadata": 1})
                 scored_results = []
                 for doc in cursor:
                     vec = doc.get("embedding", [])
@@ -163,6 +170,8 @@ class MongoDBVectorStore:
         # 3. Fallback to in-memory store similarity search
         scored_results = []
         for chunk_id, chunk in self._in_memory_store.items():
+            if user_id and chunk.metadata.get("user_id") != user_id:
+                continue
             score = cosine_similarity(query_embedding, chunk.embedding)
             scored_results.append(
                 SearchResult(
@@ -175,13 +184,16 @@ class MongoDBVectorStore:
         scored_results.sort(key=lambda x: x.score, reverse=True)
         return scored_results[:top_k]
 
-    def count(self) -> int:
-        """Returns total vector count."""
+    def count(self, user_id: Optional[str] = None) -> int:
+        """Returns total vector count, optionally filtered by user_id."""
         if self._collection is not None:
             try:
-                return self._collection.count_documents({})
+                filter_q = {"metadata.user_id": user_id} if user_id else {}
+                return self._collection.count_documents(filter_q)
             except Exception:
                 pass
+        if user_id:
+            return sum(1 for c in self._in_memory_store.values() if c.metadata.get("user_id") == user_id)
         return len(self._in_memory_store)
 
     def remove_source(self, filename: str) -> None:
@@ -196,6 +208,23 @@ class MongoDBVectorStore:
         if self._collection is not None:
             try:
                 self._collection.delete_many({"metadata.filename": filename})
+            except Exception:
+                pass
+
+    def remove_user_chunks(self, user_id: str) -> None:
+        """Remove previously indexed chunks belonging to a specific user."""
+        if not user_id:
+            return
+        stale_ids = [
+            chunk_id for chunk_id, chunk in self._in_memory_store.items()
+            if chunk.metadata.get("user_id") == user_id
+        ]
+        for chunk_id in stale_ids:
+            del self._in_memory_store[chunk_id]
+
+        if self._collection is not None:
+            try:
+                self._collection.delete_many({"metadata.user_id": user_id})
             except Exception:
                 pass
 

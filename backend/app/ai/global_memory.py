@@ -6,21 +6,25 @@ logger = logging.getLogger("app.ai.global_memory")
 
 
 def get_global_conversational_context(
+    user_id: Optional[str] = None,
     exclude_conv_id: Optional[str] = None,
     query: Optional[str] = None,
     max_past_chats: int = 2,
 ) -> str:
     """
-    Retrieves concise global memory context across past conversation sessions in MongoDB.
-    Optimized for low token usage.
+    Retrieves concise global memory context across past conversation sessions in MongoDB,
+    strictly scoped to the specified user_id. Never leaks other users' conversations.
     """
+    if not user_id:
+        return ""
+
     try:
         db = get_db()
         if db is None:
             return ""
 
         collection = db["conversations"]
-        query_filter = {}
+        query_filter = {"user_id": user_id}
         if exclude_conv_id:
             query_filter["id"] = {"$ne": exclude_conv_id}
 

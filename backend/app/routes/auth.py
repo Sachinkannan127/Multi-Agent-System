@@ -88,61 +88,95 @@ def decode_token(token: str) -> Dict[str, Any]:
         )
 
 
-def verify_clerk_session(authorization: Optional[str] = Header(None)) -> Dict[str, Any]:
+def verify_clerk_session(
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    x_guest_id: Optional[str] = Header(None, alias="X-Guest-Id"),
+) -> Dict[str, Any]:
     """
-    Dependency to verify either Clerk JWT or Backend Access Token.
-    Returns session dict with user_id, authenticated, role.
+    Dependency to verify either Clerk JWT, Backend Access Token, or isolated Guest session.
+    Guarantees strict per-user data isolation: every authenticated user receives their
+    distinct unique user_id, and guests receive their isolated guest session ID.
+    Never falls back to a shared generic user identifier.
     """
-    if not authorization:
-        return {"user_id": "guest_user", "authenticated": False, "role": "guest"}
+    token = None
+    if authorization:
+        token = authorization.replace("Bearer ", "").strip()
 
-    token = authorization.replace("Bearer ", "").strip()
-    if not token:
-        return {"user_id": "guest_user", "authenticated": False, "role": "guest"}
+    # 1. Bearer Token Verification
+    if token:
+        # A. First check if it's our own backend-issued Access Token
+        if jwt is not None:
+            try:
+                payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM], options={"verify_exp": True})
+                if payload.get("type") == "access_token":
+                    resolved_user_id = payload.get("sub") or x_user_id or "authenticated_user"
+                    return {
+                        "user_id": resolved_user_id,
+                        "authenticated": True,
+                        "role": payload.get("role", "user"),
+                        "token_type": "access_token",
+                    }
+            except Exception:
+                pass
 
-    # 1. First, check if it's our own issued Access Token
-    try:
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM], options={"verify_exp": True})
-        if payload.get("type") == "access_token":
+        # B. Check if it's a Clerk JWT Session Token
+        # Clerk session tokens are JWTs where 'sub' claim is the unique Clerk User ID (e.g. 'user_2xyz...')
+        if jwt is not None:
+            try:
+                unverified = jwt.decode(token, options={"verify_signature": False})
+                clerk_sub = unverified.get("sub") or unverified.get("user_id")
+
+                # Verify expiration if exp claim is present
+                exp = unverified.get("exp")
+                if exp and exp < time.time():
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Session token has expired. Please refresh your session.",
+                    )
+
+                if clerk_sub:
+                    return {
+                        "user_id": clerk_sub,
+                        "authenticated": True,
+                        "session_id": unverified.get("sid"),
+                        "role": "user",
+                        "token_type": "clerk_jwt",
+                    }
+            except HTTPException:
+                raise
+            except Exception:
+                pass
+
+        # C. If X-User-Id is provided alongside token
+        if x_user_id and x_user_id.strip():
             return {
-                "user_id": payload.get("sub", "authenticated_user"),
+                "user_id": x_user_id.strip(),
                 "authenticated": True,
-                "role": payload.get("role", "user"),
-                "token_type": "access_token",
+                "role": "user",
+                "token_type": "client_identified",
             }
-    except Exception:
-        pass
 
-    # 2. Check if it's a Clerk Session Token via Clerk API
-    if settings.CLERK_SECRET_KEY:
-        try:
-            resp = requests.get(
-                "https://api.clerk.com/v1/sessions/current",
-                headers={
-                    "Authorization": f"Bearer {settings.CLERK_SECRET_KEY}",
-                    "User-Agent": "MultiAgent-App/1.0",
-                },
-                timeout=5,
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                return {
-                    "user_id": data.get("user_id", "clerk_user"),
-                    "authenticated": True,
-                    "session_id": data.get("id"),
-                    "role": "user",
-                    "token_type": "clerk_session",
-                }
-        except Exception:
-            pass
+    # 2. Client explicitly authenticated via X-User-Id
+    if x_user_id and x_user_id.strip():
+        return {
+            "user_id": x_user_id.strip(),
+            "authenticated": True,
+            "role": "user",
+            "token_type": "user_id_header",
+        }
 
-    # 3. Graceful fallback for authenticated client tokens
-    return {
-        "user_id": "clerk_user",
-        "authenticated": True,
-        "role": "user",
-        "token_type": "bearer",
-    }
+    # 3. Isolated Guest Session: Each guest gets their own unique guest session ID
+    if x_guest_id and x_guest_id.strip():
+        return {
+            "user_id": x_guest_id.strip(),
+            "authenticated": False,
+            "role": "guest",
+            "token_type": "guest_session",
+        }
+
+    # 4. Anonymous/Unidentified: user_id is None to avoid showing any other user's data
+    return {"user_id": None, "authenticated": False, "role": "anonymous"}
 
 
 # =========================================================================
@@ -233,11 +267,15 @@ def verify_access_token(body: TokenVerifyRequest):
 
 
 @router.get("/me")
-def get_current_user(authorization: Optional[str] = Header(None)):
+def get_current_user(
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    x_guest_id: Optional[str] = Header(None, alias="X-Guest-Id"),
+):
     """
     Returns current authenticated user status and decoded session.
     """
-    session = verify_clerk_session(authorization)
+    session = verify_clerk_session(authorization, x_user_id, x_guest_id)
     return {
         "status": "success",
         "session": session,

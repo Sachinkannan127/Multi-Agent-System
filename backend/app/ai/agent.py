@@ -103,15 +103,16 @@ class LangChainToolAgent:
         history: Optional[List[Dict[str, Any]]] = None,
         conversation_id: Optional[str] = None,
         max_iterations: int = 5,
+        user_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Runs the agent conversation loop with tool calling execution, session memory, and global cross-chat context.
+        Runs the agent conversation loop with tool calling execution, session memory, and global cross-chat context scoped to the user.
         """
         logger.info(f"Agent received prompt: '{prompt}'")
         print(f"[Agent] Processing user prompt: '{prompt}' (History turns: {len(history) if history else 0})")
 
         from app.ai.global_memory import get_global_conversational_context
-        global_memory_context = get_global_conversational_context(exclude_conv_id=conversation_id)
+        global_memory_context = get_global_conversational_context(user_id=user_id, exclude_conv_id=conversation_id)
         full_system_prompt = SYSTEM_PROMPT + global_memory_context
 
         messages: List[BaseMessage] = [SystemMessage(content=full_system_prompt)]

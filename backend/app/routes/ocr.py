@@ -33,7 +33,13 @@ def get_ocr_reader(languages: Optional[List[str]] = None):
     Lazily instantiates and caches EasyOCR reader.
     Defaults to English ['en'].
     """
-    import easyocr
+    try:
+        import easyocr
+    except ImportError:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="EasyOCR is not installed in this environment. Install easyocr, torch, and torchvision to enable image text extraction.",
+        )
 
     langs = tuple(sorted(languages or ["en"]))
     lang_key = ",".join(langs)

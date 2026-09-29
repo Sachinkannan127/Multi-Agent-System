@@ -2,20 +2,43 @@
    MULTI-AGENT SYSTEM — App Chat Logic
    ============================================ */
 
-const API_BASE = 'http://localhost:8990';
+const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE)
+    || localStorage.getItem('ma_api_base')
+    || 'http://localhost:8990';
 const API_V1 = `${API_BASE}/api/v1`;
 
 // --- State ---
 let currentMode = 'Smart';       // Smart | Fast | Slow | LangGraph
 let currentThreadId = `thread_${Date.now()}`;
-let conversations = JSON.parse(localStorage.getItem('ma_conversations') || '[]');
+let conversations = [];
 let activeConversationId = null;
 let isLoading = false;
 let uploadedFile = null;
-let documentReady = localStorage.getItem('ma_document_ready') === 'true';
+let documentReady = false;
 let speechRecognition = null;
 let isListening = false;
 let speechBaseText = '';
+let currentUserId = null;
+
+// Clean up any legacy shared storage from older versions
+try { localStorage.removeItem('ma_conversations'); } catch {}
+
+function getGuestId() {
+    let gid = localStorage.getItem('ma_guest_id');
+    if (!gid) {
+        gid = 'guest_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+        localStorage.setItem('ma_guest_id', gid);
+    }
+    return gid;
+}
+
+function getActiveUserId() {
+    return currentClerkUser?.id || clerk?.user?.id || getGuestId();
+}
+
+function getUserConversationsStorageKey(uid) {
+    return `ma_conversations_${uid || getActiveUserId()}`;
+}
 
 // --- DOM Refs ---
 const $ = id => document.getElementById(id);
@@ -48,11 +71,10 @@ let currentClerkUser = null;
 // ============================
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
-    initClerkAuth();
-    loadConversationsFromBackend();
     setHomeState(true);
     setupEventListeners();
     autoResizeTextarea();
+    initClerkAuth();
 });
 
 function initTheme() {
@@ -97,6 +119,13 @@ function toggleTheme() {
 // ============================
 async function getAuthHeaders(extraHeaders = {}) {
     const headers = { 'Content-Type': 'application/json', ...extraHeaders };
+
+    const activeUser = currentClerkUser || clerk?.user;
+    if (activeUser?.id) {
+        headers['X-User-Id'] = activeUser.id;
+    } else {
+        headers['X-Guest-Id'] = getGuestId();
+    }
 
     // 1. Clerk session token (auto-refreshed by Clerk SDK)
     if (clerk && clerk.session) {
@@ -206,16 +235,25 @@ async function initClerkAuth() {
 
             await clerk.load(loadOptions);
 
+            currentClerkUser = clerk.user;
             updateAuthUI();
 
             if (clerk.addListener) {
-                clerk.addListener(({ user }) => {
+                clerk.addListener(async ({ user }) => {
+                    const prevUid = currentUserId;
                     currentClerkUser = user;
                     updateAuthUI();
                     const modalBackdrop = $('clerk-modal-backdrop');
                     if (user && modalBackdrop) modalBackdrop.hidden = true;
+                    const newUid = user ? user.id : getGuestId();
+                    if (newUid !== prevUid) {
+                        await switchUserContext(newUid);
+                    }
                 });
             }
+
+            // Immediately switch user context to the active user
+            await switchUserContext(getActiveUserId(), true);
 
             // Prompt sign-in modal if not logged in and not explicitly in guest mode
             const urlParams = new URLSearchParams(window.location.search);
@@ -241,11 +279,39 @@ async function initClerkAuth() {
                     clerk.openSignIn();
                 }
             }
+        } else {
+            await switchUserContext(getActiveUserId(), true);
         }
     } catch (err) {
         console.warn('Clerk initialization notice:', err);
+        await switchUserContext(getActiveUserId(), true);
     }
     setupAuthListeners();
+}
+
+async function switchUserContext(newUid, isInitial = false) {
+    if (!isInitial && newUid === currentUserId) return;
+    currentUserId = newUid;
+
+    // Reset current active conversation view & in-memory state
+    activeConversationId = null;
+    currentThreadId = `thread_${newUid}_${Date.now()}`;
+    clearMessages();
+    setHomeState(true);
+    topbarTitle.textContent = 'New Chat';
+    if (welcomeScreen) welcomeScreen.style.display = '';
+
+    // Load conversations for THIS user only from isolated local storage key
+    const userKey = getUserConversationsStorageKey(newUid);
+    try {
+        conversations = JSON.parse(localStorage.getItem(userKey) || '[]');
+    } catch {
+        conversations = [];
+    }
+    renderChatList();
+
+    // Fetch this user's conversations from the backend
+    await loadConversationsFromBackend();
 }
 
 function updateAuthUI() {
@@ -354,6 +420,14 @@ function setupAuthListeners() {
 
     const handleSignOut = async (e) => {
         if (e) e.stopPropagation();
+        activeConversationId = null;
+        conversations = [];
+        renderChatList();
+        clearMessages();
+        setHomeState(true);
+        // Create fresh guest ID so next guest session is brand new
+        localStorage.setItem('ma_guest_id', 'guest_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9));
+        currentUserId = null;
         if (clerk && typeof clerk.signOut === 'function') {
             await clerk.signOut({ redirectUrl: '/' });
         }
@@ -730,15 +804,23 @@ function setupEventListeners() {
     if (ttsAutoSelect) ttsAutoSelect.addEventListener('change', event => {
         localStorage.setItem('ma_tts_auto', event.target.value);
     });
-    if (clearHistoryBtn) clearHistoryBtn.addEventListener('click', () => {
+    if (clearHistoryBtn) clearHistoryBtn.addEventListener('click', async () => {
         if (!confirm('Are you sure you want to clear all conversation history?')) return;
+        const currentUid = getActiveUserId();
+        const toDelete = [...conversations];
         conversations = [];
         activeConversationId = null;
-        localStorage.removeItem('ma_conversations');
+        localStorage.removeItem(getUserConversationsStorageKey(currentUid));
         renderChatList();
         setHomeState(true);
         closeSettings();
         showToast('🗑️ All conversation history cleared.');
+        try {
+            const headers = await getAuthHeaders();
+            for (const c of toDelete) {
+                await fetch(`${API_V1}/conversations/${c.id}`, { method: 'DELETE', headers });
+            }
+        } catch { /* Silent */ }
     });
     messagesContainer.addEventListener('click', async event => {
         const ttsButton = event.target.closest('.tts-btn');
@@ -1130,35 +1212,47 @@ function updateTopbarRoute() {
 // ============================
 function startNewChat() {
     activeConversationId = null;
-    currentThreadId = `thread_${Date.now()}`;
+    currentThreadId = `thread_${getActiveUserId()}_${Date.now()}`;
     clearMessages();
     setHomeState(true);
     topbarTitle.textContent = 'New Chat';
-    welcomeScreen.style.display = '';
+    if (welcomeScreen) welcomeScreen.style.display = '';
     $('sidebar')?.classList.remove('open');
     $('sidebar-backdrop')?.classList.remove('active');
     renderChatList();
 }
 
 async function loadConversationsFromBackend() {
+    const targetUid = currentUserId || getActiveUserId();
     try {
         const headers = await getAuthHeaders();
         const response = await fetch(`${API_V1}/conversations`, { headers });
         if (response.ok) {
             const dbConvs = await response.json();
-            if (Array.isArray(dbConvs) && dbConvs.length > 0) {
-                conversations = dbConvs;
-                localStorage.setItem('ma_conversations', JSON.stringify(conversations));
+            // Verify active context hasn't changed while request was in-flight
+            if (targetUid === (currentUserId || getActiveUserId())) {
+                conversations = Array.isArray(dbConvs) ? dbConvs : [];
+                localStorage.setItem(getUserConversationsStorageKey(targetUid), JSON.stringify(conversations));
                 renderChatList();
-                restoreLatestConversation();
+                if (conversations.length > 0 && !activeConversationId) {
+                    restoreLatestConversation();
+                } else if (conversations.length === 0) {
+                    setHomeState(true);
+                }
                 return;
             }
         }
     } catch {
         /* Fallback to local storage */
     }
-    renderChatList();
-    restoreLatestConversation();
+    if (targetUid === (currentUserId || getActiveUserId())) {
+        renderChatList();
+        if (conversations.length > 0 && !activeConversationId) {
+            restoreLatestConversation();
+        } else if (conversations.length === 0) {
+            setHomeState(true);
+        }
+    }
 }
 
 function restoreLatestConversation() {
@@ -1166,6 +1260,7 @@ function restoreLatestConversation() {
 }
 
 async function saveConversation(title, messages) {
+    const currentUid = getActiveUserId();
     let convToSave = null;
     if (!activeConversationId) {
         activeConversationId = `conv_${Date.now()}`;
@@ -1175,7 +1270,7 @@ async function saveConversation(title, messages) {
         const conv = conversations.find(c => c.id === activeConversationId);
         if (conv) { conv.messages = messages; conv.title = title || conv.title; convToSave = conv; }
     }
-    localStorage.setItem('ma_conversations', JSON.stringify(conversations.slice(0, 50)));
+    localStorage.setItem(getUserConversationsStorageKey(currentUid), JSON.stringify(conversations.slice(0, 50)));
     renderChatList();
 
     if (convToSave) {
@@ -1194,11 +1289,11 @@ function loadConversation(id) {
     const conv = conversations.find(c => c.id === id);
     if (!conv) return;
     activeConversationId = id;
-    currentThreadId = conv.threadId || `thread_${Date.now()}`;
+    currentThreadId = conv.threadId || `thread_${getActiveUserId()}_${Date.now()}`;
     topbarTitle.textContent = conv.title;
     clearMessages();
     setHomeState(false);
-    welcomeScreen.style.display = 'none';
+    if (welcomeScreen) welcomeScreen.style.display = 'none';
     conv.messages.forEach(m => appendMessage(m.role, m.content, m.meta, false));
     scrollToBottom();
     $('sidebar')?.classList.remove('open');
@@ -1208,8 +1303,9 @@ function loadConversation(id) {
 
 async function deleteConversation(id, e) {
     if (e) e.stopPropagation();
+    const currentUid = getActiveUserId();
     conversations = conversations.filter(c => c.id !== id);
-    localStorage.setItem('ma_conversations', JSON.stringify(conversations));
+    localStorage.setItem(getUserConversationsStorageKey(currentUid), JSON.stringify(conversations));
     if (activeConversationId === id) startNewChat();
     renderChatList();
 
@@ -1409,10 +1505,11 @@ function createStreamingMessage() {
 }
 
 async function streamChatResponse(text, history = []) {
+    const headers = await getAuthHeaders({ Accept: 'text/event-stream' });
     const response = await fetch(`${API_V1}/chat/stream`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-        body: JSON.stringify({ message: text, mode: currentMode, history, stream: true })
+        headers,
+        body: JSON.stringify({ message: text, mode: currentMode, history, stream: true, user_id: getActiveUserId() })
     });
     if (!response.ok || !response.body) {
         let detail = 'Streaming request failed';
@@ -1523,10 +1620,11 @@ async function sendMessage() {
         let response, data, meta = {};
 
         if (documentReady && currentMode === 'Smart' && isDocumentQuestion(text)) {
+            const ragHeaders = await getAuthHeaders();
             response = await fetch(`${API_V1}/rag/qa`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: text, mode: 'Fast', top_k: 3, history: conversationHistory })
+                headers: ragHeaders,
+                body: JSON.stringify({ query: text, mode: 'Fast', top_k: 3, history: conversationHistory, user_id: getActiveUserId() })
             });
             data = await response.json();
             if (!response.ok) throw new Error(data.detail || 'Document question error');
@@ -1535,10 +1633,11 @@ async function sendMessage() {
             appendMessage('assistant', data.answer, meta);
         } else if (currentMode === 'Smart') {
             removeTyping();
+            const streamHeaders = await getAuthHeaders({ Accept: 'text/event-stream' });
             response = await fetch(`${API_V1}/router/stream`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-                body: JSON.stringify({ prompt: text, provider: 'groq', top_k: 3, history: conversationHistory, conversation_id: activeConversationId })
+                headers: streamHeaders,
+                body: JSON.stringify({ prompt: text, provider: 'groq', top_k: 3, history: conversationHistory, conversation_id: activeConversationId, user_id: getActiveUserId() })
             });
             if (!response.ok || !response.body) {
                 let detail = 'Router streaming failed';
@@ -1613,10 +1712,11 @@ async function sendMessage() {
             meta = { route: sMeta.selected_route || 'direct', model: sMeta.model_used, confidence: sMeta.confidence };
         } else if (currentMode === 'LangGraph') {
             // Use LangGraph stateful workflow
+            const graphHeaders = await getAuthHeaders();
             response = await fetch(`${API_V1}/graph/chat`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: text, thread_id: currentThreadId })
+                headers: graphHeaders,
+                body: JSON.stringify({ prompt: text, thread_id: currentThreadId, user_id: getActiveUserId() })
             });
             data = await response.json();
             if (!response.ok) throw new Error(data.detail || 'Graph error');
@@ -1678,7 +1778,9 @@ async function handleFileUpload(e) {
         appendMessage('user', `📄 Uploading: ${file.name}`);
         showTyping();
 
-        const response = await fetch(`${API_V1}/upload/pdf`, { method: 'POST', body: formData });
+        const uploadHeaders = await getAuthHeaders();
+        delete uploadHeaders['Content-Type']; // let browser set multipart boundary
+        const response = await fetch(`${API_V1}/upload/pdf`, { method: 'POST', headers: uploadHeaders, body: formData });
         const data = await response.json();
 
         removeTyping();

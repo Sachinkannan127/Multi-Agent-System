@@ -1,9 +1,10 @@
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel, Field
 from langchain_core.messages import HumanMessage
 
 from app.ai.graph import langgraph_app, memory_checkpointer
+from app.routes.auth import verify_clerk_session
 
 router = APIRouter(prefix="/graph", tags=["Stateful LangGraph Workflow"])
 
@@ -19,6 +20,10 @@ class GraphChatRequest(BaseModel):
         description="Stateful conversation thread ID for session memory persistence",
         json_schema_extra={"example": "session_123"},
     )
+    user_id: Optional[str] = Field(
+        default=None,
+        description="Optional user ID for thread memory isolation",
+    )
 
 
 class GraphChatResponse(BaseModel):
@@ -32,17 +37,30 @@ class GraphChatResponse(BaseModel):
 
 
 @router.post("/chat", response_model=GraphChatResponse, summary="Stateful LangGraph Multi-Agent Chat")
-def graph_chat(request: GraphChatRequest):
+def graph_chat(
+    request: GraphChatRequest,
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    x_guest_id: Optional[str] = Header(None, alias="X-Guest-Id"),
+):
     """
-    Executes the stateful LangGraph Multi-Agent workflow with memory persistence per thread_id.
-    Retains context across turns in the same conversation thread.
+    Executes the stateful LangGraph Multi-Agent workflow with memory persistence per thread_id,
+    strictly isolated per user to prevent cross-user state sharing.
     """
     try:
-        config = {"configurable": {"thread_id": request.thread_id}}
+        session = verify_clerk_session(authorization, x_user_id, x_guest_id)
+        effective_user_id = session.get("user_id") or request.user_id or "anonymous"
+        scoped_thread_id = (
+            f"{effective_user_id}_{request.thread_id}"
+            if not request.thread_id.startswith(f"{effective_user_id}_")
+            else request.thread_id
+        )
+
+        config = {"configurable": {"thread_id": scoped_thread_id}}
 
         initial_state = {
             "messages": [HumanMessage(content=request.prompt)],
-            "thread_id": request.thread_id,
+            "thread_id": scoped_thread_id,
             "route": "direct",
             "reasoning": "",
             "context": "",
@@ -73,12 +91,25 @@ def graph_chat(request: GraphChatRequest):
 
 
 @router.get("/memory/{thread_id}", summary="Get Stateful Thread Memory")
-def get_thread_memory(thread_id: str):
+def get_thread_memory(
+    thread_id: str,
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    x_guest_id: Optional[str] = Header(None, alias="X-Guest-Id"),
+):
     """
-    Retrieves the persisted conversation memory & state history for a given thread_id.
+    Retrieves the persisted conversation memory & state history for a given thread_id scoped to the user.
     """
     try:
-        config = {"configurable": {"thread_id": thread_id}}
+        session = verify_clerk_session(authorization, x_user_id, x_guest_id)
+        effective_user_id = session.get("user_id") or "anonymous"
+        scoped_thread_id = (
+            f"{effective_user_id}_{thread_id}"
+            if not thread_id.startswith(f"{effective_user_id}_")
+            else thread_id
+        )
+
+        config = {"configurable": {"thread_id": scoped_thread_id}}
         state_snapshot = langgraph_app.get_state(config)
 
         if not state_snapshot.values:

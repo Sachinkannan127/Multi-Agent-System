@@ -161,9 +161,11 @@ class HybridSearchEngine:
         query: str,
         query_embedding: Optional[List[float]] = None,
         top_k: int = 3,
+        user_id: Optional[str] = None,
     ) -> List[HybridSearchResult]:
         """
         Executes Hybrid Search: Semantic Vector Search + BM25 Keyword Search + RRF Fusion.
+        Scoped to user_id if provided.
         """
         if not query:
             return []
@@ -177,14 +179,15 @@ class HybridSearchEngine:
 
         semantic_results: List[SearchResult] = []
         if query_embedding:
-            semantic_results = vector_store.similarity_search(query_embedding, top_k=top_k * 5)
+            semantic_results = vector_store.similarity_search(query_embedding, top_k=top_k * 5, user_id=user_id)
 
         # 2. Keyword Search (BM25) over documents
         corpus = []
         # Pull documents from vector store in-memory store or MongoDB collection
         if vector_store._collection is not None:
             try:
-                cursor = vector_store._collection.find({}, {"_id": 1, "chunk_id": 1, "text": 1, "metadata": 1})
+                find_query = {"metadata.user_id": user_id} if user_id else {}
+                cursor = vector_store._collection.find(find_query, {"_id": 1, "chunk_id": 1, "text": 1, "metadata": 1})
                 for doc in cursor:
                     corpus.append({
                         "chunk_id": doc.get("chunk_id", str(doc.get("_id"))),
@@ -196,6 +199,8 @@ class HybridSearchEngine:
 
         if not corpus:
             for chunk_id, chunk in vector_store._in_memory_store.items():
+                if user_id and chunk.metadata.get("user_id") != user_id:
+                    continue
                 corpus.append({
                     "chunk_id": chunk.chunk_id,
                     "text": chunk.text,

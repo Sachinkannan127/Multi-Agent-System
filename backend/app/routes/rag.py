@@ -1,6 +1,6 @@
 import os
 from typing import Dict, List, Optional, Any
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Header
 from pydantic import BaseModel, Field
 import litellm
 
@@ -9,6 +9,7 @@ from app.rag.embedder import EmbeddedChunk, GeminiEmbedder
 from app.rag.pdf_loader import PDFLoader
 from app.rag.text_chunker import RecursiveCharacterTextSplitter
 from app.rag.vector_store import SearchResult, vector_store
+from app.routes.auth import verify_clerk_session
 
 router = APIRouter(prefix="/rag", tags=["RAG Pipeline"])
 
@@ -87,6 +88,7 @@ class RAGQARequest(BaseModel):
     mode: Optional[str] = Field(default="Fast", description="LLM mode tier: 'Slow' (Gemini), 'Fast' (Groq), 'Pro' (Mistral)")
     top_k: int = Field(default=3, gt=0, description="Number of context chunks to retrieve")
     history: List[Dict[str, Any]] = Field(default_factory=list, description="Previous conversation turns")
+    user_id: Optional[str] = Field(None, description="Optional user ID for isolation")
 
 
 class RAGQAResponse(BaseModel):
@@ -267,23 +269,31 @@ async def vector_search(request: SearchRequest):
 
 
 @router.post("/qa", response_model=RAGQAResponse, summary="Stage 4: End-to-End RAG Q&A Grounded in Document Context")
-async def rag_qa(request: RAGQARequest):
+async def rag_qa(
+    request: RAGQARequest,
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    x_guest_id: Optional[str] = Header(None, alias="X-Guest-Id"),
+):
     """
     RAG Stage 4: Document Question Answering
     - Retrieves top_k relevant document chunks via Gemini vector search
     - Constructs context-augmented prompt
     - Generates grounded answer using configured LLM tier (Fast / Slow / Pro) with automatic fallback
     """
-    if vector_store.count() == 0:
+    session = verify_clerk_session(authorization, x_user_id, x_guest_id)
+    effective_user_id = session.get("user_id") or request.user_id
+
+    if vector_store.count(user_id=effective_user_id) == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Vector store is empty. Please upload and embed a document via /rag/embed first.",
+            detail="No document context found for your account. Please upload a PDF first.",
         )
 
     # 1. Vector Search Retrieval
     embedder = GeminiEmbedder(model="gemini/gemini-embedding-001")
     query_vectors = await embedder.aembed_texts([request.query])
-    results = vector_store.similarity_search(query_vectors[0], top_k=request.top_k)
+    results = vector_store.similarity_search(query_vectors[0], top_k=request.top_k, user_id=effective_user_id)
 
     if not results:
         raise HTTPException(status_code=404, detail="No relevant context found in vector store.")

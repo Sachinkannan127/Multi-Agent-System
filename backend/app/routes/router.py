@@ -1,9 +1,10 @@
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.ai.router import intent_router, IntentClassification
 from app.ai.orchestrator import orchestrator, RouterExecutionResult
+from app.routes.auth import verify_clerk_session
 
 router = APIRouter(prefix="/router", tags=["Smart Intent Router"])
 
@@ -34,6 +35,10 @@ class RouterChatRequest(BaseModel):
         default=None,
         description="Optional conversation ID for global cross-chat memory exclusion",
     )
+    user_id: Optional[str] = Field(
+        default=None,
+        description="Optional authenticated or guest user ID",
+    )
 
 
 class ClassifyPromptRequest(BaseModel):
@@ -54,7 +59,12 @@ class RouterChatResponse(BaseModel):
 
 
 @router.post("/chat", response_model=RouterChatResponse, summary="Smart Intent Router Chat")
-def smart_router_chat(request: RouterChatRequest):
+def smart_router_chat(
+    request: RouterChatRequest,
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    x_guest_id: Optional[str] = Header(None, alias="X-Guest-Id"),
+):
     """
     Intelligent Router Endpoint:
     Classifies the user prompt into one of three routes and dispatches execution:
@@ -63,12 +73,16 @@ def smart_router_chat(request: RouterChatRequest):
     3. 'direct': For basic conversational chat or general LLM completion.
     """
     try:
+        session = verify_clerk_session(authorization, x_user_id, x_guest_id)
+        effective_user_id = session.get("user_id") or request.user_id
+
         result: RouterExecutionResult = orchestrator.route_and_execute(
             prompt=request.prompt,
             provider=request.provider,
             top_k_rag=request.top_k,
             history=request.history,
             conversation_id=request.conversation_id,
+            user_id=effective_user_id,
         )
         return RouterChatResponse(
             query=result.query,
@@ -102,12 +116,20 @@ def classify_prompt_intent(request: ClassifyPromptRequest):
 
 
 @router.post("/stream", summary="Smart Router Streaming (SSE)")
-async def smart_router_stream(request: RouterChatRequest):
+async def smart_router_stream(
+    request: RouterChatRequest,
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    x_guest_id: Optional[str] = Header(None, alias="X-Guest-Id"),
+):
     """
     Real-time SSE streaming endpoint.
     Classifies intent, then streams LLM tokens live.
     """
     from fastapi.responses import StreamingResponse
+    session = verify_clerk_session(authorization, x_user_id, x_guest_id)
+    effective_user_id = session.get("user_id") or request.user_id
+
     return StreamingResponse(
         orchestrator.stream_route_execution(
             prompt=request.prompt,
@@ -115,6 +137,8 @@ async def smart_router_stream(request: RouterChatRequest):
             top_k_rag=request.top_k,
             history=request.history,
             conversation_id=request.conversation_id,
+            user_id=effective_user_id,
         ),
         media_type="text/event-stream",
     )
+

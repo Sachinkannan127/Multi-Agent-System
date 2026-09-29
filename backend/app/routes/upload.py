@@ -1,12 +1,13 @@
 import os
 from typing import List, Optional
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, Header, HTTPException, UploadFile, status
 from pydantic import BaseModel
 from app.rag.pdf_loader import PDFLoader, PageContent
 from app.rag.embedder import EmbeddedChunk, GeminiEmbedder
 from app.rag.text_chunker import RecursiveCharacterTextSplitter
 from app.rag.vector_store import vector_store
 from app.core.config import settings
+from app.routes.auth import verify_clerk_session
 
 router = APIRouter(prefix="/upload", tags=["PDF Loader Stage"])
 
@@ -28,12 +29,18 @@ class PDFUploadResponse(BaseModel):
 
 @router.post("/pdf", response_model=PDFUploadResponse, summary="Stage 1: Load and extract text from uploaded PDF")
 @router.post("/pdf/", response_model=PDFUploadResponse, include_in_schema=False)
-async def upload_pdf(file: UploadFile = File(...)):
+async def upload_pdf(
+    file: UploadFile = File(...),
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    x_guest_id: Optional[str] = Header(None, alias="X-Guest-Id"),
+):
     """
     RAG Stage 1: Load PDF File
     - Validates PDF format
     - Saves uploaded file to disk
     - Extracts page-by-page text content & character counts
+    - Isolates chunk storage to the uploading user
     """
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(
@@ -42,6 +49,9 @@ async def upload_pdf(file: UploadFile = File(...)):
         )
 
     try:
+        session = verify_clerk_session(authorization, x_user_id, x_guest_id)
+        user_id = session.get("user_id") or "guest_anonymous"
+
         content = await file.read()
         if len(content) == 0:
             raise HTTPException(
@@ -54,9 +64,9 @@ async def upload_pdf(file: UploadFile = File(...)):
         with open(save_path, "wb") as f:
             f.write(content)
 
-        # Process with PDFLoader and clear previous PDF chunks for static isolated document QA
+        # Process with PDFLoader and clear only this user's previous document chunks
         doc = PDFLoader.load_bytes(content, filename=file.filename)
-        vector_store.clear()
+        vector_store.remove_user_chunks(user_id)
 
         total_chunks = 0
         indexed = False
@@ -65,7 +75,7 @@ async def upload_pdf(file: UploadFile = File(...)):
             chunks = splitter.split_text(
                 text=doc.full_text,
                 source_name=doc.filename,
-                base_metadata={"filename": doc.filename, "num_pages": doc.num_pages},
+                base_metadata={"filename": doc.filename, "num_pages": doc.num_pages, "user_id": user_id},
             )
             if chunks:
                 try:

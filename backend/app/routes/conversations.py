@@ -18,21 +18,30 @@ class SaveConversationRequest(BaseModel):
 
 @router.get("", summary="Get all permanent conversations from MongoDB")
 @router.get("/", include_in_schema=False)
-def list_conversations(authorization: Optional[str] = Header(None)):
+def list_conversations(
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    x_guest_id: Optional[str] = Header(None, alias="X-Guest-Id"),
+):
     """
-    Fetches stored conversations from MongoDB, optionally scoped by authenticated Clerk user.
+    Fetches stored conversations from MongoDB, strictly scoped to the authenticated Clerk user
+    or isolated guest session. NEVER returns conversations belonging to another user.
     """
     try:
         db = get_db()
         if db is None:
             return []
 
-        session = verify_clerk_session(authorization)
+        session = verify_clerk_session(authorization, x_user_id, x_guest_id)
         user_id = session.get("user_id")
 
+        # If user has no active identifier, do not display any other user's conversations
+        if not user_id:
+            return []
+
         collection = db["conversations"]
-        # If authenticated, fetch user's chats or legacy unauthenticated chats
-        query = {"$or": [{"user_id": user_id}, {"user_id": None}, {"user_id": "guest_user"}]} if user_id and user_id != "guest_user" else {}
+        # Strictly query only this user's conversations
+        query = {"user_id": user_id}
         cursor = collection.find(query, {"_id": 0}).sort("updated_at", -1).limit(50)
         return list(cursor)
     except Exception as e:
@@ -40,17 +49,23 @@ def list_conversations(authorization: Optional[str] = Header(None)):
 
 
 @router.post("/save", summary="Save or update permanent conversation in MongoDB")
-def save_conversation(request: SaveConversationRequest, authorization: Optional[str] = Header(None)):
+def save_conversation(
+    request: SaveConversationRequest,
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    x_guest_id: Optional[str] = Header(None, alias="X-Guest-Id"),
+):
     """
-    Saves or updates a conversation session and its messages permanently in MongoDB with Clerk user ID.
+    Saves or updates a conversation session and its messages permanently in MongoDB with Clerk user ID
+    or isolated guest ID. Prevents cross-user conversation overwriting.
     """
     try:
         db = get_db()
         if db is None:
             return {"status": "error", "message": "MongoDB not connected"}
 
-        session = verify_clerk_session(authorization)
-        user_id = session.get("user_id", "guest_user")
+        session = verify_clerk_session(authorization, x_user_id, x_guest_id)
+        user_id = session.get("user_id") or "guest_anonymous"
 
         collection = db["conversations"]
         now = time.time()
@@ -64,7 +79,12 @@ def save_conversation(request: SaveConversationRequest, authorization: Optional[
             "updated_at": now,
         }
 
-        collection.update_one({"id": request.id}, {"$set": doc}, upsert=True)
+        # Prevent overwriting another user's conversation with the same ID
+        collection.update_one(
+            {"id": request.id, "$or": [{"user_id": user_id}, {"user_id": {"$exists": False}}]},
+            {"$set": doc},
+            upsert=True,
+        )
         return {"status": "success", "conversation_id": request.id, "user_id": user_id}
     except Exception as e:
         raise HTTPException(
@@ -74,17 +94,31 @@ def save_conversation(request: SaveConversationRequest, authorization: Optional[
 
 
 @router.delete("/{conversation_id}", summary="Delete permanent conversation from MongoDB")
-def delete_conversation(conversation_id: str):
+def delete_conversation(
+    conversation_id: str,
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    x_guest_id: Optional[str] = Header(None, alias="X-Guest-Id"),
+):
     """
-    Deletes a conversation permanently from MongoDB.
+    Deletes a conversation permanently from MongoDB, scoped to the requesting user.
     """
     try:
         db = get_db()
         if db is not None:
-            db["conversations"].delete_one({"id": conversation_id})
-        return {"status": "success", "deleted_id": conversation_id}
+            session = verify_clerk_session(authorization, x_user_id, x_guest_id)
+            user_id = session.get("user_id")
+
+            delete_filter = {"id": conversation_id}
+            if user_id:
+                delete_filter["user_id"] = user_id
+
+            res = db["conversations"].delete_one(delete_filter)
+            return {"status": "success", "deleted_id": conversation_id, "deleted_count": res.deleted_count}
+        return {"status": "success", "deleted_id": conversation_id, "deleted_count": 0}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete conversation: {str(e)}",
         )
+
