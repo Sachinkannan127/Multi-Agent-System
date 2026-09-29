@@ -256,29 +256,10 @@ async function initClerkAuth() {
             // Immediately switch user context to the active user
             await switchUserContext(getActiveUserId(), true);
 
-            // Prompt sign-in modal if not logged in and not explicitly in guest mode
+            // Only open sign-in modal if explicitly requested in URL query
             const urlParams = new URLSearchParams(window.location.search);
-            if (!clerk.user && urlParams.get('guest') !== 'true') {
-                const modalBackdrop = $('clerk-modal-backdrop');
-                const signInTarget = $('clerk-sign-in-target');
-                if (modalBackdrop && signInTarget) {
-                    modalBackdrop.hidden = false;
-                    if (!signInTarget.hasChildNodes()) {
-                        try {
-                            clerk.mountSignIn(signInTarget, {
-                                afterSignInUrl: window.location.origin + '/app.html',
-                                afterSignUpUrl: window.location.origin + '/app.html'
-                            });
-                        } catch (err) {
-                            console.warn('mountSignIn fallback in app.html:', err);
-                            if (typeof clerk.openSignIn === 'function') {
-                                clerk.openSignIn();
-                            }
-                        }
-                    }
-                } else if (typeof clerk.openSignIn === 'function') {
-                    clerk.openSignIn();
-                }
+            if (!clerk.user && urlParams.get('signin') === 'true') {
+                handleSignIn();
             }
         } else {
             await switchUserContext(getActiveUserId(), true);

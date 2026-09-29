@@ -407,13 +407,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        const heroCtaBtn = document.getElementById('hero-cta');
-        const navCtaBtn = document.getElementById('nav-cta');
-        const navLoginBtn = document.getElementById('nav-login-btn');
-        const navLoginLegacy = document.getElementById('nav-login');
-
-        if (heroCtaBtn) heroCtaBtn.addEventListener('click', requireAuthForWorkspace);
-        if (navCtaBtn) navCtaBtn.addEventListener('click', requireAuthForWorkspace);
+        if (heroCtaBtn) heroCtaBtn.addEventListener('click', () => { window.location.href = 'app.html'; });
+        if (navCtaBtn) navCtaBtn.addEventListener('click', () => { window.location.href = 'app.html'; });
         if (navLoginBtn) navLoginBtn.addEventListener('click', requireAuthForWorkspace);
         if (navLoginLegacy) navLoginLegacy.addEventListener('click', requireAuthForWorkspace);
 
