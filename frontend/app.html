@@ -723,11 +723,12 @@
 
                         <div class="cg-settings-row">
                             <div class="cg-row-label">
-                                <strong>API Service Endpoint</strong>
-                                <small>Active FastAPI backend microservice.</small>
+                                <strong>Backend API URL</strong>
+                                <small>FastAPI microservice endpoint (e.g. Render: <code>https://xxx.onrender.com</code>).</small>
                             </div>
-                            <div class="cg-row-control">
-                                <span class="settings-value cg-pill">http://localhost:8990</span>
+                            <div class="cg-row-control" style="display: flex; gap: 8px; align-items: center;">
+                                <input type="text" id="setting-backend-api-input" class="cg-input" placeholder="https://your-backend.onrender.com" style="padding: 6px 10px; border-radius: 6px; background: #1b1b22; border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 12px; width: 220px;">
+                                <button type="button" id="save-backend-api-btn" class="cg-primary-btn" style="padding: 6px 12px; font-size: 12px;">Save</button>
                             </div>
                         </div>
                     </div>

@@ -455,16 +455,43 @@ function setupEventListeners() {
     const settingsClose = $('settings-close');
     const clearHistoryBtn = $('clear-history-btn');
     const sidebarSettingsLink = $('sidebar-settings-link');
+    const backendApiInput = $('setting-backend-api-input');
+    const saveBackendApiBtn = $('save-backend-api-btn');
+    if (backendApiInput) {
+        backendApiInput.value = localStorage.getItem('ma_api_base') || window.__API_BASE__ || API_BASE;
+    }
+    if (saveBackendApiBtn) {
+        saveBackendApiBtn.addEventListener('click', () => {
+            const val = (backendApiInput?.value || '').trim().replace(/\/+$/, '');
+            if (val) {
+                localStorage.setItem('ma_api_base', val);
+                showToast('✅ Backend URL saved! Reloading application...');
+                setTimeout(() => location.reload(), 600);
+            }
+        });
+    }
+
     if (settingsBtn) settingsBtn.addEventListener('click', () => {
+        if (backendApiInput) backendApiInput.value = localStorage.getItem('ma_api_base') || window.__API_BASE__ || API_BASE;
         settingsBackdrop.hidden = false;
     });
     if (sidebarSettingsLink) sidebarSettingsLink.addEventListener('click', () => {
+        if (backendApiInput) backendApiInput.value = localStorage.getItem('ma_api_base') || window.__API_BASE__ || API_BASE;
         settingsBackdrop.hidden = false;
     });
     if (settingsClose) settingsClose.addEventListener('click', closeSettings);
     if (settingsBackdrop) settingsBackdrop.addEventListener('click', event => {
         if (event.target === settingsBackdrop) closeSettings();
     });
+
+    // Check if deployed to cloud (e.g. Vercel) while still pointing to localhost
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        if (API_BASE.includes('localhost') && !localStorage.getItem('ma_api_base') && !window.__API_BASE__) {
+            setTimeout(() => {
+                showToast('⚠️ App is on Vercel but backend is set to localhost. Click Settings ⚙️ to connect Render backend.');
+            }, 1200);
+        }
+    }
 
     // Connectors Dialog Setup
     const sidebarConnectorsLink = $('sidebar-connectors-link');
