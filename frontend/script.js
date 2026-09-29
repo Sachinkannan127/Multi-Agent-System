@@ -236,9 +236,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let clerkLanding = null;
 
     async function initClerkLanding() {
-        const API_BASE = ((typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE)
+        const rawBase = (typeof window !== 'undefined' && window.__API_BASE__)
+            || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE)
             || localStorage.getItem('ma_api_base')
-            || 'http://localhost:8990') + '/api/v1';
+            || 'http://localhost:8990';
+        const API_BASE = `${rawBase.replace(/\/+$/, '')}/api/v1`;
         let publishableKey = 'pk_test_c2hpbmluZy1saXphcmQtNTc4MC5jbGVyay5hY2NvdW50cy5kZXYk';
 
         try {

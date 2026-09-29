@@ -2,7 +2,8 @@
    MULTI-AGENT SYSTEM — App Chat Logic
    ============================================ */
 
-const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE)
+const API_BASE = (typeof window !== 'undefined' && window.__API_BASE__)
+    || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE)
     || localStorage.getItem('ma_api_base')
     || 'http://localhost:8990';
 const API_V1 = `${API_BASE}/api/v1`;
