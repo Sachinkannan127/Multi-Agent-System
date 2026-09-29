@@ -1,26 +1,6 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "routes": [
-    {
-      "src": "/app",
-      "dest": "/frontend/app.html"
-    },
-    {
-      "src": "/docs",
-      "dest": "/frontend/docs.html"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/frontend/assets/$1"
-    },
-    {
-      "src": "/(.*\\.(?:css|js|png|jpg|jpeg|svg|ico|json|html))",
-      "dest": "/frontend/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/frontend/index.html"
-    }
-  ]
+  "buildCommand": "echo 'Frontend static assets ready'",
+  "outputDirectory": "frontend"
 }
