@@ -2062,8 +2062,72 @@ function setHomeState(isHome) {
     document.body.classList.toggle('home-state', isHome);
 }
 
-function isDocumentQuestion(text) {
-    return /\b(pdf|resume|uploaded|document|file|vector store|chunk|report|according to the file)\b/i.test(text);
+function generateDynamicFollowUpsHtml(content, route = 'direct') {
+    const isCode = (content && content.includes('```')) || route === 'coding';
+    const isRag = route === 'rag' || /document|chunk|pdf|resume|score/i.test(content || '');
+    const isWeb = route === 'toolcalling' || /search|scrape|tavily|source|latest|news/i.test(content || '');
+
+    let suggestions = [];
+    if (isCode) {
+        suggestions = [
+            { label: 'Step-by-step walkthrough', prompt: 'Walk through how this code works step-by-step.' },
+            { label: 'Add unit tests', prompt: 'Write comprehensive test cases and edge cases for this solution.' },
+            { label: 'Optimize performance', prompt: 'How can we optimize the time and memory complexity of this code?' }
+        ];
+    } else if (isRag) {
+        suggestions = [
+            { label: 'Key takeaways', prompt: 'Summarize the top 3 key takeaways from the document context.' },
+            { label: 'Extract data table', prompt: 'Extract any numerical data, metrics, or tables mentioned into a clear markdown table.' },
+            { label: 'Critical analysis', prompt: 'Are there any limitations, caveats, or missing points in this document context?' }
+        ];
+    } else if (isWeb) {
+        suggestions = [
+            { label: 'Recent timeline', prompt: 'Provide a chronological timeline of recent developments on this topic.' },
+            { label: 'Compare perspectives', prompt: 'Compare different viewpoint sources and analyses on this subject.' },
+            { label: 'Key summary', prompt: 'Provide an in-depth summary highlighting the most credible sources.' }
+        ];
+    } else {
+        suggestions = [
+            { label: 'Summarize in 3 points', prompt: 'Summarize that in three concise, actionable bullet points.' },
+            { label: 'Practical example', prompt: 'Give a concrete, practical real-world example of this.' },
+            { label: 'Pros & cons analysis', prompt: 'What are the main advantages and drawbacks of this approach?' }
+        ];
+    }
+
+    const buttons = suggestions.map(s => `<button type="button" class="follow-up-btn" data-prompt="${escapeHtml(s.prompt)}">${escapeHtml(s.label)}</button>`).join('');
+    return `<div class="follow-ups"><span>Suggestions</span>${buttons}</div>`;
+}
+
+async function requestDynamicTitle(prompt, convId) {
+    if (!prompt || !convId) return;
+    try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${API_V1}/conversations/autotitle`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ prompt })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.title && data.title.trim()) {
+                const cleanTitle = data.title.trim();
+                const conv = conversations.find(c => c.id === convId);
+                if (conv) {
+                    conv.title = cleanTitle;
+                    if (activeConversationId === convId) {
+                        topbarTitle.textContent = cleanTitle;
+                    }
+                    const currentUid = getActiveUserId();
+                    localStorage.setItem(getUserConversationsStorageKey(currentUid), JSON.stringify(conversations));
+                    renderChatList();
+                    // Sync updated title with MongoDB
+                    await saveConversation(cleanTitle, conv.messages);
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Auto-title background task notice:', e);
+    }
 }
 
 function appendMessage(role, content, meta = {}, animate = true) {
@@ -2093,7 +2157,7 @@ function appendMessage(role, content, meta = {}, animate = true) {
     if (meta.model) metaHtml += `<span>${meta.model}</span>`;
     if (meta.confidence) metaHtml += `<span>Confidence: ${(meta.confidence * 100).toFixed(0)}%</span>`;
 
-    const followUpsHtml = !isUser ? `<div class="follow-ups"><span>Continue with</span><button class="follow-up-btn" data-prompt="Summarize that in three concise points">Summarize it</button><button class="follow-up-btn" data-prompt="Explain that in simpler terms">Explain simply</button><button class="follow-up-btn" data-prompt="What should I look at next?">What next?</button></div>` : '';
+    const followUpsHtml = !isUser ? generateDynamicFollowUpsHtml(content, meta.route || 'direct') : '';
 
     const ttsBtnHtml = !isUser
         ? `<button class="tts-btn" title="Read aloud" aria-label="Read aloud"><svg class="tts-icon-speaker" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>`
@@ -2203,7 +2267,7 @@ async function streamChatResponse(text, history = []) {
     content.dataset.rawContent = encodeURIComponent(fullText);
     row.querySelector('.agent-activity')?.remove();
     metaElement.classList.remove('streaming-meta');
-    row.querySelector('.msg-bubble').insertAdjacentHTML('beforeend', '<div class="follow-ups"><span>Continue with</span><button class="follow-up-btn" data-prompt="Summarize that in three concise points">Summarize it</button><button class="follow-up-btn" data-prompt="Explain that in simpler terms">Explain simply</button><button class="follow-up-btn" data-prompt="What should I look at next?">What next?</button></div>');
+    row.querySelector('.msg-bubble').insertAdjacentHTML('beforeend', generateDynamicFollowUpsHtml(fullText, 'direct'));
 
     if (localStorage.getItem('ma_tts_auto') === 'on') {
         const btn = row.querySelector('.tts-btn');
@@ -2252,6 +2316,7 @@ async function sendMessage() {
     }
 
     const conversationHistory = getAllMessages();
+    const isNewThread = !activeConversationId || conversationHistory.length === 0;
     isLoading = true;
     chatInput.value = '';
     chatInput.style.height = 'auto';
@@ -2347,7 +2412,7 @@ async function sendMessage() {
             streamContent.dataset.rawContent = encodeURIComponent(fullText);
             row.querySelector('.agent-activity')?.remove();
             streamMetaEl.classList.remove('streaming-meta');
-            row.querySelector('.msg-bubble').insertAdjacentHTML('beforeend', '<div class="follow-ups"><span>Continue with</span><button class="follow-up-btn" data-prompt="Summarize that in three concise points">Summarize it</button><button class="follow-up-btn" data-prompt="Explain that in simpler terms">Explain simply</button><button class="follow-up-btn" data-prompt="What should I look at next?">What next?</button></div>');
+            row.querySelector('.msg-bubble').insertAdjacentHTML('beforeend', generateDynamicFollowUpsHtml(fullText, sMeta.selected_route || 'direct'));
 
             if (localStorage.getItem('ma_tts_auto') === 'on') {
                 const tBtn = row.querySelector('.tts-btn');
@@ -2374,11 +2439,18 @@ async function sendMessage() {
             meta = streamed.meta;
         }
 
-        // Save conversation
+        // Save conversation with dynamic titling
         const allMsgs = getAllMessages();
-        const title = allMsgs.length > 0 ? allMsgs[0].content.substring(0, 50) : 'Chat';
-        topbarTitle.textContent = title;
-        saveConversation(title, allMsgs);
+        const initialTitle = allMsgs.length > 0 ? allMsgs[0].content.substring(0, 45) : 'Chat';
+        const currentConv = conversations.find(c => c.id === activeConversationId);
+        const titleToUse = (currentConv && currentConv.title && currentConv.title !== 'New Chat') ? currentConv.title : initialTitle;
+        topbarTitle.textContent = titleToUse;
+        await saveConversation(titleToUse, allMsgs);
+
+        // Dynamically request intelligent AI titling for first turn in thread
+        if (isNewThread && activeConversationId) {
+            requestDynamicTitle(text, activeConversationId);
+        }
 
     } catch (err) {
         removeTyping();
@@ -2390,6 +2462,7 @@ async function sendMessage() {
 
     isLoading = false;
 }
+
 
 function getAllMessages() {
     const rows = messagesContainer.querySelectorAll('.message-row:not(.typing-row)');

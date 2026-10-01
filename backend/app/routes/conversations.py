@@ -136,3 +136,63 @@ def delete_conversation(
             detail=f"Failed to delete conversation: {str(e)}",
         )
 
+
+class AutoTitleRequest(BaseModel):
+    prompt: str = Field(..., min_length=1, description="First message prompt")
+    model: Optional[str] = Field(default=None)
+
+
+class AutoTitleResponse(BaseModel):
+    title: str
+    status: str = "success"
+
+
+@router.post("/autotitle", response_model=AutoTitleResponse, summary="Generate dynamic smart title for conversation")
+async def generate_conversation_title(request: AutoTitleRequest):
+    """
+    Dynamically generates a clean, concise 3 to 6 word title from the user prompt.
+    """
+    prompt = request.prompt.strip()
+    if not prompt:
+        return AutoTitleResponse(title="New Conversation")
+
+    # Fast fallback prompt with LLM
+    try:
+        import litellm
+        from app.core.config import settings
+
+        candidate_models = settings.FALLBACK_SEQUENCES.get("Fast", [settings.DEFAULT_MODEL])
+        sys_prompt = (
+            "You are an expert concise title generator. "
+            "Generate a clear, high-quality, professional 3 to 6 word title (without quotes, markdown, or punctuation) for this user question/query."
+        )
+
+        for m in candidate_models:
+            try:
+                res = await litellm.acompletion(
+                    model=m,
+                    messages=[
+                        {"role": "system", "content": sys_prompt},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=20,
+                    temperature=0.3
+                )
+                generated_title = res.choices[0].message.content.strip().strip('"\'`').strip()
+                if generated_title and len(generated_title) > 2:
+                    generated_title = generated_title.rstrip('.!?')
+                    return AutoTitleResponse(title=generated_title[:60])
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+    # Heuristic fallback: clean up first words
+    words = prompt.split()
+    if len(words) <= 6:
+        fallback_title = prompt
+    else:
+        fallback_title = " ".join(words[:6]) + "..."
+    return AutoTitleResponse(title=fallback_title[:50])
+
+
