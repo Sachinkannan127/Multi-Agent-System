@@ -266,12 +266,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let clerkLanding = null;
 
     async function initClerkLanding() {
+        const PERMANENT_BACKEND = 'https://multi-agent-system-nn5b.onrender.com';
         let rawBase = (typeof window !== 'undefined' && window.__API_BASE__)
-            || (typeof window !== 'undefined' && window.env && window.env.VITE_API_BASE)
+            || (typeof window !== 'undefined' && window.__PERMANENT_BACKEND_URL__)
             || localStorage.getItem('ma_api_base')
-            || 'http://127.0.0.1:8990';
+            || PERMANENT_BACKEND;
         let API_BASE = `${rawBase.replace(/\/+$/, '')}/api/v1`;
         let publishableKey = 'pk_test_c2hpbmluZy1saXphcmQtNTc4MC5jbGVyay5hY2NvdW50cy5kZXYk';
+
 
         try {
             let res = await fetch(`${API_BASE}/auth/config`);

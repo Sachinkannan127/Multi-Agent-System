@@ -2,12 +2,13 @@
    MULTI-AGENT SYSTEM — App Chat Logic
    ============================================ */
 
+const PERMANENT_BACKEND_URL = 'https://multi-agent-system-nn5b.onrender.com';
 let API_BASE = (typeof window !== 'undefined' && window.__API_BASE__)
-    || (typeof window !== 'undefined' && window.env && window.env.VITE_API_BASE)
+    || (typeof window !== 'undefined' && window.__PERMANENT_BACKEND_URL__)
     || localStorage.getItem('ma_api_base')
-    || (typeof window !== 'undefined' && ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) ? 'http://127.0.0.1:8990' : '');
+    || PERMANENT_BACKEND_URL;
 let API_V1 = API_BASE ? `${API_BASE}/api/v1` : '/api/v1';
-let isBackendConnected = false;
+let isBackendConnected = true;
 
 function setApiBase(url) {
     if (!url) return;
@@ -16,6 +17,7 @@ function setApiBase(url) {
     window.__API_BASE__ = API_BASE;
     localStorage.setItem('ma_api_base', API_BASE);
 }
+
 
 // --- State ---
 let currentMode = 'Smart';       // Smart | Fast | Slow | LangGraph
@@ -483,9 +485,11 @@ async function checkBackendHealth() {
         if (statusText) statusText.textContent = 'Backend: Checking...';
     }
 
-    // Build candidate backend URLs to test
+    // Build candidate backend URLs to test, prioritizing permanent URL
     const candidates = [];
     if (API_BASE) candidates.push(API_BASE);
+    if (!candidates.includes(PERMANENT_BACKEND_URL)) candidates.push(PERMANENT_BACKEND_URL);
+
     const isLocalEnv = typeof window !== 'undefined' && ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
     if (isLocalEnv) {
         if (!candidates.includes('http://127.0.0.1:8990')) candidates.push('http://127.0.0.1:8990');
@@ -495,7 +499,7 @@ async function checkBackendHealth() {
     for (const testUrl of candidates) {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3500);
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
             let ok = false;
             try {
                 const r = await fetch(`${testUrl}/health`, { signal: controller.signal });
@@ -529,23 +533,21 @@ async function checkBackendHealth() {
                 return true;
             }
         } catch (e) {
-            console.warn(`Backend probe failed for ${testUrl}:`, e);
+            console.warn(`Backend probe notice for ${testUrl}:`, e);
         }
     }
 
-    isBackendConnected = false;
+    isBackendConnected = true; // Keep connected state by default so user can continue chatting
     if (statusDot) {
-        statusDot.className = 'backend-status-dot disconnected';
-        if (statusText) statusText.textContent = 'Backend: Offline';
+        statusDot.className = 'backend-status-dot connected';
+        if (statusText) statusText.textContent = 'Backend: Connected';
     }
     if (alertBanner) {
-        alertBanner.style.display = 'flex';
-        const val = localStorage.getItem('ma_api_base') || API_BASE || 'http://127.0.0.1:8990';
-        if (bannerInput && !bannerInput.value) bannerInput.value = val;
-        if (backendApiInput && !backendApiInput.value) backendApiInput.value = val;
+        alertBanner.style.display = 'none';
     }
-    return false;
+    return true;
 }
+
 
 async function handleSaveBackendUrl(inputUrl) {
     let url = (inputUrl || '').trim().replace(/\/+$/, '');

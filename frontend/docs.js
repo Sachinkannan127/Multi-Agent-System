@@ -68,9 +68,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const apiSendBtn = document.getElementById('api-send-btn');
     const apiResponse = document.getElementById('api-tester-response');
 
+    const PERMANENT_BACKEND = 'https://multi-agent-system-nn5b.onrender.com';
     const docsApiBase = (typeof window !== 'undefined' && window.__API_BASE__)
+        || (typeof window !== 'undefined' && window.__PERMANENT_BACKEND_URL__)
         || localStorage.getItem('ma_api_base')
-        || 'http://127.0.0.1:8990';
+        || PERMANENT_BACKEND;
+
 
     const ENDPOINTS = {
         chat: {
@@ -161,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 apiResponse.textContent = `Status: ${statusColor} ${res.status} ${res.statusText} (${duration}ms)\n\n` +
                     (typeof data === 'object' ? JSON.stringify(data, null, 2) : data);
             } catch (error) {
-                apiResponse.textContent = `❌ Connection Error: ${error.message}\nMake sure the backend is running at http://localhost:8990`;
+                apiResponse.textContent = `❌ Connection Error: ${error.message}\nMake sure the backend is live at https://multi-agent-system-nn5b.onrender.com`;
             } finally {
                 apiSendBtn.innerHTML = `
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
