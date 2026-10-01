@@ -274,6 +274,8 @@ async function initClerkAuth() {
 async function switchUserContext(newUid, isInitial = false) {
     if (!newUid) {
         conversations = [];
+        folders = [];
+        renderFolders();
         renderChatList();
         setHomeState(true);
         return;
@@ -298,7 +300,11 @@ async function switchUserContext(newUid, isInitial = false) {
     }
     renderChatList();
 
-    // Fetch this user's conversations from the backend
+    // Sync user profile to MongoDB
+    await syncUserProfileToMongoDB();
+
+    // Fetch this user's folders and conversations from MongoDB
+    await loadFoldersFromBackend();
     await loadConversationsFromBackend();
 }
 
@@ -1087,8 +1093,48 @@ function setupEventListeners() {
             if (settingsBackdrop && !settingsBackdrop.hidden) closeSettings();
             if (connectorsBackdrop && !connectorsBackdrop.hidden) closeConnectors();
             if (ocrBackdrop && !ocrBackdrop.hidden) closeOcr();
+            const folderModal = $('folder-modal-backdrop');
+            if (folderModal && !folderModal.hidden) closeFolderModal();
+            const moveModal = $('move-modal-backdrop');
+            if (moveModal && !moveModal.hidden) closeMoveModal();
         }
     });
+
+    // Folders Event Listeners
+    const addFolderBtn = $('add-folder-btn');
+    const filterResetBtn = $('filter-reset-btn');
+    const folderModalClose = $('folder-modal-close');
+    const folderBtnCancel = $('folder-btn-cancel');
+    const folderBtnSave = $('folder-btn-save');
+    const folderModalBackdrop = $('folder-modal-backdrop');
+    const folderColorPalette = $('folder-color-palette');
+    const moveModalClose = $('move-modal-close');
+    const moveModalBackdrop = $('move-modal-backdrop');
+
+    if (addFolderBtn) addFolderBtn.addEventListener('click', openCreateFolderModal);
+    if (filterResetBtn) filterResetBtn.addEventListener('click', resetFolderFilter);
+    if (folderModalClose) folderModalClose.addEventListener('click', closeFolderModal);
+    if (folderBtnCancel) folderBtnCancel.addEventListener('click', closeFolderModal);
+    if (folderBtnSave) folderBtnSave.addEventListener('click', saveFolderModal);
+    if (folderModalBackdrop) {
+        folderModalBackdrop.addEventListener('click', (e) => {
+            if (e.target === folderModalBackdrop) closeFolderModal();
+        });
+    }
+    if (folderColorPalette) {
+        folderColorPalette.addEventListener('click', (e) => {
+            const dot = e.target.closest('.color-dot');
+            if (!dot) return;
+            selectedFolderColor = dot.dataset.color || '#FF6B35';
+            updatePaletteActiveState();
+        });
+    }
+    if (moveModalClose) moveModalClose.addEventListener('click', closeMoveModal);
+    if (moveModalBackdrop) {
+        moveModalBackdrop.addEventListener('click', (e) => {
+            if (e.target === moveModalBackdrop) closeMoveModal();
+        });
+    }
 
     // Send
     sendBtn.addEventListener('click', sendMessage);
@@ -1447,6 +1493,305 @@ function updateTopbarRoute() {
 }
 
 // ============================
+//  USER PROFILE & FOLDERS (MongoDB)
+// ============================
+let folders = [];
+let activeFolderFilter = null;
+let editingFolderId = null;
+let activeMoveConversationId = null;
+let selectedFolderColor = '#FF6B35';
+
+async function syncUserProfileToMongoDB() {
+    const user = clerk?.user || currentClerkUser;
+    if (!user || !user.id) return;
+    try {
+        const headers = await getAuthHeaders();
+        const body = {
+            user_id: user.id,
+            email: user.primaryEmailAddress?.emailAddress || (user.emailAddresses?.[0]?.emailAddress) || '',
+            first_name: user.firstName || '',
+            last_name: user.lastName || '',
+            full_name: user.fullName || user.username || 'Agent User',
+            image_url: user.imageUrl || ''
+        };
+        await fetch(`${API_V1}/user/profile/sync`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(body)
+        });
+    } catch (e) {
+        console.warn('Profile sync notice:', e);
+    }
+}
+
+async function loadFoldersFromBackend() {
+    const targetUid = currentUserId || getActiveUserId();
+    if (!targetUid) {
+        folders = [];
+        renderFolders();
+        return;
+    }
+    try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${API_V1}/folders`, { headers });
+        if (res.ok) {
+            folders = await res.json();
+            localStorage.setItem(`ma_folders_${targetUid}`, JSON.stringify(folders));
+        } else {
+            folders = JSON.parse(localStorage.getItem(`ma_folders_${targetUid}`) || '[]');
+        }
+    } catch {
+        folders = JSON.parse(localStorage.getItem(`ma_folders_${targetUid}`) || '[]');
+    }
+    renderFolders();
+}
+
+function renderFolders() {
+    const folderList = $('folder-list');
+    if (!folderList) return;
+    folderList.innerHTML = '';
+
+    if (folders.length === 0) {
+        folderList.innerHTML = '<div style="padding: 6px 10px; font-size: 0.76rem; color: var(--text-muted); font-style: italic;">No folders yet. Click New to organize chats.</div>';
+        return;
+    }
+
+    folders.forEach(folder => {
+        const item = document.createElement('div');
+        item.className = `folder-item${activeFolderFilter === folder.id ? ' active' : ''}`;
+        item.innerHTML = `
+            <div class="folder-item-left">
+                <span class="folder-color-badge" style="background: ${folder.color || '#FF6B35'};"></span>
+                <span class="folder-name-text" title="${escapeHtml(folder.name)}">${escapeHtml(folder.name)}</span>
+            </div>
+            <div class="folder-item-right">
+                <span class="folder-count-badge">${folder.conversation_count || 0}</span>
+                <div class="folder-item-actions">
+                    <button type="button" class="folder-action-btn edit" title="Edit folder">✏️</button>
+                    <button type="button" class="folder-action-btn delete" title="Delete folder">🗑</button>
+                </div>
+            </div>
+        `;
+
+        item.addEventListener('click', (e) => {
+            if (e.target.closest('.folder-action-btn')) return;
+            toggleFolderFilter(folder.id);
+        });
+
+        item.querySelector('.folder-action-btn.edit').addEventListener('click', (e) => {
+            e.stopPropagation();
+            openEditFolderModal(folder.id);
+        });
+
+        item.querySelector('.folder-action-btn.delete').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteFolderConfirm(folder.id, folder.name);
+        });
+
+        folderList.appendChild(item);
+    });
+}
+
+function toggleFolderFilter(folderId) {
+    if (activeFolderFilter === folderId) {
+        resetFolderFilter();
+    } else {
+        activeFolderFilter = folderId;
+        const folder = folders.find(f => f.id === folderId);
+        const label = $('chats-section-label');
+        const resetBtn = $('filter-reset-btn');
+        if (label && folder) label.textContent = `Chats: ${folder.name}`;
+        if (resetBtn) resetBtn.style.display = 'inline-block';
+        renderFolders();
+        renderChatList();
+    }
+}
+
+function resetFolderFilter() {
+    activeFolderFilter = null;
+    const label = $('chats-section-label');
+    const resetBtn = $('filter-reset-btn');
+    if (label) label.textContent = 'Recent Chats';
+    if (resetBtn) resetBtn.style.display = 'none';
+    renderFolders();
+    renderChatList();
+}
+
+function openCreateFolderModal() {
+    editingFolderId = null;
+    const modal = $('folder-modal-backdrop');
+    const title = $('folder-modal-title');
+    const input = $('folder-name-input');
+    if (title) title.textContent = 'Create Chat Folder';
+    if (input) input.value = '';
+    selectedFolderColor = '#FF6B35';
+    updatePaletteActiveState();
+    if (modal) modal.hidden = false;
+    setTimeout(() => input?.focus(), 50);
+}
+
+function openEditFolderModal(folderId) {
+    const folder = folders.find(f => f.id === folderId);
+    if (!folder) return;
+    editingFolderId = folderId;
+    const modal = $('folder-modal-backdrop');
+    const title = $('folder-modal-title');
+    const input = $('folder-name-input');
+    if (title) title.textContent = 'Edit Chat Folder';
+    if (input) input.value = folder.name;
+    selectedFolderColor = folder.color || '#FF6B35';
+    updatePaletteActiveState();
+    if (modal) modal.hidden = false;
+    setTimeout(() => input?.focus(), 50);
+}
+
+function closeFolderModal() {
+    const modal = $('folder-modal-backdrop');
+    if (modal) modal.hidden = true;
+    editingFolderId = null;
+}
+
+function updatePaletteActiveState() {
+    const dots = document.querySelectorAll('#folder-color-palette .color-dot');
+    dots.forEach(d => {
+        d.classList.toggle('active', d.dataset.color === selectedFolderColor);
+    });
+}
+
+async function saveFolderModal() {
+    const input = $('folder-name-input');
+    const name = (input?.value || '').trim();
+    if (!name) {
+        showToast('⚠️ Please enter a folder name.');
+        return;
+    }
+
+    try {
+        const headers = await getAuthHeaders();
+        if (editingFolderId) {
+            // Update existing folder
+            const res = await fetch(`${API_V1}/folders/${editingFolderId}`, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({ name, color: selectedFolderColor })
+            });
+            if (res.ok) {
+                showToast('✅ Folder updated in MongoDB.');
+            }
+        } else {
+            // Create new folder
+            const res = await fetch(`${API_V1}/folders`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ name, color: selectedFolderColor })
+            });
+            if (res.ok) {
+                showToast('✅ New folder created in MongoDB.');
+            }
+        }
+        closeFolderModal();
+        await loadFoldersFromBackend();
+        await loadConversationsFromBackend();
+    } catch (e) {
+        showToast('❌ Error saving folder: ' + e.message);
+    }
+}
+
+async function deleteFolderConfirm(folderId, folderName) {
+    if (!confirm(`Are you sure you want to delete folder "${folderName}"? Chats inside will be moved to unfiled.`)) return;
+
+    try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${API_V1}/folders/${folderId}`, {
+            method: 'DELETE',
+            headers
+        });
+        if (res.ok) {
+            showToast('🗑️ Folder deleted from MongoDB.');
+            if (activeFolderFilter === folderId) resetFolderFilter();
+            await loadFoldersFromBackend();
+            await loadConversationsFromBackend();
+        }
+    } catch (e) {
+        showToast('❌ Failed to delete folder.');
+    }
+}
+
+function openMoveModal(conversationId) {
+    activeMoveConversationId = conversationId;
+    const modal = $('move-modal-backdrop');
+    const optionsContainer = $('move-folder-options');
+    if (!optionsContainer) return;
+    optionsContainer.innerHTML = '';
+
+    const conv = conversations.find(c => c.id === conversationId);
+    const currentFid = conv?.folder_id;
+
+    // Option 1: Unfiled / No Folder
+    const unfiledOpt = document.createElement('div');
+    unfiledOpt.className = 'move-folder-option';
+    unfiledOpt.innerHTML = `
+        <span style="font-size: 16px;">📂</span>
+        <div style="flex: 1;">
+            <strong>Unfiled (No Folder)</strong>
+            ${!currentFid ? '<small style="color: var(--orange-500); margin-left: 6px;">(Current)</small>' : ''}
+        </div>
+    `;
+    unfiledOpt.addEventListener('click', () => executeMoveConversation(null));
+    optionsContainer.appendChild(unfiledOpt);
+
+    // User Folders
+    folders.forEach(f => {
+        const opt = document.createElement('div');
+        opt.className = 'move-folder-option';
+        opt.innerHTML = `
+            <span style="display:inline-block; width: 10px; height: 10px; border-radius: 50%; background: ${f.color || '#FF6B35'};"></span>
+            <div style="flex: 1;">
+                <strong>${escapeHtml(f.name)}</strong>
+                ${currentFid === f.id ? '<small style="color: var(--orange-500); margin-left: 6px;">(Current)</small>' : ''}
+            </div>
+        `;
+        opt.addEventListener('click', () => executeMoveConversation(f.id));
+        optionsContainer.appendChild(opt);
+    });
+
+    if (modal) modal.hidden = false;
+}
+
+function closeMoveModal() {
+    const modal = $('move-modal-backdrop');
+    if (modal) modal.hidden = true;
+    activeMoveConversationId = null;
+}
+
+async function executeMoveConversation(targetFolderId) {
+    if (!activeMoveConversationId) return;
+    const convId = activeMoveConversationId;
+    closeMoveModal();
+
+    const conv = conversations.find(c => c.id === convId);
+    if (conv) {
+        conv.folder_id = targetFolderId;
+    }
+    const currentUid = getActiveUserId();
+    localStorage.setItem(getUserConversationsStorageKey(currentUid), JSON.stringify(conversations));
+    renderChatList();
+
+    try {
+        const headers = await getAuthHeaders();
+        await fetch(`${API_V1}/folders/conversations/${convId}/move`, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({ folder_id: targetFolderId })
+        });
+        showToast(targetFolderId ? '📁 Conversation moved to folder.' : '📂 Conversation unfiled.');
+        await loadFoldersFromBackend();
+    } catch {
+        /* Fallback */
+    }
+}
+
+// ============================
 //  CONVERSATIONS
 // ============================
 function startNewChat() {
@@ -1503,11 +1848,22 @@ async function saveConversation(title, messages) {
     let convToSave = null;
     if (!activeConversationId) {
         activeConversationId = `conv_${Date.now()}`;
-        convToSave = { id: activeConversationId, title, messages, threadId: currentThreadId, created: Date.now() };
+        convToSave = {
+            id: activeConversationId,
+            title,
+            messages,
+            threadId: currentThreadId,
+            folder_id: activeFolderFilter || null,
+            created: Date.now()
+        };
         conversations.unshift(convToSave);
     } else {
         const conv = conversations.find(c => c.id === activeConversationId);
-        if (conv) { conv.messages = messages; conv.title = title || conv.title; convToSave = conv; }
+        if (conv) {
+            conv.messages = messages;
+            conv.title = title || conv.title;
+            convToSave = conv;
+        }
     }
     localStorage.setItem(getUserConversationsStorageKey(currentUid), JSON.stringify(conversations.slice(0, 50)));
     renderChatList();
@@ -1518,8 +1874,15 @@ async function saveConversation(title, messages) {
             await fetch(`${API_V1}/conversations/save`, {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({ id: convToSave.id, title: convToSave.title, thread_id: convToSave.threadId, messages: convToSave.messages })
+                body: JSON.stringify({
+                    id: convToSave.id,
+                    title: convToSave.title,
+                    thread_id: convToSave.threadId,
+                    folder_id: convToSave.folder_id || null,
+                    messages: convToSave.messages
+                })
             });
+            await loadFoldersFromBackend();
         } catch { /* Silent fallback */ }
     }
 }
@@ -1551,24 +1914,59 @@ async function deleteConversation(id, e) {
     try {
         const headers = await getAuthHeaders();
         await fetch(`${API_V1}/conversations/${id}`, { method: 'DELETE', headers });
+        await loadFoldersFromBackend();
     } catch { /* Silent fallback */ }
 }
 
 function renderChatList() {
     chatList.innerHTML = '';
-    if (conversations.length === 0) {
-        chatList.innerHTML = '<div style="padding:20px 12px;font-size:0.82rem;color:var(--gray-400);text-align:center;">No conversations yet</div>';
+
+    // Apply folder filter if active
+    let displayList = conversations;
+    if (activeFolderFilter) {
+        displayList = conversations.filter(c => c.folder_id === activeFolderFilter);
+    }
+
+    if (displayList.length === 0) {
+        chatList.innerHTML = `<div style="padding:20px 12px;font-size:0.82rem;color:var(--gray-400);text-align:center;">${activeFolderFilter ? 'No chats in this folder' : 'No conversations yet'}</div>`;
         return;
     }
-    conversations.forEach(conv => {
+
+    displayList.forEach(conv => {
         const item = document.createElement('div');
         item.className = `chat-list-item${conv.id === activeConversationId ? ' active' : ''}`;
+
+        // Find folder metadata if assigned
+        let folderPillHtml = '';
+        if (conv.folder_id) {
+            const folder = folders.find(f => f.id === conv.folder_id);
+            if (folder) {
+                folderPillHtml = `
+                    <div class="chat-folder-pill">
+                        <span class="dot" style="background: ${folder.color || '#FF6B35'};"></span>
+                        <span>${escapeHtml(folder.name)}</span>
+                    </div>
+                `;
+            }
+        }
+
         item.innerHTML = `
             <span class="chat-icon">💬</span>
-            <span class="chat-label">${escapeHtml(conv.title)}</span>
-            <button class="chat-delete" title="Delete">🗑</button>
+            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+                <span class="chat-label">${escapeHtml(conv.title)}</span>
+                ${folderPillHtml}
+            </div>
+            <div style="display: flex; align-items: center; gap: 2px;">
+                <button type="button" class="chat-move-btn" title="Move to folder">📁</button>
+                <button type="button" class="chat-delete" title="Delete">🗑</button>
+            </div>
         `;
+
         item.addEventListener('click', () => loadConversation(conv.id));
+        item.querySelector('.chat-move-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            openMoveModal(conv.id);
+        });
         item.querySelector('.chat-delete').addEventListener('click', (e) => deleteConversation(conv.id, e));
         chatList.appendChild(item);
     });

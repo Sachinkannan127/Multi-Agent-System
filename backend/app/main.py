@@ -26,6 +26,8 @@ from app.routes.langgraph import router as langgraph_router
 from app.routes.conversations import router as conversations_router
 from app.routes.ocr import router as ocr_router
 from app.routes.auth import router as auth_router
+from app.routes.user import router as user_router
+from app.routes.folders import router as folders_router
 
 
 
@@ -78,6 +80,12 @@ app.include_router(langgraph_router)
 
 app.include_router(conversations_router, prefix=settings.API_V1_STR)
 app.include_router(conversations_router)
+
+app.include_router(folders_router, prefix=settings.API_V1_STR)
+app.include_router(folders_router)
+
+app.include_router(user_router, prefix=settings.API_V1_STR)
+app.include_router(user_router)
 
 app.include_router(ocr_router, prefix=settings.API_V1_STR)
 app.include_router(ocr_router)
