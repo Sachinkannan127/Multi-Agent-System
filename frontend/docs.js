@@ -68,10 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const apiSendBtn = document.getElementById('api-send-btn');
     const apiResponse = document.getElementById('api-tester-response');
 
+    const docsApiBase = (typeof window !== 'undefined' && window.__API_BASE__)
+        || localStorage.getItem('ma_api_base')
+        || 'http://127.0.0.1:8990';
+
     const ENDPOINTS = {
         chat: {
             method: 'POST',
-            url: 'http://localhost:8990/api/v1/chat',
+            url: `${docsApiBase}/api/v1/chat`,
             body: JSON.stringify({
                 message: "How does the Multi-Agent router decide which agent to run?",
                 conversation_id: "demo-session-1"
@@ -79,14 +83,14 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         router: {
             method: 'POST',
-            url: 'http://localhost:8990/api/v1/router/execute',
+            url: `${docsApiBase}/api/v1/router/execute`,
             body: JSON.stringify({
                 query: "Analyze this quadratic equation 2x^2 + 5x - 3 = 0"
             }, null, 2)
         },
         langgraph: {
             method: 'POST',
-            url: 'http://localhost:8990/api/v1/langgraph/chat',
+            url: `${docsApiBase}/api/v1/langgraph/chat`,
             body: JSON.stringify({
                 message: "Write a high-performance Python function for matrix multiplication",
                 thread_id: "graph-thread-1"
@@ -94,14 +98,14 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         rag_query: {
             method: 'POST',
-            url: 'http://localhost:8990/api/v1/rag/query',
+            url: `${docsApiBase}/api/v1/rag/query`,
             body: JSON.stringify({
                 query: "Summarize the key architectural patterns mentioned in the uploaded paper"
             }, null, 2)
         },
         health: {
             method: 'GET',
-            url: 'http://localhost:8990/health',
+            url: `${docsApiBase}/health`,
             body: ""
         }
     };

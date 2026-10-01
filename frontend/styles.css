@@ -1720,15 +1720,15 @@ body.dark .nav-user-chip {
    THEME TOGGLE & DARK MODE
    ============================ */
 .theme-toggle {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.12);
+    color: var(--gray-700, #374151);
+    border: 1px solid var(--gray-200, #e5e7eb);
+    background: var(--gray-100, #f3f4f6);
     backdrop-filter: blur(8px);
     transition: all var(--transition-fast);
     position: relative;
@@ -1738,9 +1738,22 @@ body.dark .nav-user-chip {
 }
 
 .theme-toggle:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 107, 53, 0.12);
+    border-color: var(--orange-400, #FF8C42);
+    color: var(--orange-500, #FF6B35);
     transform: scale(1.06);
+}
+
+body.dark .theme-toggle {
+    color: #f7f5ef;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+body.dark .theme-toggle:hover {
+    background: rgba(255, 107, 53, 0.22);
+    border-color: var(--orange-400, #FF8C42);
+    color: #ffffff;
 }
 
 .theme-toggle .icon-sun,
@@ -2499,6 +2512,48 @@ body.dark .api-section {
 
     .navbar {
         padding: 16px 20px;
+        position: relative;
+    }
+
+    .mobile-toggle {
+        display: flex;
+        z-index: 102;
+    }
+
+    body.dark .mobile-toggle span {
+        background: #f3f4f6;
+    }
+
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        flex-direction: column;
+        padding: 24px 28px;
+        gap: 18px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
+        z-index: 101;
+    }
+
+    body.dark .nav-links {
+        background: rgba(17, 25, 39, 0.98);
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+    }
+
+    .nav-links.active {
+        display: flex;
+        animation: fade-in 0.2s ease both;
+    }
+
+    .nav-actions {
+        gap: 10px;
     }
 
     .hero {

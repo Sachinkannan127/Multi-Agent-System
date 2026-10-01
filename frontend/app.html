@@ -9,12 +9,14 @@
     <title>MultiAgent — AI Chat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" href="favicon.ico">
     <link rel="stylesheet" href="app.css">
     <!-- App Config -->
     <script src="config.js"></script>
-    <!-- Clerk Authentication SDK & Prebuilt UI Components -->
-    <script async crossorigin="anonymous" src="https://shining-lizard-5780.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js"></script>
-    <script async crossorigin="anonymous" data-clerk-publishable-key="pk_test_c2hpbmluZy1saXphcmQtNTc4MC5jbGVyay5hY2NvdW50cy5kZXYk" src="https://shining-lizard-5780.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"></script>
+    <!-- Clerk Authentication SDK (Self-contained distribution with full UI support) -->
+    <script async crossorigin="anonymous" data-clerk-publishable-key="pk_test_c2hpbmluZy1saXphcmQtNTc4MC5jbGVyay5hY2NvdW50cy5kZXYk" src="https://shining-lizard-5780.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
 </head>
 
 <body>
@@ -125,10 +127,10 @@
                         <span class="profile-avatar" id="profile-avatar">M</span>
                         <div class="profile-meta">
                             <div class="profile-name-row">
-                                <strong id="profile-name">Guest User</strong>
+                                <strong id="profile-name">Sign In Required</strong>
                                 <span class="profile-badge" id="profile-badge" style="display: none;">Active</span>
                             </div>
-                            <small id="profile-email">Sign in to sync</small>
+                            <small id="profile-email">Sign in with Clerk</small>
                             <span class="profile-subtext" id="profile-subtext" style="display: none;">Manage Profile ⚙</span>
                         </div>
                     </div>
@@ -165,6 +167,12 @@
                 </div>
 
                 <div class="topbar-controls">
+                    <!-- Backend Status Indicator -->
+                    <button type="button" class="backend-status-pill" id="backend-status-pill" title="Backend Connection Status (Click to configure)">
+                        <span class="backend-status-dot checking" id="backend-status-dot"></span>
+                        <span class="backend-status-text" id="backend-status-text">Backend: Checking...</span>
+                    </button>
+
                     <!-- Topbar Sign In (only shown when not logged in) -->
                     <button type="button" class="auth-btn" id="topbar-signin-btn" title="Sign In with Clerk" style="display: none;">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -225,6 +233,22 @@
                     </button>
                 </div>
             </header>
+
+            <!-- Backend Status Alert Banner -->
+            <div class="backend-alert-banner" id="backend-alert-banner" style="display: none;">
+                <div class="backend-alert-content">
+                    <span class="backend-alert-icon">⚡</span>
+                    <div class="backend-alert-info">
+                        <strong id="backend-banner-title">Backend Server Disconnected</strong>
+                        <p id="backend-banner-desc">Enter your Render backend URL to enable AI chat, RAG, and memory.</p>
+                    </div>
+                    <div class="backend-alert-actions">
+                        <input type="url" id="backend-banner-input" placeholder="https://your-service.onrender.com" spellcheck="false" autocomplete="off" />
+                        <button type="button" id="backend-banner-save-btn" class="backend-banner-btn primary">Connect</button>
+                        <button type="button" id="backend-banner-dismiss-btn" class="backend-banner-btn close" title="Dismiss Banner">✕</button>
+                    </div>
+                </div>
+            </div>
 
             <!-- Messages Area -->
             <div class="messages-container" id="messages-container">
@@ -1233,9 +1257,6 @@
         <div class="clerk-modal-card">
             <button class="clerk-modal-close" id="clerk-modal-close" title="Close">✕</button>
             <div id="clerk-sign-in-target"></div>
-            <div style="text-align: center; margin-top: 14px;">
-                <button type="button" onclick="document.getElementById('clerk-modal-backdrop').hidden = true;" style="background: none; border: none; color: #ff8c42; font-size: 13px; cursor: pointer; font-weight: 500;">Continue as Guest →</button>
-            </div>
         </div>
     </div>
 

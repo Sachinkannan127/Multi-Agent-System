@@ -4,7 +4,9 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Theme Toggle Initialization
+    // ----------------------------
+    // 1. Theme Toggle Initialization
+    // ----------------------------
     const themeToggleBtn = document.getElementById('theme-toggle');
     const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     const savedTheme = localStorage.getItem('ma_theme') || (systemPrefersDark ? 'dark' : 'light');
@@ -36,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------
-    // 1. Floating Particles
+    // 2. Floating Particles
     // ----------------------------
     const particlesContainer = document.getElementById('particles');
     if (particlesContainer) {
@@ -54,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------
-    // 2. Animated Counter
+    // 3. Animated Counter
     // ----------------------------
     function animateCounter(el, target, duration = 2000) {
         const startTime = performance.now();
@@ -79,66 +81,90 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------
-    // 3. Mobile Menu Toggle
+    // 4. Brand Click -> Smooth Scroll Top
+    // ----------------------------
+    const navBrand = document.getElementById('nav-brand');
+    if (navBrand) {
+        navBrand.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    // ----------------------------
+    // 5. Mobile Menu Toggle
     // ----------------------------
     const mobileToggle = document.getElementById('mobile-toggle');
     const navLinks = document.getElementById('nav-links');
     const navActions = document.getElementById('nav-actions');
 
+    const closeMobileMenu = () => {
+        if (navLinks && navLinks.classList.contains('active')) {
+            navLinks.classList.remove('active');
+            if (navActions) navActions.classList.remove('active');
+            if (mobileToggle) {
+                mobileToggle.classList.remove('open');
+                const spans = mobileToggle.querySelectorAll('span');
+                spans.forEach(s => { s.style.transform = ''; s.style.opacity = ''; });
+            }
+        }
+    };
+
     if (mobileToggle && navLinks) {
-        mobileToggle.addEventListener('click', () => {
+        mobileToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
             const isOpen = navLinks.classList.toggle('active');
             if (navActions) navActions.classList.toggle('active');
-            mobileToggle.classList.toggle('open');
+            mobileToggle.classList.toggle('open', isOpen);
             const spans = mobileToggle.querySelectorAll('span');
-            if (isOpen) {
+            if (isOpen && spans.length >= 3) {
                 spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
                 spans[1].style.opacity = '0';
                 spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
-            } else {
+            } else if (spans.length >= 3) {
                 spans[0].style.transform = '';
                 spans[1].style.opacity = '';
                 spans[2].style.transform = '';
             }
         });
+
+        // Close mobile menu on outside click
+        document.addEventListener('click', (e) => {
+            if (!navLinks.contains(e.target) && !mobileToggle.contains(e.target)) {
+                closeMobileMenu();
+            }
+        });
     }
 
     // ----------------------------
-    // 4. Smooth Scroll
+    // 6. Smooth Scroll on In-Page Anchors
     // ----------------------------
     document.querySelectorAll('a[href^="#"]').forEach(a => {
         a.addEventListener('click', e => {
             const id = a.getAttribute('href');
-            if (id === '#') return;
+            if (!id || id === '#') return;
             const target = document.querySelector(id);
             if (target) {
                 e.preventDefault();
                 target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                // Close mobile menu
-                if (navLinks && navLinks.classList.contains('active')) {
-                    navLinks.classList.remove('active');
-                    if (navActions) navActions.classList.remove('active');
-                    mobileToggle.classList.remove('open');
-                    const spans = mobileToggle.querySelectorAll('span');
-                    spans.forEach(s => { s.style.transform = ''; s.style.opacity = ''; });
-                }
+                closeMobileMenu();
             }
         });
     });
 
     // ----------------------------
-    // 5. Navbar Scroll Shadow
+    // 7. Navbar Scroll Shadow (Listens to window scroll)
     // ----------------------------
     const navbar = document.getElementById('navbar');
-    const mainCard = document.getElementById('main-card');
-    if (mainCard && navbar) {
-        mainCard.addEventListener('scroll', () => {
-            navbar.style.boxShadow = mainCard.scrollTop > 20 ? '0 2px 20px rgba(0,0,0,0.06)' : '';
-        });
+    if (navbar) {
+        const updateNavbarShadow = () => {
+            navbar.style.boxShadow = window.scrollY > 20 ? '0 4px 20px rgba(0,0,0,0.08)' : '';
+        };
+        window.addEventListener('scroll', updateNavbarShadow, { passive: true });
+        updateNavbarShadow();
     }
 
     // ----------------------------
-    // 6. Scroll Reveal Animations
+    // 8. Scroll Reveal Animations
     // ----------------------------
     const revealElements = document.querySelectorAll(
         '.feature-card, .step, .tool-card, .tech-item, .api-card, .workflow-image-wrap, .cta-card, .section-header'
@@ -146,28 +172,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     revealElements.forEach(el => el.classList.add('reveal'));
 
-    const revealObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry, idx) => {
-            if (entry.isIntersecting) {
-                // Stagger siblings
-                const parent = entry.target.parentElement;
-                const siblings = parent ? Array.from(parent.querySelectorAll('.reveal')) : [];
-                const siblingIdx = siblings.indexOf(entry.target);
-                const delay = siblingIdx >= 0 ? siblingIdx * 80 : 0;
+    if ('IntersectionObserver' in window) {
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const parent = entry.target.parentElement;
+                    const siblings = parent ? Array.from(parent.querySelectorAll('.reveal')) : [];
+                    const siblingIdx = siblings.indexOf(entry.target);
+                    const delay = siblingIdx >= 0 ? siblingIdx * 80 : 0;
 
-                setTimeout(() => {
-                    entry.target.classList.add('visible');
-                }, delay);
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, delay);
 
-                revealObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
-    revealElements.forEach(el => revealObserver.observe(el));
+        revealElements.forEach(el => revealObserver.observe(el));
+    } else {
+        revealElements.forEach(el => el.classList.add('visible'));
+    }
 
     // ----------------------------
-    // 7. Parallax on Hero Image
+    // 9. Parallax on Hero Visual
     // ----------------------------
     const heroVisual = document.querySelector('.hero-visual');
     const heroImage = document.getElementById('hero-image');
@@ -193,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------
-    // 8. CTA Ripple Effect
+    // 10. CTA Ripple Effect
     // ----------------------------
     const heroCta = document.getElementById('hero-cta');
     if (heroCta) {
@@ -210,18 +239,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------
-    // 9. Active Nav Link Highlight
+    // 11. Active Nav Link Highlight
     // ----------------------------
     const sections = document.querySelectorAll('section[id]');
     const navLinkElements = document.querySelectorAll('.nav-link');
 
-    if (sections.length && navLinkElements.length) {
+    if (sections.length && navLinkElements.length && 'IntersectionObserver' in window) {
         const navObserver = new IntersectionObserver(entries => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const id = entry.target.getAttribute('id');
                     navLinkElements.forEach(link => {
-                        link.style.color = link.getAttribute('href') === `#${id}` ? 'var(--orange-500)' : '';
+                        const href = link.getAttribute('href');
+                        link.style.color = href === `#${id}` ? 'var(--orange-500)' : '';
                     });
                 }
             });
@@ -231,20 +261,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------
-    // 11. Clerk Auth & Workspace Gateway
+    // 12. Clerk Auth & Workspace Gateway
     // ----------------------------
     let clerkLanding = null;
 
     async function initClerkLanding() {
-        const rawBase = (typeof window !== 'undefined' && window.__API_BASE__)
-            || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE)
+        let rawBase = (typeof window !== 'undefined' && window.__API_BASE__)
+            || (typeof window !== 'undefined' && window.env && window.env.VITE_API_BASE)
             || localStorage.getItem('ma_api_base')
-            || 'http://localhost:8990';
-        const API_BASE = `${rawBase.replace(/\/+$/, '')}/api/v1`;
+            || 'http://127.0.0.1:8990';
+        let API_BASE = `${rawBase.replace(/\/+$/, '')}/api/v1`;
         let publishableKey = 'pk_test_c2hpbmluZy1saXphcmQtNTc4MC5jbGVyay5hY2NvdW50cy5kZXYk';
 
         try {
-            const res = await fetch(`${API_BASE}/auth/config`);
+            let res = await fetch(`${API_BASE}/auth/config`);
+            if (!res.ok && API_BASE.includes('127.0.0.1')) {
+                res = await fetch(`${API_BASE.replace('127.0.0.1', 'localhost')}/auth/config`);
+            }
             if (res.ok) {
                 const data = await res.json();
                 if (data.publishable_key) publishableKey = data.publishable_key;
@@ -258,29 +291,30 @@ document.addEventListener('DOMContentLoaded', () => {
             if (parts.length >= 3) domain = atob(parts[2]).slice(0, -1);
         } catch { /* Default */ }
 
-        // Ensure Clerk UI bundle is loaded
-        if (!window.__internal_ClerkUICtor) {
+        // Ensure Clerk SDK is loaded if not already present
+        if (!window.Clerk) {
             await new Promise((resolve) => {
-                const existing = document.querySelector('script[src*="@clerk/ui"]');
+                const existing = document.querySelector('script[src*="clerk"]');
                 if (existing) {
                     existing.addEventListener('load', resolve, { once: true });
-                    setTimeout(resolve, 2000);
+                    setTimeout(resolve, 1500);
                     return;
                 }
                 const script = document.createElement('script');
-                script.src = `https://${domain}/npm/@clerk/ui@1/dist/ui.browser.js`;
+                script.src = `https://${domain}/npm/@clerk/clerk-js@5/dist/clerk.browser.js`;
                 script.async = true;
                 script.crossOrigin = 'anonymous';
+                script.setAttribute('data-clerk-publishable-key', publishableKey);
                 script.onload = resolve;
                 script.onerror = resolve;
                 document.head.appendChild(script);
-                setTimeout(resolve, 3000);
+                setTimeout(resolve, 2000);
             });
         }
 
-        // Wait for Clerk SDK
+        // Poll briefly for Clerk instance
         let attempts = 0;
-        while (!window.Clerk && attempts < 40) {
+        while (!window.Clerk && attempts < 25) {
             await new Promise(r => setTimeout(r, 100));
             attempts++;
         }
@@ -293,17 +327,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     clerkLanding = window.Clerk;
                 }
 
-                const loadOptions = {};
-                if (window.__internal_ClerkUICtor) {
-                    loadOptions.ui = { ClerkUI: window.__internal_ClerkUICtor };
-                }
-
-                await clerkLanding.load(loadOptions);
+                await clerkLanding.load();
 
                 // Initial dynamic UI update
                 updateLandingAuthUI(clerkLanding.user);
 
-                // Real-time listener for live auth transitions (Sign In, Sign Out, Token Refresh)
+                // Real-time listener for live auth transitions
                 if (typeof clerkLanding.addListener === 'function') {
                     clerkLanding.addListener(({ user }) => {
                         updateLandingAuthUI(user);
@@ -315,31 +344,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.warn('Clerk landing notice:', err);
             }
         }
-
-        setupAuthGateway();
     }
 
     function updateLandingAuthUI(user) {
         const navCta = document.getElementById('nav-cta');
         const heroCta = document.getElementById('hero-cta');
         const navLoginBtn = document.getElementById('nav-login-btn');
-        const navLoginLegacy = document.getElementById('nav-login');
         const navUserBtn = document.getElementById('nav-clerk-user-button');
 
         if (user) {
             const firstName = user.firstName || user.fullName || user.username || 'User';
             if (navLoginBtn) navLoginBtn.style.display = 'none';
-            if (navLoginLegacy) navLoginLegacy.style.display = 'none';
 
             if (navCta) {
                 navCta.textContent = 'Go to Workspace →';
-                navCta.href = 'app.html';
             }
 
             if (heroCta) {
                 const span = heroCta.querySelector('span');
                 if (span) span.textContent = `Open Workspace (${firstName}) →`;
-                heroCta.href = 'app.html';
             }
 
             if (clerkLanding && navUserBtn && !navUserBtn.hasChildNodes()) {
@@ -355,13 +378,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (navCta) {
                 navCta.textContent = 'Get Started';
-                navCta.href = 'app.html';
             }
 
             if (heroCta) {
                 const span = heroCta.querySelector('span');
                 if (span) span.textContent = 'Open the workspace';
-                heroCta.href = 'app.html';
             }
         }
     }
@@ -370,61 +391,87 @@ document.addEventListener('DOMContentLoaded', () => {
         const modalBackdrop = document.getElementById('clerk-modal-backdrop');
         const modalClose = document.getElementById('clerk-modal-close');
         const signInTarget = document.getElementById('clerk-sign-in-target');
+        const navLoginBtn = document.getElementById('nav-login-btn');
 
-        const requireAuthForWorkspace = (e) => {
-            if (clerkLanding && clerkLanding.user) {
-                // User is authenticated, allow natural navigation to app.html
-                window.location.href = 'app.html';
-                return;
-            }
-
-            e.preventDefault();
-            if (clerkLanding) {
-                if (modalBackdrop && signInTarget) {
-                    modalBackdrop.hidden = false;
-                    if (!signInTarget.hasChildNodes()) {
+        const openAuthModal = () => {
+            if (modalBackdrop) modalBackdrop.hidden = false;
+            if (clerkLanding && signInTarget) {
+                if (!signInTarget.hasChildNodes()) {
+                    try {
+                        clerkLanding.mountSignIn(signInTarget, {
+                            afterSignInUrl: window.location.origin + '/app.html',
+                            afterSignUpUrl: window.location.origin + '/app.html',
+                        });
+                    } catch (mountErr) {
+                        console.warn('mountSignIn fallback:', mountErr);
+                        if (typeof clerkLanding.openSignIn === 'function') {
+                            clerkLanding.openSignIn();
+                        }
+                    }
+                }
+            } else if (!clerkLanding && signInTarget) {
+                signInTarget.innerHTML = `
+                    <div style="text-align:center;padding:24px;color:#8E8EA0;">
+                        <div style="margin:0 auto 12px;width:24px;height:24px;border:2px solid #FF8C42;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                        <div>Connecting to secure login...</div>
+                    </div>
+                `;
+                const checkInterval = setInterval(() => {
+                    if (clerkLanding) {
+                        clearInterval(checkInterval);
+                        signInTarget.innerHTML = '';
                         try {
                             clerkLanding.mountSignIn(signInTarget, {
                                 afterSignInUrl: window.location.origin + '/app.html',
                                 afterSignUpUrl: window.location.origin + '/app.html',
                             });
-                        } catch (mountErr) {
-                            console.warn('mountSignIn fallback:', mountErr);
-                            if (typeof clerkLanding.openSignIn === 'function') {
-                                clerkLanding.openSignIn();
-                            }
+                        } catch (err) {
+                            console.warn('Delayed mountSignIn failed:', err);
                         }
                     }
-                } else if (typeof clerkLanding.openSignIn === 'function') {
-                    clerkLanding.openSignIn({
-                        redirectUrl: window.location.origin + '/app.html',
-                        afterSignInUrl: window.location.origin + '/app.html',
-                        afterSignUpUrl: window.location.origin + '/app.html'
-                    });
-                }
-            } else {
-                window.location.href = 'app.html';
+                }, 200);
+                setTimeout(() => clearInterval(checkInterval), 4000);
             }
         };
 
-        if (heroCtaBtn) heroCtaBtn.addEventListener('click', () => { window.location.href = 'app.html'; });
-        if (navCtaBtn) navCtaBtn.addEventListener('click', () => { window.location.href = 'app.html'; });
-        if (navLoginBtn) navLoginBtn.addEventListener('click', requireAuthForWorkspace);
-        if (navLoginLegacy) navLoginLegacy.addEventListener('click', requireAuthForWorkspace);
+        const heroCtaBtn = document.getElementById('hero-cta');
+        const navCtaBtn = document.getElementById('nav-cta');
+
+        const requireAuth = (e) => {
+            if (clerkLanding && clerkLanding.user) {
+                return;
+            }
+            if (e) e.preventDefault();
+            openAuthModal();
+        };
+
+        if (navLoginBtn) navLoginBtn.addEventListener('click', requireAuth);
+        if (heroCtaBtn) heroCtaBtn.addEventListener('click', requireAuth);
+        if (navCtaBtn) navCtaBtn.addEventListener('click', requireAuth);
 
         if (modalClose) {
             modalClose.addEventListener('click', () => {
                 if (modalBackdrop) modalBackdrop.hidden = true;
             });
         }
+
         if (modalBackdrop) {
             modalBackdrop.addEventListener('click', (e) => {
                 if (e.target === modalBackdrop) modalBackdrop.hidden = true;
             });
         }
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalBackdrop && !modalBackdrop.hidden) {
+                modalBackdrop.hidden = true;
+            }
+        });
     }
 
+    setupAuthGateway();
     initClerkLanding();
 
 });
+
 

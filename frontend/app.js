@@ -2,11 +2,20 @@
    MULTI-AGENT SYSTEM — App Chat Logic
    ============================================ */
 
-const API_BASE = (typeof window !== 'undefined' && window.__API_BASE__)
-    || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE)
+let API_BASE = (typeof window !== 'undefined' && window.__API_BASE__)
+    || (typeof window !== 'undefined' && window.env && window.env.VITE_API_BASE)
     || localStorage.getItem('ma_api_base')
-    || 'http://localhost:8990';
-const API_V1 = `${API_BASE}/api/v1`;
+    || (typeof window !== 'undefined' && ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) ? 'http://127.0.0.1:8990' : '');
+let API_V1 = API_BASE ? `${API_BASE}/api/v1` : '/api/v1';
+let isBackendConnected = false;
+
+function setApiBase(url) {
+    if (!url) return;
+    API_BASE = url.replace(/\/+$/, '');
+    API_V1 = `${API_BASE}/api/v1`;
+    window.__API_BASE__ = API_BASE;
+    localStorage.setItem('ma_api_base', API_BASE);
+}
 
 // --- State ---
 let currentMode = 'Smart';       // Smart | Fast | Slow | LangGraph
@@ -24,21 +33,13 @@ let currentUserId = null;
 // Clean up any legacy shared storage from older versions
 try { localStorage.removeItem('ma_conversations'); } catch {}
 
-function getGuestId() {
-    let gid = localStorage.getItem('ma_guest_id');
-    if (!gid) {
-        gid = 'guest_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
-        localStorage.setItem('ma_guest_id', gid);
-    }
-    return gid;
-}
-
 function getActiveUserId() {
-    return currentClerkUser?.id || clerk?.user?.id || getGuestId();
+    return currentClerkUser?.id || clerk?.user?.id || null;
 }
 
 function getUserConversationsStorageKey(uid) {
-    return `ma_conversations_${uid || getActiveUserId()}`;
+    const id = uid || getActiveUserId() || 'anonymous';
+    return `ma_conversations_${id}`;
 }
 
 // --- DOM Refs ---
@@ -74,8 +75,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     setHomeState(true);
     setupEventListeners();
+    setupAuthListeners();
     autoResizeTextarea();
     initClerkAuth();
+    checkBackendHealth();
 });
 
 function initTheme() {
@@ -124,8 +127,6 @@ async function getAuthHeaders(extraHeaders = {}) {
     const activeUser = currentClerkUser || clerk?.user;
     if (activeUser?.id) {
         headers['X-User-Id'] = activeUser.id;
-    } else {
-        headers['X-Guest-Id'] = getGuestId();
     }
 
     // 1. Clerk session token (auto-refreshed by Clerk SDK)
@@ -195,23 +196,24 @@ async function initClerkAuth() {
             if (parts.length >= 3) domain = atob(parts[2]).slice(0, -1);
         } catch { /* Default */ }
 
-        // Ensure Clerk UI bundle is loaded
-        if (!window.__internal_ClerkUICtor) {
+        // Ensure Clerk SDK is loaded if not already present
+        if (!window.Clerk) {
             await new Promise((resolve) => {
-                const existing = document.querySelector('script[src*="@clerk/ui"]');
+                const existing = document.querySelector('script[src*="clerk"]');
                 if (existing) {
                     existing.addEventListener('load', resolve, { once: true });
-                    setTimeout(resolve, 2000);
+                    setTimeout(resolve, 2500);
                     return;
                 }
                 const script = document.createElement('script');
-                script.src = `https://${domain}/npm/@clerk/ui@1/dist/ui.browser.js`;
+                script.src = `https://${domain}/npm/@clerk/clerk-js@5/dist/clerk.browser.js`;
                 script.async = true;
                 script.crossOrigin = 'anonymous';
+                script.setAttribute('data-clerk-publishable-key', publishableKey);
                 script.onload = resolve;
                 script.onerror = resolve;
                 document.head.appendChild(script);
-                setTimeout(resolve, 3000);
+                setTimeout(resolve, 3500);
             });
         }
 
@@ -229,12 +231,7 @@ async function initClerkAuth() {
                 clerk = window.Clerk;
             }
 
-            const loadOptions = {};
-            if (window.__internal_ClerkUICtor) {
-                loadOptions.ui = { ClerkUI: window.__internal_ClerkUICtor };
-            }
-
-            await clerk.load(loadOptions);
+            await clerk.load();
 
             currentClerkUser = clerk.user;
             updateAuthUI();
@@ -246,32 +243,41 @@ async function initClerkAuth() {
                     updateAuthUI();
                     const modalBackdrop = $('clerk-modal-backdrop');
                     if (user && modalBackdrop) modalBackdrop.hidden = true;
-                    const newUid = user ? user.id : getGuestId();
+                    const newUid = user ? user.id : null;
                     if (newUid !== prevUid) {
                         await switchUserContext(newUid);
+                    }
+                    if (!user) {
+                        handleSignIn();
                     }
                 });
             }
 
             // Immediately switch user context to the active user
-            await switchUserContext(getActiveUserId(), true);
-
-            // Only open sign-in modal if explicitly requested in URL query
-            const urlParams = new URLSearchParams(window.location.search);
-            if (!clerk.user && urlParams.get('signin') === 'true') {
+            if (clerk.user) {
+                await switchUserContext(clerk.user.id, true);
+            } else {
+                updateAuthUI();
+                // Prompt sign in when entering the workspace without authentication
                 handleSignIn();
             }
         } else {
-            await switchUserContext(getActiveUserId(), true);
+            updateAuthUI();
+            handleSignIn();
         }
     } catch (err) {
         console.warn('Clerk initialization notice:', err);
-        await switchUserContext(getActiveUserId(), true);
+        updateAuthUI();
     }
-    setupAuthListeners();
 }
 
 async function switchUserContext(newUid, isInitial = false) {
+    if (!newUid) {
+        conversations = [];
+        renderChatList();
+        setHomeState(true);
+        return;
+    }
     if (!isInitial && newUid === currentUserId) return;
     currentUserId = newUid;
 
@@ -343,14 +349,99 @@ function updateAuthUI() {
         if (topbarSigninBtn) topbarSigninBtn.style.display = 'none';
     } else {
         currentClerkUser = null;
-        if (profileName) profileName.textContent = 'Guest User';
-        if (profileEmail) profileEmail.textContent = 'Sign in to sync';
-        if (profileAvatar) profileAvatar.textContent = 'M';
+        if (profileName) profileName.textContent = 'Sign In Required';
+        if (profileEmail) profileEmail.textContent = 'Sign in with Clerk';
+        if (profileAvatar) profileAvatar.textContent = '🔒';
         if (profileBadge) profileBadge.style.display = 'none';
         if (profileSubtext) profileSubtext.style.display = 'none';
         if (sidebarSigninBtn) sidebarSigninBtn.style.display = '';
         if (sidebarSignoutBtn) sidebarSignoutBtn.style.display = 'none';
         if (topbarSigninBtn) topbarSigninBtn.style.display = '';
+    }
+}
+
+function handleSignIn() {
+    const modalBackdrop = $('clerk-modal-backdrop');
+    const signInTarget = $('clerk-sign-in-target');
+
+    if (modalBackdrop) modalBackdrop.hidden = false;
+
+    if (clerk && signInTarget) {
+        if (!signInTarget.hasChildNodes()) {
+            try {
+                clerk.mountSignIn(signInTarget, {
+                    afterSignInUrl: window.location.origin + '/app.html',
+                    afterSignUpUrl: window.location.origin + '/app.html'
+                });
+            } catch (mountErr) {
+                console.warn('mountSignIn notice:', mountErr);
+                if (typeof clerk.openSignIn === 'function') {
+                    try {
+                        clerk.openSignIn({
+                            afterSignInUrl: window.location.origin + '/app.html',
+                            afterSignUpUrl: window.location.origin + '/app.html'
+                        });
+                    } catch (e) {
+                        console.warn('openSignIn error:', e);
+                    }
+                }
+            }
+        }
+    } else if (!clerk && signInTarget) {
+        signInTarget.innerHTML = '<div style="text-align:center;padding:24px;color:#8E8EA0;"><div style="margin:0 auto 12px;width:24px;height:24px;border:2px solid #FF8C42;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></div>Loading authentication...</div>';
+        const checkInterval = setInterval(() => {
+            if (clerk) {
+                clearInterval(checkInterval);
+                signInTarget.innerHTML = '';
+                try {
+                    clerk.mountSignIn(signInTarget, {
+                        afterSignInUrl: window.location.origin + '/app.html',
+                        afterSignUpUrl: window.location.origin + '/app.html'
+                    });
+                } catch (e) {
+                    console.warn('Delayed mountSignIn failed:', e);
+                }
+            }
+        }, 200);
+        setTimeout(() => clearInterval(checkInterval), 6000);
+    } else if (clerk && typeof clerk.openSignIn === 'function') {
+        try {
+            clerk.openSignIn({
+                afterSignInUrl: window.location.origin + '/app.html',
+                afterSignUpUrl: window.location.origin + '/app.html'
+            });
+        } catch (e) {
+            console.warn('openSignIn notice:', e);
+        }
+    }
+}
+
+function handleProfileOpen(e) {
+    if (e) e.stopPropagation();
+    if (clerk && clerk.user) {
+        if (typeof clerk.openUserProfile === 'function') {
+            clerk.openUserProfile();
+        }
+    } else {
+        handleSignIn();
+    }
+}
+
+async function handleSignOut(e) {
+    if (e) e.stopPropagation();
+    activeConversationId = null;
+    conversations = [];
+    renderChatList();
+    clearMessages();
+    setHomeState(true);
+    currentUserId = null;
+    currentClerkUser = null;
+    localStorage.removeItem('ma_access_token');
+    localStorage.removeItem('ma_refresh_token');
+    if (clerk && typeof clerk.signOut === 'function') {
+        await clerk.signOut({ redirectUrl: '/' });
+    } else {
+        window.location.href = '/';
     }
 }
 
@@ -360,72 +451,126 @@ function setupAuthListeners() {
     const sidebarSignoutBtn = $('sidebar-signout-btn');
     const modalBackdrop = $('clerk-modal-backdrop');
     const modalClose = $('clerk-modal-close');
-    const signInTarget = $('clerk-sign-in-target');
     const profileInfoWrap = $('profile-info-wrap');
-    const settingsBtn = $('settings-btn');
-
-    const handleSignIn = () => {
-        if (clerk) {
-            if (typeof clerk.openSignIn === 'function') {
-                clerk.openSignIn({
-                    afterSignInUrl: window.location.origin + '/app.html',
-                    afterSignUpUrl: window.location.origin + '/app.html'
-                });
-            } else if (modalBackdrop && signInTarget) {
-                modalBackdrop.hidden = false;
-                if (!signInTarget.hasChildNodes()) {
-                    try {
-                        clerk.mountSignIn(signInTarget, {
-                            afterSignInUrl: window.location.origin + '/app.html',
-                            afterSignUpUrl: window.location.origin + '/app.html'
-                        });
-                    } catch {
-                        if (typeof clerk.openSignIn === 'function') clerk.openSignIn();
-                    }
-                }
-            }
-        } else {
-            showToast('ℹ️ Connecting to authentication service...');
-        }
-    };
-
-    const handleProfileOpen = (e) => {
-        if (e) e.stopPropagation();
-        if (clerk && clerk.user) {
-            if (typeof clerk.openUserProfile === 'function') {
-                clerk.openUserProfile();
-            }
-        } else {
-            handleSignIn();
-        }
-    };
-
-    const handleSignOut = async (e) => {
-        if (e) e.stopPropagation();
-        activeConversationId = null;
-        conversations = [];
-        renderChatList();
-        clearMessages();
-        setHomeState(true);
-        // Create fresh guest ID so next guest session is brand new
-        localStorage.setItem('ma_guest_id', 'guest_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9));
-        currentUserId = null;
-        if (clerk && typeof clerk.signOut === 'function') {
-            await clerk.signOut({ redirectUrl: '/' });
-        }
-    };
 
     topbarSigninBtn?.addEventListener('click', handleSignIn);
     sidebarSigninBtn?.addEventListener('click', handleSignIn);
     sidebarSignoutBtn?.addEventListener('click', handleSignOut);
     profileInfoWrap?.addEventListener('click', handleProfileOpen);
-    settingsBtn?.addEventListener('click', handleProfileOpen);
     modalClose?.addEventListener('click', () => {
         if (modalBackdrop) modalBackdrop.hidden = true;
     });
     modalBackdrop?.addEventListener('click', (e) => {
         if (e.target === modalBackdrop) modalBackdrop.hidden = true;
     });
+}
+
+async function checkBackendHealth() {
+    const statusDot = $('backend-status-dot');
+    const statusText = $('backend-status-text');
+    const alertBanner = $('backend-alert-banner');
+    const bannerInput = $('backend-banner-input');
+    const backendApiInput = $('setting-backend-api-input');
+
+    if (statusDot) {
+        statusDot.className = 'backend-status-dot checking';
+        if (statusText) statusText.textContent = 'Backend: Checking...';
+    }
+
+    // Build candidate backend URLs to test
+    const candidates = [];
+    if (API_BASE) candidates.push(API_BASE);
+    const isLocalEnv = typeof window !== 'undefined' && ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
+    if (isLocalEnv) {
+        if (!candidates.includes('http://127.0.0.1:8990')) candidates.push('http://127.0.0.1:8990');
+        if (!candidates.includes('http://localhost:8990')) candidates.push('http://localhost:8990');
+    }
+
+    for (const testUrl of candidates) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3500);
+            let ok = false;
+            try {
+                const r = await fetch(`${testUrl}/health`, { signal: controller.signal });
+                if (r.ok || r.status < 500) ok = true;
+            } catch {
+                try {
+                    const r = await fetch(`${testUrl}/`, { signal: controller.signal });
+                    if (r.ok || r.status < 500) ok = true;
+                } catch {}
+            }
+            clearTimeout(timeoutId);
+
+            if (ok) {
+                if (API_BASE !== testUrl) {
+                    setApiBase(testUrl);
+                }
+                isBackendConnected = true;
+                if (statusDot) {
+                    statusDot.className = 'backend-status-dot connected';
+                    if (statusText) statusText.textContent = 'Backend: Connected';
+                }
+                if (alertBanner) alertBanner.style.display = 'none';
+                const settingsStatus = document.querySelector('.cg-status-online');
+                if (settingsStatus) {
+                    try {
+                        settingsStatus.textContent = '● Operational (' + (new URL(testUrl).hostname) + ')';
+                    } catch {
+                        settingsStatus.textContent = '● Operational';
+                    }
+                }
+                return true;
+            }
+        } catch (e) {
+            console.warn(`Backend probe failed for ${testUrl}:`, e);
+        }
+    }
+
+    isBackendConnected = false;
+    if (statusDot) {
+        statusDot.className = 'backend-status-dot disconnected';
+        if (statusText) statusText.textContent = 'Backend: Offline';
+    }
+    if (alertBanner) {
+        alertBanner.style.display = 'flex';
+        const val = localStorage.getItem('ma_api_base') || API_BASE || 'http://127.0.0.1:8990';
+        if (bannerInput && !bannerInput.value) bannerInput.value = val;
+        if (backendApiInput && !backendApiInput.value) backendApiInput.value = val;
+    }
+    return false;
+}
+
+async function handleSaveBackendUrl(inputUrl) {
+    let url = (inputUrl || '').trim().replace(/\/+$/, '');
+    if (!url) {
+        showToast('⚠️ Please enter a backend URL (e.g. https://your-service.onrender.com)');
+        return false;
+    }
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+    }
+    if (window.location.protocol === 'https:' && url.startsWith('http://') && !url.includes('localhost')) {
+        showToast('⚠️ Mixed Content: On HTTPS, your backend URL must use https://');
+        return false;
+    }
+
+    setApiBase(url);
+    showToast('Connecting to ' + url + '...');
+    const bannerInput = $('backend-banner-input');
+    const backendApiInput = $('setting-backend-api-input');
+    if (bannerInput) bannerInput.value = url;
+    if (backendApiInput) backendApiInput.value = url;
+
+    const ok = await checkBackendHealth();
+    if (ok) {
+        showToast('✅ Backend connected successfully! Reloading...');
+        setTimeout(() => location.reload(), 600);
+    } else {
+        showToast('ℹ️ URL saved! (Render services may take ~40s to wake from sleep on initial request).');
+        setTimeout(() => location.reload(), 1500);
+    }
+    return true;
 }
 
 function setupEventListeners() {
@@ -438,16 +583,68 @@ function setupEventListeners() {
     const sidebarSettingsLink = $('sidebar-settings-link');
     const backendApiInput = $('setting-backend-api-input');
     const saveBackendApiBtn = $('save-backend-api-btn');
+    const backendStatusPill = $('backend-status-pill');
+    const bannerSaveBtn = $('backend-banner-save-btn');
+    const bannerDismissBtn = $('backend-banner-dismiss-btn');
+    const bannerInput = $('backend-banner-input');
+
     if (backendApiInput) {
         backendApiInput.value = localStorage.getItem('ma_api_base') || window.__API_BASE__ || API_BASE;
     }
+    if (bannerInput) {
+        bannerInput.value = localStorage.getItem('ma_api_base') || window.__API_BASE__ || (API_BASE.includes('localhost') ? '' : API_BASE);
+    }
+
+    // Backend Status Pill click
+    if (backendStatusPill) {
+        backendStatusPill.addEventListener('click', () => {
+            const banner = $('backend-alert-banner');
+            if (banner && banner.style.display !== 'none') {
+                if (bannerInput) {
+                    bannerInput.focus();
+                    bannerInput.select();
+                }
+            } else {
+                openSettingsTab('models');
+                setTimeout(() => {
+                    if (backendApiInput) { backendApiInput.focus(); backendApiInput.select(); }
+                }, 100);
+            }
+        });
+    }
+
+    // Backend Banner Actions
+    if (bannerSaveBtn) {
+        bannerSaveBtn.addEventListener('click', () => {
+            handleSaveBackendUrl(bannerInput?.value);
+        });
+    }
+    if (bannerInput) {
+        bannerInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSaveBackendUrl(bannerInput.value);
+            }
+        });
+    }
+    if (bannerDismissBtn) {
+        bannerDismissBtn.addEventListener('click', () => {
+            const banner = $('backend-alert-banner');
+            if (banner) banner.style.display = 'none';
+        });
+    }
+
+    // Settings Modal Backend URL Save
     if (saveBackendApiBtn) {
         saveBackendApiBtn.addEventListener('click', () => {
-            const val = (backendApiInput?.value || '').trim().replace(/\/+$/, '');
-            if (val) {
-                localStorage.setItem('ma_api_base', val);
-                showToast('✅ Backend URL saved! Reloading application...');
-                setTimeout(() => location.reload(), 600);
+            handleSaveBackendUrl(backendApiInput?.value);
+        });
+    }
+    if (backendApiInput) {
+        backendApiInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSaveBackendUrl(backendApiInput.value);
             }
         });
     }
@@ -464,15 +661,6 @@ function setupEventListeners() {
     if (settingsBackdrop) settingsBackdrop.addEventListener('click', event => {
         if (event.target === settingsBackdrop) closeSettings();
     });
-
-    // Check if deployed to cloud (e.g. Vercel) while still pointing to localhost
-    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        if (API_BASE.includes('localhost') && !localStorage.getItem('ma_api_base') && !window.__API_BASE__) {
-            setTimeout(() => {
-                showToast('⚠️ App is on Vercel but backend is set to localhost. Click Settings ⚙️ to connect Render backend.');
-            }, 1200);
-        }
-    }
 
     // Connectors Dialog Setup
     const sidebarConnectorsLink = $('sidebar-connectors-link');
@@ -802,6 +990,35 @@ function setupEventListeners() {
         orchestratorSelect.addEventListener('change', () => {
             localStorage.setItem('ma_orchestrator_mode', orchestratorSelect.value);
             showToast(`🤖 Routing mode: ${orchestratorSelect.options[orchestratorSelect.selectedIndex].text}`);
+        });
+    }
+
+    // General Settings Toggles
+    const showCodeToggle = $('setting-show-code');
+    const showCitationsToggle = $('setting-show-citations');
+    const saveHistoryToggle = $('setting-save-history');
+
+    if (showCodeToggle) {
+        showCodeToggle.checked = localStorage.getItem('ma_show_code') !== 'false';
+        showCodeToggle.addEventListener('change', () => {
+            localStorage.setItem('ma_show_code', showCodeToggle.checked ? 'true' : 'false');
+            showToast(showCodeToggle.checked ? '✔ Tool execution display enabled' : 'ℹ Tool execution display collapsed');
+        });
+    }
+
+    if (showCitationsToggle) {
+        showCitationsToggle.checked = localStorage.getItem('ma_show_citations') !== 'false';
+        showCitationsToggle.addEventListener('change', () => {
+            localStorage.setItem('ma_show_citations', showCitationsToggle.checked ? 'true' : 'false');
+            showToast(showCitationsToggle.checked ? '✔ Document citations display enabled' : 'ℹ Document citations display hidden');
+        });
+    }
+
+    if (saveHistoryToggle) {
+        saveHistoryToggle.checked = localStorage.getItem('ma_save_history') !== 'false';
+        saveHistoryToggle.addEventListener('change', () => {
+            localStorage.setItem('ma_save_history', saveHistoryToggle.checked ? 'true' : 'false');
+            showToast(saveHistoryToggle.checked ? '✔ Chat history auto-saving enabled' : 'ℹ Chat history auto-saving paused');
         });
     }
 
@@ -1199,6 +1416,19 @@ function showVoiceStatus(message) {
 
 function closeSettings() {
     if (settingsBackdrop) settingsBackdrop.hidden = true;
+}
+
+function openSettingsTab(tabName = 'general') {
+    if (settingsBackdrop) settingsBackdrop.hidden = false;
+    const settingsTabsNav = $('settings-tabs-nav');
+    if (settingsTabsNav) {
+        settingsTabsNav.querySelectorAll('.cg-nav-item').forEach(b => {
+            b.classList.toggle('active', b.dataset.tab === tabName);
+        });
+    }
+    document.querySelectorAll('.cg-tab-panel').forEach(panel => {
+        panel.classList.toggle('active', panel.id === `settings-panel-${tabName}`);
+    });
 }
 
 function autoResizeTextarea() {
@@ -1616,6 +1846,13 @@ async function sendMessage() {
     const text = chatInput.value.trim();
     if (!text || isLoading) return;
 
+    const activeUser = currentClerkUser || clerk?.user;
+    if (!activeUser) {
+        showToast('🔒 Please sign in with Clerk to chat with agents.');
+        handleSignIn();
+        return;
+    }
+
     const conversationHistory = getAllMessages();
     isLoading = true;
     chatInput.value = '';
@@ -1747,7 +1984,10 @@ async function sendMessage() {
 
     } catch (err) {
         removeTyping();
-        appendMessage('assistant', `⚠️ **Error:** ${err.message}\n\nMake sure the backend is running at \`${API_BASE}\``, { route: 'direct' });
+        appendMessage('assistant', `⚠️ **Error:** ${err.message}\n\nMake sure your backend is running at \`${API_BASE || 'configured endpoint'}\`.\n\n*If you deployed to Render, paste your Render URL in the banner above or in Settings ⚙️.*`, { route: 'direct' });
+        const banner = $('backend-alert-banner');
+        if (banner) banner.style.display = 'flex';
+        checkBackendHealth();
     }
 
     isLoading = false;
