@@ -4449,4 +4449,429 @@ body.dark .ocr-action-btn {
     border-color: var(--orange-500);
     background: rgba(255, 107, 53, 0.08);
 }
+
+/* ============================================
+   ULTRA-RESPONSIVE MOBILE STYLES (ChatGPT & Claude Style)
+   ============================================ */
+@media (max-width: 768px) {
+    :root {
+        --sidebar-w: 280px;
+    }
+
+    html, body {
+        height: 100% !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+        position: fixed !important;
+        width: 100% !important;
+        -webkit-overflow-scrolling: touch;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .app-layout {
+        height: 100% !important;
+        height: 100dvh !important;
+        width: 100% !important;
+        position: relative !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: row !important;
+    }
+
+    /* ---- Mobile Drawer Sidebar (Claude & ChatGPT Style) ---- */
+    .sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: 82vw !important;
+        max-width: 310px !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        z-index: 1000 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        box-shadow: none !important;
+        background: var(--bg-sidebar) !important;
+        border-right: 1px solid var(--border) !important;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 12px);
+    }
+
+    .sidebar.open {
+        transform: translateX(0) !important;
+        box-shadow: 0 0 60px rgba(0, 0, 0, 0.7) !important;
+    }
+
+    .sidebar.collapsed {
+        margin-left: 0 !important;
+    }
+
+    .sidebar-backdrop {
+        position: fixed !important;
+        inset: 0 !important;
+        background: rgba(0, 0, 0, 0.65) !important;
+        backdrop-filter: blur(6px) !important;
+        -webkit-backdrop-filter: blur(6px) !important;
+        z-index: 999 !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transition: opacity 0.25s ease !important;
+    }
+
+    .sidebar-backdrop.active {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+
+    .sidebar-collapse-btn {
+        display: none !important;
+    }
+
+    /* ---- Mobile Topbar (Clean, Sleek & Minimal) ---- */
+    .main-chat {
+        width: 100% !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+
+    .chat-topbar {
+        height: 52px !important;
+        min-height: 52px !important;
+        padding: env(safe-area-inset-top, 4px) 10px 4px 10px !important;
+        background: var(--bg-app) !important;
+        border-bottom: 1px solid var(--border-light) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+        z-index: 40 !important;
+    }
+
+    .sidebar-toggle {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        border-radius: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        color: var(--text-primary) !important;
+        flex-shrink: 0 !important;
+    }
+
+    .topbar-info {
+        flex: 1 !important;
+        min-width: 0 !important;
+        text-align: center !important;
+        padding: 0 4px !important;
+    }
+
+    .topbar-title {
+        font-size: 0.92rem !important;
+        font-weight: 700 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        margin: 0 auto !important;
+        max-width: 165px !important;
+        color: var(--text-primary) !important;
+    }
+
+    .topbar-route {
+        display: none !important;
+    }
+
+    .mobile-new-chat-btn {
+        display: flex !important;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        border-radius: 10px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: linear-gradient(135deg, var(--orange-500), var(--orange-400)) !important;
+        color: #ffffff !important;
+        border: none !important;
+        box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3) !important;
+        flex-shrink: 0 !important;
+        cursor: pointer !important;
+    }
+
+    .topbar-controls {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+
+    .backend-status-pill .backend-status-text {
+        display: none !important;
+    }
+
+    .backend-status-pill {
+        padding: 6px 8px !important;
+        margin-right: 0 !important;
+    }
+
+    .upload-btn,
+    .share-btn {
+        display: none !important; /* Preserved on desktop, streamlined on phone */
+    }
+
+    .theme-toggle,
+    .settings-btn {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        border-radius: 8px !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* ---- Messages Container on Mobile ---- */
+    .messages-container {
+        flex: 1 !important;
+        padding: 12px 10px 145px 10px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .message-row {
+        margin-bottom: 16px !important;
+        gap: 8px !important;
+        max-width: 100% !important;
+    }
+
+    .message-row.user {
+        justify-content: flex-end !important;
+    }
+
+    .message-row.user .msg-bubble {
+        max-width: 90% !important;
+        padding: 10px 14px !important;
+        border-radius: 18px 18px 4px 18px !important;
+        font-size: 0.94rem !important;
+        line-height: 1.5 !important;
+        word-break: break-word !important;
+    }
+
+    .message-row.assistant .msg-bubble {
+        max-width: 100% !important;
+        padding: 2px 0 6px 0 !important;
+        font-size: 0.94rem !important;
+        line-height: 1.6 !important;
+        word-break: break-word !important;
+    }
+
+    .msg-avatar {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        font-size: 0.7rem !important;
+        border-radius: 8px !important;
+    }
+
+    .msg-avatar img {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    /* ---- Code Block & Tables on Mobile ---- */
+    .code-block-container {
+        border-radius: 10px !important;
+        margin: 10px 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+    }
+
+    .code-block-header {
+        padding: 6px 10px !important;
+        font-size: 0.72rem !important;
+    }
+
+    .code-block-container pre {
+        padding: 10px 12px !important;
+        font-size: 0.8rem !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .msg-content table {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        font-size: 0.82rem !important;
+    }
+
+    /* ---- Follow-ups on Mobile ---- */
+    .follow-ups {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+        margin-top: 10px !important;
+    }
+
+    .follow-up-btn {
+        padding: 6px 11px !important;
+        font-size: 0.75rem !important;
+        border-radius: 16px !important;
+        white-space: normal !important;
+        text-align: left !important;
+    }
+
+    /* ---- Welcome Screen on Mobile ---- */
+    .welcome-screen {
+        padding: 24px 8px 12px !important;
+        max-width: 100% !important;
+    }
+
+    .home-brand-lockup {
+        gap: 12px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .claude-spark-emblem {
+        width: 44px !important;
+        height: 44px !important;
+    }
+
+    .welcome-heading {
+        font-size: 1.35rem !important;
+        line-height: 1.28 !important;
+        letter-spacing: -0.02em !important;
+    }
+
+    .welcome-subheading {
+        font-size: 0.84rem !important;
+        margin-bottom: 18px !important;
+    }
+
+    .suggestion-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    .suggestion-card {
+        padding: 12px 14px !important;
+        border-radius: 14px !important;
+    }
+
+    /* ---- Floating Input Area (ChatGPT & Claude Mobile Style) ---- */
+    .input-area {
+        position: absolute !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        padding: 6px 10px calc(8px + env(safe-area-inset-bottom, 0px)) 10px !important;
+        background: linear-gradient(180deg, transparent 0%, var(--bg-app) 25%) !important;
+        z-index: 50 !important;
+    }
+
+    .input-capsule-container {
+        border-radius: 24px !important;
+        padding: 8px 10px 8px 12px !important;
+        background: var(--bg-input) !important;
+        border: 1px solid var(--border) !important;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.14) !important;
+    }
+
+    .chat-input {
+        font-size: 0.95rem !important;
+        max-height: 120px !important;
+        padding: 4px 2px !important;
+        line-height: 1.45 !important;
+    }
+
+    .capsule-toolbar {
+        margin-top: 6px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+
+    .toolbar-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+
+    .model-pill-trigger {
+        padding: 5px 9px !important;
+        font-size: 0.74rem !important;
+        border-radius: 14px !important;
+        background: var(--bg-card) !important;
+    }
+
+    .web-search-btn span {
+        display: none !important;
+    }
+
+    .web-search-btn {
+        padding: 6px !important;
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .voice-btn, .send-btn {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        border-radius: 50% !important;
+    }
+
+    .capsule-footer-meta {
+        display: none !important; /* Keep mobile input footprint compact */
+    }
+
+    /* ---- Modals & Overlays on Mobile ---- */
+    .cg-dialog, .connectors-dialog, .ocr-dialog, .folder-modal-content, .clerk-sign-in-modal {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        max-height: 90vh !important;
+        max-height: 90dvh !important;
+        padding: 20px 16px !important;
+        border-radius: 20px !important;
+        margin: auto !important;
+        overflow-y: auto !important;
+    }
+
+    .ocr-dropzone {
+        padding: 18px 10px !important;
+    }
+
+    .ocr-dialog-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+}
+
+/* Tiny screens (<= 380px) */
+@media (max-width: 380px) {
+    .topbar-title {
+        max-width: 120px !important;
+        font-size: 0.88rem !important;
+    }
+
+    .model-pill-text {
+        max-width: 75px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+}
+
 

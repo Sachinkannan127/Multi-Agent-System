@@ -1211,7 +1211,9 @@ function setupEventListeners() {
     }
 
     // New chat
-    $('new-chat-btn').addEventListener('click', startNewChat);
+    $('new-chat-btn')?.addEventListener('click', startNewChat);
+    $('mobile-new-chat-btn')?.addEventListener('click', startNewChat);
+
 
     // Suggestion cards
     document.querySelectorAll('.suggestion-card').forEach(card => {
